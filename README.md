@@ -4,7 +4,18 @@
 # SWMPrStorm
 
 <!-- badges: start -->
+
+[![CRAN
+status](https://www.r-pkg.org/badges/version/SWMPrStorm)](https://CRAN.R-project.org/package=SWMPrStorm)
+[![Lifecycle:
+experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 <!-- badges: end -->
+
+<!-- logos: start -->
+
+<img src="man/figures/swmpr_logo.png" align="center"/>
+<img src="man/figures/Storm-Story-logo.png" align="center" width = "50%"/>
+<!-- logos: end -->
 
 ## Overview
 

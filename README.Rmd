@@ -16,7 +16,13 @@ knitr::opts_chunk$set(
 # SWMPrStorm
 
 <!-- badges: start -->
+[![CRAN status](https://www.r-pkg.org/badges/version/SWMPrStorm)](https://CRAN.R-project.org/package=SWMPrStorm) [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 <!-- badges: end -->
+
+<!-- logos: start -->
+<img src="man/figures/swmpr_logo.png" align="center"/>
+<img src="man/figures/Storm-Story-logo.png" align="center" width = "50%"/>
+<!-- logos: end -->
 
 ## Overview
 The System Wide Monitoring Program ([SWMP](http://nerrs.noaa.gov/RCDefault.aspx?ID=18)) was implemented by the National Estuarine Research Reserve System ([NERRS](http://nerrs.noaa.gov/)) in 1995 to provide continuous monitoring data at over 140 continuous monitoring stations in 28 estuaries across the United States.  SWMPrStorm (pronounced "swamper storm") is an R package that provides functions to organize and analyze SWMP data on a storm event basis. It is a companion package to [SWMPr](https://github.com/fawda123/SWMPr) and [SWMPrExtension](https://github.com/NOAA-OCM/SWMPrExtension/). Currently, there is no citation for SWMPrStorm
