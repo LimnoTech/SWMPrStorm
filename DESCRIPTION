@@ -1,0 +1,21 @@
+Package: SWMPrStorm
+Title: Organizing, and Analyzing Estuary Monitoring Data for Storm Events
+Version: 0.0.0.9000
+Authors@R: c(
+    person("Ben", "Crary", , "bcrary@limno.com", c("aut", "cre")),
+    person("Julie", "Padilla", , "padilla410@gmail.com", "aut"),
+    person("Shanna", "Rucker", , "srucker@limno.com", "aut")
+    )
+Description: Tools for performing routine analysis and plotting tasks with
+    environmental data from the System Wide Monitoring Program of the
+    National Estuarine Research Reserve System <http://cdmo.baruch.sc.edu/>.
+    This package builds on the functionality of the SWMPr package
+    <https://cran.r-project.org/package=SWMPr>, which is used to retrieve and
+    organize the data. The combined set of tools address common challenges
+    associated with evaluating time series data collected during storm events,
+    and is intended for use in reporting on these events.
+License: CC0
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.1
