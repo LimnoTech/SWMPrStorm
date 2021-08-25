@@ -1,14 +1,12 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
-
-# SWMPrStorm
-
 <!-- badges: start -->
 
 [![CRAN
 status](https://www.r-pkg.org/badges/version/SWMPrStorm)](https://CRAN.R-project.org/package=SWMPrStorm)
 [![Lifecycle:
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+[![R-CMD-check](https://github.com/LimnoTech/SWMPrStorm/workflows/R-CMD-check/badge.svg)](https://github.com/LimnoTech/SWMPrStorm/actions)
 <!-- badges: end -->
 
 <!-- logos: start -->
