@@ -44,7 +44,7 @@ compare_one_event_multi_reserve <- function() {
 
   # combine data.frames into one and tidy
   dat <- bind_rows(ls_par, .id = 'station')
-  dat_tidy <- dat %>% pivot_longer(., 3:length(names(dat)), names_to = 'parameter', values_to = 'result')
+  dat_tidy <- dat %>% tidyr::pivot_longer(., 3:length(names(dat)), names_to = 'parameter', values_to = 'result')
   dat_tidy$event <- storm_nm
   dat_tidy$evt_start <- storm_start
   dat_tidy$evt_end <- storm_end
@@ -54,8 +54,8 @@ compare_one_event_multi_reserve <- function() {
   # ----------------------------------------------
 
   summary <- dat_tidy %>%
-    group_by(event, evt_start, evt_end, parameter, station) %>%
-    summarise(min = min(result, na.rm = T)
+    dplyr::group_by(event, evt_start, evt_end, parameter, station) %>%
+    dplyr::summarise(min = min(result, na.rm = T)
               , max = max(result, na.rm = T)
               , mean = mean(result, na.rm = T)
               , median = median(result, na.rm = T))
@@ -67,7 +67,7 @@ compare_one_event_multi_reserve <- function() {
   summary$station_fac <- factor(summary$station, levels = wq_sites)
 
   # re-sort the table using factors
-  summary <- summary %>% arrange(., parameter, station_fac)
+  summary <- summary %>% dplyr::arrange(., parameter, station_fac)
 
   # write table
   tbl_ttl <- paste('output/wq/comparison_one_evt_multi_reserve/comparison_', storm_nm, '_multireserve.csv', sep = '')
@@ -116,21 +116,21 @@ compare_one_event_multi_reserve <- function() {
   parm <- parm %>%  subset(!(. %in% c('wdir', 'sdwdir', 'totpar', 'totsorad')))
 
   # combine data.frames into one and tidy
-  dat <- bind_rows(ls_par, .id = 'station')
-  dat_tidy <- dat %>% pivot_longer(., 3:length(names(dat)), names_to = 'parameter', values_to = 'result')
+  dat <- dplyr::bind_rows(ls_par, .id = 'station')
+  dat_tidy <- dat %>% tidyr::pivot_longer(., 3:length(names(dat)), names_to = 'parameter', values_to = 'result')
   dat_tidy$event <- storm_nm
   dat_tidy$evt_start <- storm_start
   dat_tidy$evt_end <- storm_end
 
-  dat_tidy <- dat_tidy %>% filter(parameter %in% parm)
+  dat_tidy <- dat_tidy %>% dplyr::filter(parameter %in% parm)
 
   # ----------------------------------------------
   # Single Event Comparison, Multiple Reserves ---
   # ----------------------------------------------
 
   summary <- dat_tidy %>%
-    group_by(event, evt_start, evt_end, parameter, station) %>%
-    summarise(min = min(result, na.rm = T)
+    dplyr::group_by(event, evt_start, evt_end, parameter, station) %>%
+    dplyr::summarise(min = min(result, na.rm = T)
               , max = max(result, na.rm = T)
               , mean = mean(result, na.rm = T)
               , median = median(result, na.rm = T)
@@ -143,7 +143,7 @@ compare_one_event_multi_reserve <- function() {
   summary$station_fac <- factor(summary$station, levels = met_sites)
 
   # re-sort the table using factors
-  summary <- summary %>% arrange(., parameter, station_fac)
+  summary <- summary %>% dplyr::arrange(., parameter, station_fac)
 
   # write table
   tbl_ttl <- paste('output/met/comparison_one_evt_multi_reserve/comparison_', storm_nm, '_multireserve.csv', sep = '')

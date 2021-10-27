@@ -43,28 +43,28 @@ event_roc <- function() {
   parm <- parm %>%  subset(!(. %in% c('wdir', 'sdwdir', 'totpar', 'totsorad')))
 
   # combine data.frames into one and tidy
-  dat <- bind_rows(ls_par, .id = 'station')
-  dat_tidy <- dat %>% pivot_longer(., 3:length(names(dat)), names_to = 'parameter', values_to = 'result')
+  dat <- dplyr::bind_rows(ls_par, .id = 'station')
+  dat_tidy <- dat %>% tidyr::pivot_longer(., 3:length(names(dat)), names_to = 'parameter', values_to = 'result')
   dat_tidy$event <- storm_nm
   dat_tidy$evt_start <- storm_start
   dat_tidy$evt_end <- storm_end
 
-  dat_tidy <- dat_tidy %>% filter(parameter %in% parm)
+  dat_tidy <- dat_tidy %>% dplyr::filter(parameter %in% parm)
 
   # add reserve name
   station_list <-sampling_stations
-  add_reserve <- station_list %>% select(station = Station.Code, Reserve.Name)
-  dat_tidy <- left_join(dat_tidy, add_reserve)
+  add_reserve <- station_list %>% dplyr::select(station = Station.Code, Reserve.Name)
+  dat_tidy <- dplyr::left_join(dat_tidy, add_reserve)
 
   # assign factors for plotting
   ## turn this into a function
 
   f_reservename <- station_list %>%
-    filter(Station.Code %in% unique(dat_tidy$station)) %>%
-    select(Reserve.Name, Latitude) %>%
-    distinct() %>%
-    arrange(desc(Latitude)) %>%
-    mutate(factorid = rank(Latitude))
+    dplyr::filter(Station.Code %in% unique(dat_tidy$station)) %>%
+    dplyr::select(Reserve.Name, Latitude) %>%
+    dplyr::distinct() %>%
+    dplyr::arrange(desc(Latitude)) %>%
+    dplyr::mutate(factorid = rank(Latitude))
 
   # use those factor levels to turn Reserve.Name in the main data frame into a factor, ordered thusly
   dat_tidy$Reserve.Name <- factor(dat_tidy$Reserve.Name
@@ -73,8 +73,6 @@ event_roc <- function() {
   # ----------------------------------------------
   # Rate of change plot                        ---
   # ----------------------------------------------
-  library(ggridges)
-  library(scales)
 
   unique(dat_tidy$parameter)
 
@@ -82,35 +80,35 @@ event_roc <- function() {
   stn <- 'gtmpcwq'
 
   roc <- dat_tidy %>%
-    filter(station == stn, parameter == param) %>%
-    mutate(diff_result = result - lag(result))
+    dplyr::filter(station == stn, parameter == param) %>%
+    dplyr::mutate(diff_result = result - lag(result))
 
   roc_smooth <- dat_tidy %>%
-    filter(station == stn, parameter == param) %>%
-    group_by(time_hr = floor_date(datetimestamp, "hour")) %>%
-    summarise(result = mean(result, na.rm = T)) %>%
-    mutate(diff_result = result - lag(result))
+    dplyr::filter(station == stn, parameter == param) %>%
+    dplyr::group_by(time_hr = lubridate::floor_date(datetimestamp, "hour")) %>%
+    dplyr::summarise(result = mean(result, na.rm = T)) %>%
+    dplyr::mutate(diff_result = result - lag(result))
 
   roc %>%
-    ggplot(., aes(x = datetimestamp, y = diff_result)) +
-    geom_line() +
-    scale_x_datetime(date_breaks = '1 day', labels = date_format('%b %d')) +
-    ggtitle(param)
+    ggplot2::ggplot(., ggplot2::aes(x = datetimestamp, y = diff_result)) +
+    ggplot2::geom_line() +
+    ggplot2::scale_x_datetime(date_breaks = '1 day', labels = date_format('%b %d')) +
+    ggplot2::ggtitle(param)
 
   roc_smooth %>%
-    ggplot(., aes(x = time_hr, y = diff_result)) +
-    geom_line() +
-    scale_x_datetime(limits = c(as.POSIXct(storm_start), as.POSIXct(storm_end))
+    ggplot2::ggplot(., ggplot2::aes(x = time_hr, y = diff_result)) +
+    ggplot2::geom_line() +
+    ggplot2::scale_x_datetime(limits = c(as.POSIXct(storm_start), as.POSIXct(storm_end))
                      , date_breaks = '1 day', labels = date_format('%b %d')) +
-    ggtitle(param)
+    ggplot2::ggtitle(param)
 
   dat_tidy %>%
-    filter(station == stn, parameter == param) %>%
-    ggplot(., aes(x = datetimestamp, y = result)) +
-    geom_line() +
-    scale_x_datetime(limits = c(as.POSIXct(storm_start), as.POSIXct(storm_end))
+    dplyr::filter(station == stn, parameter == param) %>%
+    ggplot2::ggplot(., ggplot2::aes(x = datetimestamp, y = result)) +
+    ggplot2::geom_line() +
+    ggplot2::scale_x_datetime(limits = c(as.POSIXct(storm_start), as.POSIXct(storm_end))
                      , date_breaks = '1 day', labels = date_format('%b %d')) +
-    ggtitle(param)
+    ggplot2::ggtitle(param)
 
   # ----------------------------------------------
   # Rate of change plot                        ---
@@ -118,16 +116,17 @@ event_roc <- function() {
   param <- 'depth'
 
   roc <- dat_tidy %>%
-    filter(station == stn, parameter == param)
+    dplyr::filter(station == stn, parameter == param)
 
-  library(oce)
-  tmp <- tidem(t = dat_tidy$datetimestamp, x = dat_tidy$result)
+
+  ### i think these next few lines of code can be removed... sealevel is a default dataset with 'oce' package?
+  tmp <- oce::tidem(t = dat_tidy$datetimestamp, x = dat_tidy$result)
   plot(tmp)
 
-  library(oce)
   data(sealevel)
-  tide <- tidem(sealevel)
+  tide <- oce::tidem(sealevel)
   plot(tide)
+  ###
 
 
   ########## Meteorological #####################################################
@@ -173,28 +172,28 @@ event_roc <- function() {
   #parm <- parm %>%  subset(!(. %in% c('wdir', 'sdwdir', 'totpar', 'totsorad')))
 
   # combine data.frames into one and tidy
-  dat <- bind_rows(ls_par, .id = 'station')
-  dat_tidy <- dat %>% pivot_longer(., 3:length(names(dat)), names_to = 'parameter', values_to = 'result')
+  dat <- dplyr::bind_rows(ls_par, .id = 'station')
+  dat_tidy <- dat %>% tidyr::pivot_longer(., 3:length(names(dat)), names_to = 'parameter', values_to = 'result')
   dat_tidy$event <- storm_nm
   dat_tidy$evt_start <- storm_start
   dat_tidy$evt_end <- storm_end
 
-  dat_tidy <- dat_tidy %>% filter(parameter %in% parm)
+  dat_tidy <- dat_tidy %>% dplyr::filter(parameter %in% parm)
 
   # add reserve name
   station_list <- sampling_stations
-  add_reserve <- station_list %>% select(station = Station.Code, Reserve.Name)
-  dat_tidy <- left_join(dat_tidy, add_reserve)
+  add_reserve <- station_list %>% dplyr::select(station = Station.Code, Reserve.Name)
+  dat_tidy <- dplyr::left_join(dat_tidy, add_reserve)
 
   # assign factors for plotting
   ## turn this into a function
 
   f_reservename <- station_list %>%
-    filter(Station.Code %in% unique(dat_tidy$station)) %>%
-    select(Reserve.Name, Latitude) %>%
-    distinct() %>%
-    arrange(desc(Latitude)) %>%
-    mutate(factorid = rank(Latitude))
+    dplyr::filter(Station.Code %in% unique(dat_tidy$station)) %>%
+    dplyr::select(Reserve.Name, Latitude) %>%
+    dplyr::distinct() %>%
+    dplyr::arrange(desc(Latitude)) %>%
+    dplyr::mutate(factorid = rank(Latitude))
 
   # use those factor levels to turn Reserve.Name in the main data frame into a factor, ordered thusly
   dat_tidy$Reserve.Name <- factor(dat_tidy$Reserve.Name
@@ -203,8 +202,6 @@ event_roc <- function() {
   # ----------------------------------------------
   # Rate of change plot                        ---
   # ----------------------------------------------
-  library(ggridges)
-  library(scales)
 
   unique(dat_tidy$parameter)
 
@@ -212,30 +209,30 @@ event_roc <- function() {
   stn <- 'gtmpcmet'
 
   roc <- dat_tidy %>%
-    filter(station == stn, parameter == param) %>%
-    mutate(diff_result = result - lag(result))
+    dplyr::filter(station == stn, parameter == param) %>%
+    dplyr::mutate(diff_result = result - lag(result))
 
   roc_smooth <- dat_tidy %>%
-    filter(station == 'gtmpcmet', parameter == param) %>%
-    group_by(time_hr = floor_date(datetimestamp, "hour")) %>%
-    summarise(result = mean(result, na.rm = T)) %>%
-    mutate(diff_result = result - lag(result))
+    dplyr::filter(station == 'gtmpcmet', parameter == param) %>%
+    dplyr::group_by(time_hr = lubridate::floor_date(datetimestamp, "hour")) %>%
+    dplyr::summarise(result = mean(result, na.rm = T)) %>%
+    dplyr::mutate(diff_result = result - stats::lag(result))
 
   roc %>%
-    ggplot(., aes(x = datetimestamp, y = diff_result)) +
-    geom_line() +
-    ggtitle(param)
+    ggplot2::ggplot(., ggplot2::aes(x = datetimestamp, y = diff_result)) +
+    ggplot2::geom_line() +
+    ggplot2::ggtitle(param)
 
   roc_smooth %>%
-    ggplot(., aes(x = time_hr, y = diff_result)) +
-    geom_line() +
-    ggtitle(param)
+    ggplot2::ggplot(., ggplot2::aes(x = time_hr, y = diff_result)) +
+    ggplot2::geom_line() +
+    ggplot2::ggtitle(param)
 
   dat_tidy %>%
-    filter(station == 'gtmpcmet', parameter == param) %>%
-    ggplot(., aes(x = datetimestamp, y = result)) +
-    geom_line() +
-    ggtitle(param)
+    ggplot2::filter(station == 'gtmpcmet', parameter == param) %>%
+    ggplot2::ggplot(., aes(x = datetimestamp, y = result)) +
+    ggplot2::geom_line() +
+    ggplot2::ggtitle(param)
 
 
 

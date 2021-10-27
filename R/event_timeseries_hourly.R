@@ -58,7 +58,7 @@ event_timeseries_hourly <- function(var_in){
 
   ## identify parameters, remove a few
   parm <- unique(names(ls_par[[1]])) %>% subset(!(. %in% c('datetimestamp')))
-  parm <- parm %>%  subset(!(. %in% c('wdir', 'sdwdir', 'totpar', 'totsorad')))
+  parm <- parm %>% subset(!(. %in% c('wdir', 'sdwdir', 'totpar', 'totsorad')))
 
   names(ls_par) <- met_sites
 
@@ -96,32 +96,32 @@ event_timeseries_hourly <- function(var_in){
 
       x <-
         df_day %>% dplyr::filter(parameter == parm[j]) %>%
-        ggplot2::ggplot(., aes(x = datetimestamp_day, y = value)) +
-        ggtitle(SWMPrExtension::title_labeler(nerr_site_id = sta)) +
-        geom_line(aes(color = 'Hourly Avg'), lwd = 1) +# 'steelblue3') +
-        geom_rect(data=df,aes(xmin=xmin,ymin=ymin,xmax=xmax,ymax=ymax,fill=years),
+        ggplot2::ggplot(., ggplot2::aes(x = datetimestamp_day, y = value)) +
+        ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = sta)) +
+        ggplot2::geom_line(aes(color = 'Hourly Avg'), lwd = 1) +# 'steelblue3') +
+        ggplot2::geom_rect(data=df,ggplot2::aes(xmin=xmin,ymin=ymin,xmax=xmax,ymax=ymax,fill=years),
                   alpha=0.1,inherit.aes=FALSE) +
-        scale_x_datetime(date_breaks = 'day', date_labels = '%b %d') +
-        labs(x = '', y = SWMPrExtension::y_labeler(parm[j]))
+        ggplot2::scale_x_datetime(date_breaks = 'day', date_labels = '%b %d') +
+        ggplot2::labs(x = '', y = SWMPrExtension::y_labeler(parm[j]))
 
       x <-
         x +
-        scale_color_manual('', values = c('steelblue3')) +
-        scale_fill_manual('', values = c('steelblue3', 'green'))
+        ggplot2::scale_color_manual('', values = c('steelblue3')) +
+        ggplot2::scale_fill_manual('', values = c('steelblue3', 'green'))
 
       x <- x +
-        theme_bw() +
-        theme(plot.title = element_text(hjust = 0.5)) +
-        theme(strip.background = element_blank(),
-              panel.grid = element_blank(),
-              panel.border = element_rect(color = 'black', fill = NA)) +
-        theme(axis.title.y = element_text(margin = unit(c(0, 8, 0, 0), 'pt'), angle = 90)) +
-        theme(text = element_text(size = 16)) +
-        theme(legend.position = 'top')
+        ggplot2::theme_bw() +
+        ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5)) +
+        ggplot2::theme(strip.background = ggplot2::element_blank(),
+              panel.grid = ggplot2::element_blank(),
+              panel.border = ggplot2::element_rect(color = 'black', fill = NA)) +
+        ggplot2::theme(axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 8, 0, 0), 'pt'), angle = 90)) +
+        ggplot2::theme(text = ggplot2::ggplot2::element_text(size = 16)) +
+        ggplot2::theme(legend.position = 'top')
 
       x_ttl <- paste('output/met/timeseries_event_hourly/timeseries_event_hourly_', sta, '_', parm[j], '.png', sep = '')
 
-      ggsave(filename = x_ttl, plot = x, height = 4, width = 6, units = 'in', dpi = 300)
+      ggplot2::ggsave(filename = x_ttl, plot = x, height = 4, width = 6, units = 'in', dpi = 300)
 
     }
   }
@@ -134,12 +134,12 @@ event_timeseries_hourly <- function(var_in){
   precip <- ls_par[[1]]
 
   precip_day <- precip %>%
-    filter(between(datetimestamp
+    dplyr::filter(dplyr::between(datetimestamp
                    , as.POSIXct(view_start)
                    , as.POSIXct(view_end))) %>%
-    mutate(datetimestamp_day = floor_date(datetimestamp, unit = 'day')) %>%
-    group_by(datetimestamp_day) %>%
-    summarize(value = sum(totprcp, na.rm = T))
+    dplyr::mutate(datetimestamp_day = lubridate::floor_date(datetimestamp, unit = 'day')) %>%
+    dplyr::group_by(datetimestamp_day) %>%
+    dplyr::summarize(value = sum(totprcp, na.rm = T))
 
   precip_day$mo <- paste(month.abb[month(precip_day$datetimestamp_day)]
                          , day(precip_day$datetimestamp_day)
@@ -149,32 +149,32 @@ event_timeseries_hourly <- function(var_in){
   # precip_day$date_fac <- paste(as.factor(precip_day$datetimestamp_day), sep = ' ')
 
   # basic plot
-  x <- ggplot(precip_day, aes(x = mo, y = value)) +
-    geom_bar(stat = 'identity', fill = 'steelblue3') +
-    ggtitle(SWMPrExtension::title_labeler(nerr_site_id = met_sites)) +
-    coord_flip() +
-    scale_x_discrete(limits = rev(levels(precip_day$mo)))
+  x <- ggplot2::ggplot(precip_day, ggplot2::aes(x = mo, y = value)) +
+    ggplot2::geom_bar(stat = 'identity', fill = 'steelblue3') +
+    ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = met_sites)) +
+    ggplot2::coord_flip() +
+    ggplot2::scale_x_discrete(limits = rev(levels(precip_day$mo)))
 
   # colors
   x <- x +
-    scale_y_continuous(expand = c(0, 0), limits = c(0, 1.5), breaks = seq(0 , 1.6, 0.25)) +
-    labs(x = NULL, y = 'Daily Precipitation (in)')
+    ggplot2::scale_y_continuous(expand = c(0, 0), limits = c(0, 1.5), breaks = seq(0 , 1.6, 0.25)) +
+    ggplot2::labs(x = NULL, y = 'Daily Precipitation (in)')
 
   x <-
     x +
-    theme_bw() +
-    theme(plot.title = element_text(hjust = 0.5)) +
-    theme(strip.background = element_blank(),
-          panel.grid = element_blank(),
-          panel.border = element_rect(color = 'black', fill = NA)) +
-    theme(axis.title.y = element_text(margin = unit(c(0, 8, 0, 0), 'pt'), angle = 90)) +
-    theme(text = element_text(size = 16)) +
-    theme(plot.margin = unit(c(0, 16, 0, 0), 'pt')) +
-    theme(legend.position = 'top')
+    ggplot2::theme_bw() +
+    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5)) +
+    ggplot2::theme(strip.background = ggplot2::element_blank(),
+          panel.grid = ggplot2::element_blank(),
+          panel.border = ggplot2::element_rect(color = 'black', fill = NA)) +
+    ggplot2::theme(axis.title.y = ggplot2::element_text(margin = unit(c(0, 8, 0, 0), 'pt'), angle = 90)) +
+    ggplot2::theme(text = ggplot2::element_text(size = 16)) +
+    ggplot2::theme(plot.margin = ggplot2::unit(c(0, 16, 0, 0), 'pt')) +
+    ggplot2::theme(legend.position = 'top')
 
   x_ttl <- paste('output/met/barplot/barplot_daily_', sta, '_', parm[j], '.png', sep = '')
 
-  ggsave(filename = x_ttl, plot = x, height = 6, width = 4, units = 'in', dpi = 300)
+  ggplot2::ggsave(filename = x_ttl, plot = x, height = 6, width = 4, units = 'in', dpi = 300)
 
 
 
@@ -210,16 +210,16 @@ event_timeseries_hourly <- function(var_in){
     sta <- names(ls_par)[i]
 
     # tidy
-    dat <- pivot_longer(dat, cols = 2:13
+    dat <- tidyr::pivot_longer(dat, cols = 2:13
                         , names_to = 'parameter'
                         , values_to = 'value')
 
     df_day <- dat %>%
-      filter(between(datetimestamp
+      dplyr::filter(dplyr::between(datetimestamp
                      , as.POSIXct(view_start)
                      , as.POSIXct(view_end))) %>%
-      mutate(datetimestamp_day = floor_date(datetimestamp, unit = 'hour')) %>%
-      group_by(datetimestamp_day, parameter) %>%
+      dplyr::mutate(datetimestamp_day = lubridate::floor_date(datetimestamp, unit = 'hour')) %>%
+      dplyr::group_by(datetimestamp_day, parameter) %>%
       summarize(value = mean(value, na.rm = T))
 
     for(j in 1:length(parm)) {
@@ -232,34 +232,35 @@ event_timeseries_hourly <- function(var_in){
                        years=c('Event Onset'))
 
       x <-
-        df_day %>% filter(parameter == parm[j]) %>%
-        ggplot(., aes(x = datetimestamp_day, y = value)) +
-        ggtitle(SWMPrExtension::title_labeler(nerr_site_id = sta)) +
-        geom_line(aes(color = 'Hourly Avg'), lwd = 1) +# 'steelblue3') +
-        geom_rect(data=df,aes(xmin=xmin,ymin=ymin,xmax=xmax,ymax=ymax,fill=years),
+        df_day %>%
+        dplyr::filter(parameter == parm[j]) %>%
+        ggplot2::ggplot(., ggplot2::aes(x = datetimestamp_day, y = value)) +
+        ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = sta)) +
+        ggplot2::geom_line(ggplot2::aes(color = 'Hourly Avg'), lwd = 1) +
+        ggplot2::geom_rect(data=df,ggplot2::aes(xmin=xmin,ymin=ymin,xmax=xmax,ymax=ymax,fill=years),
                   alpha=0.1,inherit.aes=FALSE) +
-        scale_x_datetime(date_breaks = '1 week', date_labels = '%b %d') +
-        labs(x = '', y = SWMPrExtension::y_labeler(parm[j]))
+        ggplot2::scale_x_datetime(date_breaks = '1 week', date_labels = '%b %d') +
+        ggplot2::labs(x = '', y = SWMPrExtension::y_labeler(parm[j]))
 
       x <-
         x +
-        scale_color_manual('', values = c('steelblue3')) +
-        scale_fill_manual('', values = c('steelblue3', 'green'))
+        ggplot2::scale_color_manual('', values = c('steelblue3')) +
+        ggplot2::scale_fill_manual('', values = c('steelblue3', 'green'))
 
       x <- x +
-        theme_bw() +
-        theme(plot.title = element_text(hjust = 0.5)) +
-        theme(strip.background = element_blank(),
-              panel.grid = element_blank(),
-              panel.border = element_rect(color = 'black', fill = NA)) +
-        theme(plot.margin = margin(5.5, 10, 5.5, 5.5, unit = 'pt')) +
-        theme(axis.title.y = element_text(margin = unit(c(0, 8, 0, 0), 'pt'), angle = 90)) +
-        theme(text = element_text(size = 16)) +
-        theme(legend.position = 'top')
+        ggplot2::theme_bw() +
+        ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5)) +
+        ggplot2::theme(strip.background = ggplot2::element_blank(),
+              panel.grid = ggplot2::element_blank(),
+              panel.border = ggplot2::element_rect(color = 'black', fill = NA)) +
+        ggplot2::theme(plot.margin = ggplot2::margin(5.5, 10, 5.5, 5.5, unit = 'pt')) +
+        ggplot2::theme(axis.title.y = ggplot2::element_text(margin = unit(c(0, 8, 0, 0), 'pt'), angle = 90)) +
+        ggplot2::theme(text = ggplot2::element_text(size = 16)) +
+        ggplot2::theme(legend.position = 'top')
 
       x_ttl <- paste('output/wq/timeseries_event/timeseries_event_hourly_', sta, '_', parm[j], '_', storm_nm, '.png', sep = '')
 
-      ggsave(filename = x_ttl, plot = x, height = 4, width = 6, units = 'in', dpi = 300)
+      ggplot2::ggsave(filename = x_ttl, plot = x, height = 4, width = 6, units = 'in', dpi = 300)
 
     }
   }

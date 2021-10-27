@@ -9,7 +9,7 @@ compare_one_reserve_multi_event <- function() {
   storm_end <- c('2016-10-09 23:45:00', '2017-09-12 23:45:00', '2017-09-30 23:45:00', '2018-10-11 23:45:00', '2019-09-07 23:45:00') # '2016-10-10 00:00:00'
 
   evt <- read.csv('ext_data/NOAA_NHC_hurricane_events.csv')
-  evt$start_event <- ymd_hm(evt$start_event)
+  evt$start_event <- lubridate::ymd_hm(evt$start_event)
 
   reserve <- 'gtm'
   wq_sites <- paste0(c('gtmpc', 'gtmfm', 'gtmpi', 'gtmss'), 'wq')
@@ -37,15 +37,15 @@ compare_one_reserve_multi_event <- function() {
   dorian <- lapply(ls_par, subset, subset = c(storm_start[5], storm_end[5]))
 
   # bind rows
-  matthew <- bind_rows(matthew, .id = 'station')
-  irma <- bind_rows(irma, .id = 'station')
-  maria <- bind_rows(maria, .id = 'station')
-  michael <- bind_rows(michael, .id = 'station')
-  dorian <- bind_rows(dorian, .id = 'station')
+  matthew <- dplyr::bind_rows(matthew, .id = 'station')
+  irma <- dplyr::bind_rows(irma, .id = 'station')
+  maria <- dplyr::bind_rows(maria, .id = 'station')
+  michael <- dplyr::bind_rows(michael, .id = 'station')
+  dorian <- dplyr::bind_rows(dorian, .id = 'station')
 
   ls_evts <- list(matthew, irma, maria, michael, dorian)
   names(ls_evts) <- c('matthew', 'irma', 'maria', 'michael', 'dorian')
-  evts <- bind_rows(ls_evts, .id = 'event')
+  evts <- dplyr::bind_rows(ls_evts, .id = 'event')
 
   ## convert select parameters
   evts$temp <- evts$temp * 9 / 5 + 3
@@ -58,15 +58,15 @@ compare_one_reserve_multi_event <- function() {
 
 
   # combine data.frames into one and tidy
-  dat_tidy <- dat %>% pivot_longer(., 4:length(names(dat)), names_to = 'parameter', values_to = 'result')
+  dat_tidy <- dat %>% tidyr::pivot_longer(., 4:length(names(dat)), names_to = 'parameter', values_to = 'result')
 
   # ----------------------------------------------
   # Single Event Comparison, Multiple Reserves ---
   # ----------------------------------------------
 
   summary <- dat_tidy %>%
-    group_by(event, parameter, station) %>%
-    summarise(min = min(result, na.rm = T)
+    dplyr::group_by(event, parameter, station) %>%
+    dplyr::summarise(min = min(result, na.rm = T)
               , max = max(result, na.rm = T)
               , mean = mean(result, na.rm = T)
               , median = median(result, na.rm = T))
@@ -94,7 +94,7 @@ compare_one_reserve_multi_event <- function() {
   storm_end <- c('2016-10-09 23:45:00', '2017-09-12 23:45:00', '2017-09-30 23:45:00', '2018-10-11 23:45:00', '2019-09-07 23:45:00') # '2016-10-10 00:00:00'
 
   evt <- read.csv('ext_data/NOAA_NHC_hurricane_events.csv')
-  evt$start_event <- ymd_hm(evt$start_event)
+  evt$start_event <- lubridate::ymd_hm(evt$start_event)
 
   reserve <- 'gtm'
   wq_sites <- paste0(c('gtmpc', 'gtmfm', 'gtmpi', 'gtmss'), 'wq')
@@ -122,15 +122,15 @@ compare_one_reserve_multi_event <- function() {
   dorian <- lapply(ls_par, subset, subset = c(storm_start[5], storm_end[5]))
 
   # bind rows
-  matthew <- bind_rows(matthew, .id = 'station')
-  irma <- bind_rows(irma, .id = 'station')
-  maria <- bind_rows(maria, .id = 'station')
-  michael <- bind_rows(michael, .id = 'station')
-  dorian <- bind_rows(dorian, .id = 'station')
+  matthew <- dplyr::bind_rows(matthew, .id = 'station')
+  irma <- dplyr::bind_rows(irma, .id = 'station')
+  maria <- dplyr::bind_rows(maria, .id = 'station')
+  michael <- dplyr::bind_rows(michael, .id = 'station')
+  dorian <- dplyr::bind_rows(dorian, .id = 'station')
 
   ls_evts <- list(matthew, irma, maria, michael, dorian)
   names(ls_evts) <- c('matthew', 'irma', 'maria', 'michael', 'dorian')
-  evts <- bind_rows(ls_evts, .id = 'event')
+  evts <- dplyr::bind_rows(ls_evts, .id = 'event')
 
   ## convert select parameters
   evts$atemp <- evts$atemp * 9 / 5 + 3
@@ -139,21 +139,21 @@ compare_one_reserve_multi_event <- function() {
   evts$totprcp <- evts$totprcp / 25.4
   evts$intensprcp <- evts$totprcp * 4
 
-  tmp <- evts %>% filter(event == 'matthew')
+  tmp <- evts %>% dplyr::filter(event == 'matthew')
   sum(tmp$totprcp, na.rm = T)
 
   dat <- evts
 
   # combine data.frames into one and tidy
-  dat_tidy <- dat %>% pivot_longer(., 4:length(names(dat)), names_to = 'parameter', values_to = 'result')
+  dat_tidy <- dat %>% tidyr::pivot_longer(., 4:length(names(dat)), names_to = 'parameter', values_to = 'result')
 
   # ----------------------------------------------
   # Single Event Comparison, Multiple Reserves ---
   # ----------------------------------------------
 
   summary <- dat_tidy %>%
-    group_by(event, parameter, station) %>%
-    summarise(min = min(result, na.rm = T)
+    dplyr::group_by(event, parameter, station) %>%
+    dplyr::summarise(min = min(result, na.rm = T)
               , max = max(result, na.rm = T)
               , mean = mean(result, na.rm = T)
               , median = median(result, na.rm = T)
