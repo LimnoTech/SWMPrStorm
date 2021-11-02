@@ -21,8 +21,6 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
 Imports: 
     lubridate,
-    SWMPr,
-    SWMPrExtension,
     here,
     tidyr,
     dplyr,
@@ -30,4 +28,8 @@ Imports:
     openair,
     xlsx,
     scales,
-    oce
+    oce,
+    magrittr
+Depends: 
+    SWMPr,
+    SWMPrExtension

@@ -1,22 +1,80 @@
-compare_one_reserve_multi_event <- function() {
+#' Title
+#'
+#' @param var_in
+#' @param data_path
+#' @param storm_nm
+#' @param storm_start
+#' @param storm_end
+#' @param view_start
+#' @param view_end
+#' @param recovery_start
+#' @param recovery_end
+#' @param reserve
+#' @param stn_wq
+#' @param wq_sites
+#' @param stn_met
+#' @param met_sites
+#' @param stn_target
+#' @param keep_flags
+#' @param ...
+#'
+#' @return
+#' @export
+#'
+#' @examples
+compare_one_reserve_multi_event <- function(var_in,
+                                            data_path,
+                                            storm_nm = NULL,
+                                            storm_start = NULL,
+                                            storm_end = NULL,
+                                            view_start = NULL,
+                                            view_end = NULL,
+                                            recovery_start = NULL,
+                                            recovery_end = NULL,
+                                            reserve = NULL,
+                                            stn_wq = NULL,
+                                            wq_sites = NULL,
+                                            stn_met = NULL,
+                                            met_sites = NULL,
+                                            stn_target = NULL,
+                                            keep_flags = NULL,
+                                            ...) {
+
+
+
+
+
+  # ----------------------------------------------------------------------------
+  # Read in Data
+  # ----------------------------------------------------------------------------
+
+  #a.  Read in the variable input template, var_in
+
+  input_data <- xlsx::read.xlsx(var_in, sheetName = "Data")
+  input_Parameters <- xlsx::read.xlsx(var_in, sheetName = "Parameters")
+  input_Sites <- xlsx::read.xlsx(var_in, sheetName = "Sites")
+  input_Flags <- xlsx::read.xlsx(var_in, sheetName = "Flags")
+  input_Multi <- xlsx::read.xlsx(var_in, sheetName = "Multi")
+
+  if(is.null(storm_nm)) storm_nm <- input_Multi$storm_nm
+  if(is.null(storm_start)) storm_start <- input_Multi$storm_start
+  if(is.null(storm_end)) storm_end <- input_Multi$storm_end
+  if(is.null(view_start)) view_start <- input_Parameters[4,2]
+  if(is.null(view_end)) view_end <- input_Parameters[5,2]
+  if(is.null(recovery_start)) recovery_start <- storm_end
+  if(is.null(recovery_end)) recovery_end <- input_Parameters[6,2]
+  if(is.null(reserve)) reserve <- input_Parameters[7,2]
+  if(is.null(stn_wq)) stn_wq <- input_Parameters[9,2]
+  if(is.null(wq_sites)) wq_sites <- input_Multi$wq_sites[!is.na(input_Sites$wq_sites)]
+  if(is.null(stn_met)) stn_met <- input_Parameters[10,2]
+  if(is.null(met_sites)) met_sites <- input_Multi$met_sites[!is.na(input_Sites$met_sites)]
+  if(is.null(stn_target)) stn_target <- input_Parameters[8,2]
+  if(is.null(keep_flags)) keep_flags <- input_Flags$keep_flags
+  if(is.null(data_path)) data_path <- 'data/cdmo'
+
+
 
   ########## WATER QUALITY #####################################################
-
-  # Define storm ------------------
-  # Events, all category 5
-  storm_nm <- c('Matthew', 'Irma', 'Maria', 'Michael', 'Dorian')
-  storm_start <- c('2016-09-28 00:00:00', '2017-08-30 00:00:00', '2017-09-16 00:00:00', '2018-10-07 00:00:00', '2019-08-24 00:00:00') # '2016-9-28 00:00:00'
-  storm_end <- c('2016-10-09 23:45:00', '2017-09-12 23:45:00', '2017-09-30 23:45:00', '2018-10-11 23:45:00', '2019-09-07 23:45:00') # '2016-10-10 00:00:00'
-
-  evt <- read.csv('ext_data/NOAA_NHC_hurricane_events.csv')
-  evt$start_event <- lubridate::ymd_hm(evt$start_event)
-
-  reserve <- 'gtm'
-  wq_sites <- paste0(c('gtmpc', 'gtmfm', 'gtmpi', 'gtmss'), 'wq')
-  met_sites <- paste0(c('gtmpc'), 'met')
-  stn_target <- 'gtmpc'
-
-  keep_flags <- c('0', '3', '5', '<-4> [SBL]', '1')
 
   # ----------------------------------------------
   # Load water quality data ----------------------
@@ -25,36 +83,25 @@ compare_one_reserve_multi_event <- function() {
   ## load, clean, and filter data
   data_type <- 'wq'
 
-  ls_par <- lapply(wq_sites, SWMPr::import_local, path = 'data/cdmo')
+  ls_par <- lapply(wq_sites, SWMPr::import_local, path = data_path)
   ls_par <- lapply(ls_par, qaqc, qaqc_keep = keep_flags)
   names(ls_par) <- wq_sites
 
   # filter
-  matthew <- lapply(ls_par, subset, subset = c(storm_start[1], storm_end[1]))
-  irma <- lapply(ls_par, subset, subset = c(storm_start[2], storm_end[2]))
-  maria <- lapply(ls_par, subset, subset = c(storm_start[3], storm_end[3]))
-  michael <- lapply(ls_par, subset, subset = c(storm_start[4], storm_end[4]))
-  dorian <- lapply(ls_par, subset, subset = c(storm_start[5], storm_end[5]))
 
-  # bind rows
-  matthew <- dplyr::bind_rows(matthew, .id = 'station')
-  irma <- dplyr::bind_rows(irma, .id = 'station')
-  maria <- dplyr::bind_rows(maria, .id = 'station')
-  michael <- dplyr::bind_rows(michael, .id = 'station')
-  dorian <- dplyr::bind_rows(dorian, .id = 'station')
+  evts <- data.frame()
+  for(i in 1:length(storm_nm)) {
 
-  ls_evts <- list(matthew, irma, maria, michael, dorian)
-  names(ls_evts) <- c('matthew', 'irma', 'maria', 'michael', 'dorian')
-  evts <- dplyr::bind_rows(ls_evts, .id = 'event')
+    evt <- lapply(ls_par, subset, subset = c(storm_start[i], storm_end[i]))
+    evt <- dplyr::bind_rows(evt, .id = 'station')
+    evt$event <- storm_nm[i]
 
-  ## convert select parameters
-  evts$temp <- evts$temp * 9 / 5 + 3
-  evts$level <- evts$level * 3.28
-  evts$depth <- evts$depth * 3.28
-  evts$clevel <- evts$clevel * 3.28
-  evts$cdepth <- evts$cdepth * 3.28
+    evts <- dplyr::bind_rows(evts, evt)
 
-  dat <- evts
+  }
+
+
+  dat <- evts %>% dplyr::relocate(event)
 
 
   # combine data.frames into one and tidy
@@ -87,50 +134,31 @@ compare_one_reserve_multi_event <- function() {
 
   ########## Meteorological #####################################################
 
-  # Define storm ------------------
-  # Events, all category 5
-  storm_nm <- c('Matthew', 'Irma', 'Maria', 'Michael', 'Dorian')
-  storm_start <- c('2016-09-28 00:00:00', '2017-08-30 00:00:00', '2017-09-16 00:00:00', '2018-10-07 00:00:00', '2019-08-24 00:00:00') # '2016-9-28 00:00:00'
-  storm_end <- c('2016-10-09 23:45:00', '2017-09-12 23:45:00', '2017-09-30 23:45:00', '2018-10-11 23:45:00', '2019-09-07 23:45:00') # '2016-10-10 00:00:00'
-
-  evt <- read.csv('ext_data/NOAA_NHC_hurricane_events.csv')
-  evt$start_event <- lubridate::ymd_hm(evt$start_event)
-
-  reserve <- 'gtm'
-  wq_sites <- paste0(c('gtmpc', 'gtmfm', 'gtmpi', 'gtmss'), 'wq')
-  met_sites <- paste0(c('gtmpc'), 'met')
-  stn_target <- 'gtmpc'
-
-  keep_flags <- c('0', '3', '5', '<-4> [SBL]', '1')
 
   # ----------------------------------------------
-  # Load water quality data ----------------------
+  # Load meteorological data ----------------------
   # ----------------------------------------------
 
   ## load, clean, and filter data
   data_type <- 'met'
 
-  ls_par <- lapply(met_sites, SWMPr::import_local, path = 'data/cdmo')
+  ls_par <- lapply(met_sites, SWMPr::import_local, path = data_path)
   ls_par <- lapply(ls_par, qaqc, qaqc_keep = keep_flags)
   names(ls_par) <- met_sites
 
   # filter
-  matthew <- lapply(ls_par, subset, subset = c(storm_start[1], storm_end[1]))
-  irma <- lapply(ls_par, subset, subset = c(storm_start[2], storm_end[2]))
-  maria <- lapply(ls_par, subset, subset = c(storm_start[3], storm_end[3]))
-  michael <- lapply(ls_par, subset, subset = c(storm_start[4], storm_end[4]))
-  dorian <- lapply(ls_par, subset, subset = c(storm_start[5], storm_end[5]))
 
-  # bind rows
-  matthew <- dplyr::bind_rows(matthew, .id = 'station')
-  irma <- dplyr::bind_rows(irma, .id = 'station')
-  maria <- dplyr::bind_rows(maria, .id = 'station')
-  michael <- dplyr::bind_rows(michael, .id = 'station')
-  dorian <- dplyr::bind_rows(dorian, .id = 'station')
+  evts <- data.frame()
+  for(i in 1:length(storm_nm)) {
 
-  ls_evts <- list(matthew, irma, maria, michael, dorian)
-  names(ls_evts) <- c('matthew', 'irma', 'maria', 'michael', 'dorian')
-  evts <- dplyr::bind_rows(ls_evts, .id = 'event')
+    evt <- lapply(ls_par, subset, subset = c(storm_start[5], storm_end[5]))
+    evt <- dplyr::bind_rows(evt, .id = 'station')
+    evt$event <- storm_nm[i]
+
+    evts <- dplyr::bind_rows(evts, evt)
+
+  }
+
 
   ## convert select parameters
   evts$atemp <- evts$atemp * 9 / 5 + 3
@@ -139,10 +167,7 @@ compare_one_reserve_multi_event <- function() {
   evts$totprcp <- evts$totprcp / 25.4
   evts$intensprcp <- evts$totprcp * 4
 
-  tmp <- evts %>% dplyr::filter(event == 'matthew')
-  sum(tmp$totprcp, na.rm = T)
-
-  dat <- evts
+  dat <- evts %>% dplyr::relocate(event)
 
   # combine data.frames into one and tidy
   dat_tidy <- dat %>% tidyr::pivot_longer(., 4:length(names(dat)), names_to = 'parameter', values_to = 'result')
@@ -162,11 +187,6 @@ compare_one_reserve_multi_event <- function() {
   # add readable station names
   summary$station_name <- sapply(summary$station, SWMPrExtension::title_labeler)
 
-  # # add factors for spatial filtering
-  # summary$station_fac <- factor(summary$station, levels = wq_sites)
-  #
-  # # re-sort the table using factors
-  # summary <- summary %>% arrange(., parameter, station_fac)
 
   # write table
   tbl_ttl <- paste('output/met/comparison_one_reserve_multi_event/comparison_', reserve, '_multievent.csv', sep = '')

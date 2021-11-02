@@ -6,32 +6,54 @@
 #' @export
 #'
 #' @examples
-event_timeseries_hourly <- function(var_in){
+event_timeseries_hourly <- function(var_in,
+                                    data_path,
+                                    storm_nm = NULL,
+                                    storm_start = NULL,
+                                    storm_end = NULL,
+                                    view_start = NULL,
+                                    view_end = NULL,
+                                    recovery_start = NULL,
+                                    recovery_end = NULL,
+                                    reserve = NULL,
+                                    stn_wq = NULL,
+                                    wq_sites = NULL,
+                                    stn_met = NULL,
+                                    met_sites = NULL,
+                                    stn_target = NULL,
+                                    keep_flags = NULL,
+                                    ...){
 
 
   # ----------------------------------------------------------------------------
   # Read in Data
   # ----------------------------------------------------------------------------
 
+  #a.  Read in the variable input template, var_in
 
+  input_data <- xlsx::read.xlsx(var_in, sheetName = "Data")
+  input_Parameters <- xlsx::read.xlsx(var_in, sheetName = "Parameters")
+  input_Sites <- xlsx::read.xlsx(var_in, sheetName = "Sites")
+  input_Flags <- xlsx::read.xlsx(var_in, sheetName = "Flags")
 
-  ### Read the following variables from template spreadsheet, 'var_in'
-  #var_in will be defined in the analysis scripts within the Event Level Template
+  #b.  Read the following variables from template spreadsheet if not provided as optional arguments
 
-  storm_nm <- 'Matthew'
-  storm_start <- '2016-09-28 00:00:00' # '2016-9-28 00:00:00'
-  storm_end <- '2016-10-09 23:45:00' # '2016-10-10 00:00:00'
-  view_start <- '2016-09-01 00:00:00' # '2017-08-30 00:00:00'
-  view_end <- '2016-12-01 00:00:00' # '2017-09-14 00:00:00'
-  recovery_start <- storm_end
-  recovery_end <- '2016-11-15 00:00:00'
+  if(is.null(storm_nm)) storm_nm <- input_Parameters[1,2]
+  if(is.null(storm_start)) storm_start <- input_Parameters[2,2]
+  if(is.null(storm_end)) storm_end <- input_Parameters[3,2]
+  if(is.null(view_start)) view_start <- input_Parameters[4,2]
+  if(is.null(view_end)) view_end <- input_Parameters[5,2]
+  if(is.null(recovery_start)) recovery_start <- storm_end
+  if(is.null(recovery_end)) recovery_end <- input_Parameters[6,2]
+  if(is.null(reserve)) reserve <- input_Parameters[7,2]
+  if(is.null(stn_wq)) stn_wq <- input_Parameters[9,2]
+  if(is.null(wq_sites)) wq_sites <- input_Sites$wq_sites[!is.na(input_Sites$wq_sites)]
+  if(is.null(stn_met)) stn_met <- input_Parameters[10,2]
+  if(is.null(met_sites)) met_sites <- input_Sites$met_sites[!is.na(input_Sites$met_sites)]
+  if(is.null(stn_target)) stn_target <- input_Parameters[8,2]
+  if(is.null(keep_flags)) keep_flags <- input_Flags$keep_flags
+  if(is.null(data_path)) data_path <- 'data/cdmo'
 
-  reserve <- 'gtm'
-  wq_sites <- paste0(c('gtmpc', 'gtmfm', 'gtmpi', 'gtmss'), 'wq')
-  met_sites <- 'gtmpcmet'
-  stn_target <- 'gtmpc'
-
-  keep_flags <- c('0', '3', '5', '<-4> [SBL]', '1')
 
 
   # ----------------------------------------------------------------------------
@@ -42,7 +64,7 @@ event_timeseries_hourly <- function(var_in){
 
   data_type <- 'met'
 
-  ls_par <- lapply(met_sites, SWMPr::import_local, path = 'data/cdmo')
+  ls_par <- lapply(met_sites, SWMPr::import_local, path = data_path)
   ls_par <- lapply(ls_par, SWMPr::qaqc, qaqc_keep = keep_flags)
   ls_par <- lapply(ls_par, subset, subset = c(storm_start, storm_end))#, select = par) # Note: par <- wb_basic %>% .[[1]]
 
@@ -78,10 +100,10 @@ event_timeseries_hourly <- function(var_in){
                         , values_to = 'value')
 
     df_day <- dat %>%
-      dplyr::filter(between(datetimestamp
+      dplyr::filter(dplyr::between(datetimestamp
                      , as.POSIXct(view_start)
                      , as.POSIXct(view_end))) %>%
-      dplyr::mutate(datetimestamp_day = floor_date(datetimestamp, unit = 'hour')) %>%
+      dplyr::mutate(datetimestamp_day = lubridate::floor_date(datetimestamp, unit = 'hour')) %>%
       dplyr::group_by(datetimestamp_day, parameter) %>%
       dplyr::summarize(value = mean(value, na.rm = T))
 
@@ -116,7 +138,7 @@ event_timeseries_hourly <- function(var_in){
               panel.grid = ggplot2::element_blank(),
               panel.border = ggplot2::element_rect(color = 'black', fill = NA)) +
         ggplot2::theme(axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 8, 0, 0), 'pt'), angle = 90)) +
-        ggplot2::theme(text = ggplot2::ggplot2::element_text(size = 16)) +
+        ggplot2::theme(text = ggplot2::element_text(size = 16)) +
         ggplot2::theme(legend.position = 'top')
 
       x_ttl <- paste('output/met/timeseries_event_hourly/timeseries_event_hourly_', sta, '_', parm[j], '.png', sep = '')
@@ -141,8 +163,8 @@ event_timeseries_hourly <- function(var_in){
     dplyr::group_by(datetimestamp_day) %>%
     dplyr::summarize(value = sum(totprcp, na.rm = T))
 
-  precip_day$mo <- paste(month.abb[month(precip_day$datetimestamp_day)]
-                         , day(precip_day$datetimestamp_day)
+  precip_day$mo <- paste(month.abb[lubridate::month(precip_day$datetimestamp_day)]
+                         , lubridate::day(precip_day$datetimestamp_day)
                          , sep = ' ') %>%
     factor
 
@@ -186,7 +208,7 @@ event_timeseries_hourly <- function(var_in){
   ## load, clean, and filter data
   data_type <- 'wq'
 
-  ls_par <- lapply(wq_sites, SWMPr::import_local, path = 'data/cdmo')
+  ls_par <- lapply(wq_sites, SWMPr::import_local, path = data_path)
   ls_par <- lapply(ls_par, qaqc, qaqc_keep = keep_flags)
   ls_par <- lapply(ls_par, subset, subset = c(view_start, view_end))#, select = par) # Note: par <- wb_basic %>% .[[1]]
 
@@ -220,7 +242,7 @@ event_timeseries_hourly <- function(var_in){
                      , as.POSIXct(view_end))) %>%
       dplyr::mutate(datetimestamp_day = lubridate::floor_date(datetimestamp, unit = 'hour')) %>%
       dplyr::group_by(datetimestamp_day, parameter) %>%
-      summarize(value = mean(value, na.rm = T))
+      dplyr::summarize(value = mean(value, na.rm = T))
 
     for(j in 1:length(parm)) {
 

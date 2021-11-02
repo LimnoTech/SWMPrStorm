@@ -1,23 +1,80 @@
-compare_one_event_multi_reserve <- function() {
+#' Title
+#'
+#' @param var_in
+#' @param data_path
+#' @param storm_nm
+#' @param storm_start
+#' @param storm_end
+#' @param view_start
+#' @param view_end
+#' @param recovery_start
+#' @param recovery_end
+#' @param reserve
+#' @param stn_wq
+#' @param wq_sites
+#' @param stn_met
+#' @param met_sites
+#' @param stn_target
+#' @param keep_flags
+#' @param ...
+#'
+#' @return
+#' @export
+#'
+#' @examples
+compare_one_event_multi_reserve <- function(var_in,
+                                            data_path,
+                                            storm_nm = NULL,
+                                            storm_start = NULL,
+                                            storm_end = NULL,
+                                            view_start = NULL,
+                                            view_end = NULL,
+                                            recovery_start = NULL,
+                                            recovery_end = NULL,
+                                            reserve = NULL,
+                                            stn_wq = NULL,
+                                            wq_sites = NULL,
+                                            stn_met = NULL,
+                                            met_sites = NULL,
+                                            stn_target = NULL,
+                                            keep_flags = NULL,
+                                            ...) {
+
+
+
+  # ----------------------------------------------------------------------------
+  # Read in Data
+  # ----------------------------------------------------------------------------
+
+  #a.  Read in the variable input template, var_in
+
+  input_data <- xlsx::read.xlsx(var_in, sheetName = "Data")
+  input_Parameters <- xlsx::read.xlsx(var_in, sheetName = "Parameters")
+  input_Sites <- xlsx::read.xlsx(var_in, sheetName = "Sites")
+  input_Flags <- xlsx::read.xlsx(var_in, sheetName = "Flags")
+
+  #b.  Read the following variables from template spreadsheet if not provided as optional arguments
+
+  if(is.null(storm_nm)) storm_nm <- input_Parameters[1,2]
+  if(is.null(storm_start)) storm_start <- input_Parameters[2,2]
+  if(is.null(storm_end)) storm_end <- input_Parameters[3,2]
+  if(is.null(view_start)) view_start <- input_Parameters[4,2]
+  if(is.null(view_end)) view_end <- input_Parameters[5,2]
+  if(is.null(recovery_start)) recovery_start <- storm_end
+  if(is.null(recovery_end)) recovery_end <- input_Parameters[6,2]
+  if(is.null(reserve)) reserve <- input_Parameters[7,2]
+  if(is.null(stn_wq)) stn_wq <- input_Parameters[9,2]
+  if(is.null(wq_sites)) wq_sites <- input_Sites$wq_sites[!is.na(input_Sites$wq_sites)]
+  if(is.null(stn_met)) stn_met <- input_Parameters[10,2]
+  if(is.null(met_sites)) met_sites <- input_Sites$met_sites[!is.na(input_Sites$met_sites)]
+  if(is.null(stn_target)) stn_target <- input_Parameters[8,2]
+  if(is.null(keep_flags)) keep_flags <- input_Flags$keep_flags
+  if(is.null(data_path)) data_path <- 'data/cdmo'
+
+
 
   ########## WATER QUALITY #####################################################
 
-  # Define storm ------------------
-  # Matthew
-  storm_nm <- 'Matthew'
-  storm_start <- '2016-09-28 00:00:00' # '2016-9-28 00:00:00'
-  storm_end <- '2016-10-09 23:45:00' # '2016-10-10 00:00:00'
-  view_start <- '2016-09-01 00:00:00' # '2017-08-30 00:00:00'
-  view_end <- '2016-12-01 00:00:00' # '2017-09-14 00:00:00'
-  recovery_start <- storm_end
-  recovery_end <- '2016-11-15 00:00:00'
-
-  reserve <- 'gtm'
-  wq_sites <- paste0(c('gtmpc', 'acemc', 'sapld', 'niwol', 'nocrc'), 'wq')
-  met_sites <- paste0(c('gtmpc', 'acebp', 'sapml', 'niwol', 'nocrc'), 'met')
-  stn_target <- 'gtmpc'
-
-  keep_flags <- c('0', '3', '5', '<-4> [SBL]', '1')
 
   # ----------------------------------------------
   # Load water quality data ----------------------
@@ -26,9 +83,9 @@ compare_one_event_multi_reserve <- function() {
   ## load, clean, and filter data
   data_type <- 'wq'
 
-  ls_par <- lapply(wq_sites, SWMPr::import_local, path = 'data/cdmo')
+  ls_par <- lapply(wq_sites, SWMPr::import_local, path = data_path)
   ls_par <- lapply(ls_par, qaqc, qaqc_keep = keep_flags)
-  ls_par <- lapply(ls_par, subset, subset = c(storm_start, storm_end))#, select = par) # Note: par <- wb_basic %>% .[[1]]
+  ls_par <- lapply(ls_par, subset, subset = c(storm_start, storm_end))
 
   ## convert select parameters
   ls_par <- lapply(ls_par, function(x) {x$temp <- x$temp * 9 / 5 + 32; x})
@@ -43,7 +100,7 @@ compare_one_event_multi_reserve <- function() {
   parm <- unique(names(ls_par[[1]])) %>% subset(!(. %in% c('datetimestamp')))
 
   # combine data.frames into one and tidy
-  dat <- bind_rows(ls_par, .id = 'station')
+  dat <- dplyr::bind_rows(ls_par, .id = 'station')
   dat_tidy <- dat %>% tidyr::pivot_longer(., 3:length(names(dat)), names_to = 'parameter', values_to = 'result')
   dat_tidy$event <- storm_nm
   dat_tidy$evt_start <- storm_start
@@ -73,34 +130,18 @@ compare_one_event_multi_reserve <- function() {
   tbl_ttl <- paste('output/wq/comparison_one_evt_multi_reserve/comparison_', storm_nm, '_multireserve.csv', sep = '')
   write.csv(summary, file = tbl_ttl, quote = F, row.names = F)
 
-  ########## Meterological #####################################################
-  # Define storm ------------------
-  # Matthew
-  storm_nm <- 'Matthew'
-  storm_start <- '2016-09-28 00:00:00' # '2016-9-28 00:00:00'
-  storm_end <- '2016-10-09 23:45:00' # '2016-10-10 00:00:00'
-  view_start <- '2016-09-01 00:00:00' # '2017-08-30 00:00:00'
-  view_end <- '2016-12-01 00:00:00' # '2017-09-14 00:00:00'
-  recovery_start <- storm_end
-  recovery_end <- '2016-11-15 00:00:00'
-
-  reserve <- 'gtm'
-  wq_sites <- paste0(c('gtmpc', 'acemc', 'sapld', 'niwol', 'nocrc'), 'wq')
-  met_sites <- paste0(c('gtmpc', 'acebp', 'sapml', 'niwol', 'nocrc'), 'met')
-  stn_target <- 'gtmpc'
-
-  keep_flags <- c('0', '3', '5', '<-4> [SBL]', '1')
+  ########## Meteorological #####################################################
 
   # ----------------------------------------------
-  # Load water quality data ----------------------
+  # Load meteorological data ----------------------
   # ----------------------------------------------
 
   ## load, clean, and filter data
   data_type <- 'met'
 
-  ls_par <- lapply(met_sites, SWMPr::import_local, path = 'data/cdmo')
+  ls_par <- lapply(met_sites, SWMPr::import_local, path = data_path)
   ls_par <- lapply(ls_par, qaqc, qaqc_keep = keep_flags)
-  ls_par <- lapply(ls_par, subset, subset = c(storm_start, storm_end))#, select = par) # Note: par <- wb_basic %>% .[[1]]
+  ls_par <- lapply(ls_par, subset, subset = c(storm_start, storm_end))
 
   ## convert select parameters, add precip intensity (in/hr)
   ls_par <- lapply(ls_par, function(x) {x$atemp <- x$atemp * 9 / 5 + 32; x}) # C to F

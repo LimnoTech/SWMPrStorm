@@ -1,4 +1,50 @@
-event_ridgeline <- function() {
+event_ridgeline <- function(var_in,
+                            data_path,
+                            storm_nm = NULL,
+                            storm_start = NULL,
+                            storm_end = NULL,
+                            view_start = NULL,
+                            view_end = NULL,
+                            recovery_start = NULL,
+                            recovery_end = NULL,
+                            reserve = NULL,
+                            stn_wq = NULL,
+                            wq_sites = NULL,
+                            stn_met = NULL,
+                            met_sites = NULL,
+                            stn_target = NULL,
+                            keep_flags = NULL,
+                            ...) {
+
+  # ----------------------------------------------------------------------------
+  # Read in Data
+  # ----------------------------------------------------------------------------
+
+
+
+
+  #a.  Read in the variable input template, var_in
+
+  input_data <- xlsx::read.xlsx(var_in, sheetName = "Data")
+  input_Parameters <- xlsx::read.xlsx(var_in, sheetName = "Parameters")
+  input_Sites <- xlsx::read.xlsx(var_in, sheetName = "Sites")
+  input_Flags <- xlsx::read.xlsx(var_in, sheetName = "Flags")
+
+  if(is.null(storm_nm)) storm_nm <- input_Parameters[1,2]
+  if(is.null(storm_start)) storm_start <- input_Parameters[2,2]
+  if(is.null(storm_end)) storm_end <- input_Parameters[3,2]
+  if(is.null(view_start)) view_start <- input_Parameters[4,2]
+  if(is.null(view_end)) view_end <- input_Parameters[5,2]
+  if(is.null(recovery_start)) recovery_start <- storm_end
+  if(is.null(recovery_end)) recovery_end <- input_Parameters[6,2]
+  if(is.null(reserve)) reserve <- input_Parameters[7,2]
+  if(is.null(stn_wq)) stn_wq <- input_Parameters[9,2]
+  if(is.null(wq_sites)) wq_sites <- input_Sites$wq_sites[!is.na(input_Sites$wq_sites)]
+  if(is.null(stn_met)) stn_met <- input_Parameters[10,2]
+  if(is.null(met_sites)) met_sites <- input_Sites$met_sites[!is.na(input_Sites$met_sites)]
+  if(is.null(stn_target)) stn_target <- input_Parameters[8,2]
+  if(is.null(keep_flags)) keep_flags <- input_Flags$keep_flags
+  if(is.null(data_path)) data_path <- 'data/cdmo'
 
 
   ########## WATER QUALITY #####################################################
@@ -25,31 +71,23 @@ event_ridgeline <- function() {
   ## load, clean, and filter data
   data_type <- 'wq'
 
-  ls_par <- lapply(wq_sites, SWMPr::import_local, path = 'data/cdmo')
-  ls_par <- lapply(ls_par, qaqc, qaqc_keep = keep_flags)
-  ls_par <- lapply(ls_par, subset, subset = c(storm_start, storm_end))#, select = par) # Note: par <- wb_basic %>% .[[1]]
-
-  # ## convert select parameters, add precip intensity (in/hr)
-  # ls_par <- lapply(ls_par, function(x) {x$atemp <- x$atemp * 9 / 5 + 32; x}) # C to F
-  # ls_par <- lapply(ls_par, function(x) {x$wspd <- x$wspd * 3600 * 1 / 1609.34; x}) # m/s to mph
-  # ls_par <- lapply(ls_par, function(x) {x$maxwspd <- x$maxwspd * 3600 * 1 / 1609.34; x}) # m/s to mph
-  # ls_par <- lapply(ls_par, function(x) {x$totprcp <- x$totprcp / 25.4; x}) # mm to in
-  # ls_par <- lapply(ls_par, function(x) {x$intensprcp <- x$totprcp * 4; x}) # in/15-min to in/hr
+  ls_par <- lapply(wq_sites, SWMPr::import_local, path = data_path)
+  ls_par <- lapply(ls_par, SWMPr::qaqc, qaqc_keep = keep_flags)
+  ls_par <- lapply(ls_par, subset, subset = c(storm_start, storm_end))
 
   names(ls_par) <- wq_sites
 
   ## identify parameters, remove a few
-  parm <- unique(names(ls_par[[1]])) %>% subset(!(. %in% c('datetimestamp')))
-  parm <- parm %>%  subset(!(. %in% c('wdir', 'sdwdir', 'totpar', 'totsorad')))
+  #parm <- unique(names(ls_par[[1]])) %>% subset(!(. %in% c('datetimestamp')))
+  #parm <- parm %>%  subset(!(. %in% c('wdir', 'sdwdir', 'totpar', 'totsorad')))
 
   # combine data.frames into one and tidy
   dat <- dplyr::bind_rows(ls_par, .id = 'station')
-  dat_tidy <- dat %>% dplyr::pivot_longer(., 3:length(names(dat)), names_to = 'parameter', values_to = 'result')
+  dat_tidy <- dat %>% tidyr::pivot_longer(., 3:length(names(dat)), names_to = 'parameter', values_to = 'result')
   dat_tidy$event <- storm_nm
   dat_tidy$evt_start <- storm_start
   dat_tidy$evt_end <- storm_end
 
-  dat_tidy <- dat_tidy %>% dplyr::filter(parameter %in% parm)
 
   # add reserve name
   station_list <-sampling_stations
@@ -57,8 +95,6 @@ event_ridgeline <- function() {
   dat_tidy <- dplyr::left_join(dat_tidy, add_reserve)
 
   # assign factors for plotting
-  ## turn this into a function
-
   f_reservename <- station_list %>%
     dplyr::filter(Station.Code %in% unique(dat_tidy$station)) %>%
     dplyr::select(Reserve.Name, Latitude) %>%
@@ -74,151 +110,88 @@ event_ridgeline <- function() {
   # Ridgeline plot                             ---
   # ----------------------------------------------
 
-  # spcond
-  df <- dat_tidy %>%
-    dplyr::filter(parameter == 'spcond')
 
-    ggplot2::ggplot(df, ggplot2::aes(x = datetimestamp, y = Reserve.Name
-                 , height = result, group = Reserve.Name)) +
-      ggridges::geom_density_ridges(stat = "identity", scale = 1) +
-      ggridges::theme_ridges()
-
-  # wind speed
-  df <- dat_tidy %>%
-    dplyr::filter(parameter == 'cdepth')
-
-  ggplot2::ggplot(df, ggplot2::aes(x = datetimestamp, y = Reserve.Name
-                 , height = result, group = Reserve.Name)) +
-    ggridges::geom_density_ridges(stat = "identity", scale = 1)
-
-  # max wind speed
-  param <- 'sal'
-  df <- dat_tidy %>%
-    dplyr::filter(parameter == param)
-
-  ggplot2::ggplot(df, ggplot2::aes(x = datetimestamp, y = Reserve.Name
-                 , height = result, group = Reserve.Name)) +
-    ggridges::geom_density_ridges(stat = "identity", scale = 1)
+  params <- levels(as.factor(dat_tidy$parameter))
 
 
-  df2 <- dat_tidy %>%
-    dplyr::filter(parameter == param) %>%
-    dplyr::group_by(time_hr = floor_date(datetimestamp, "hour"), Reserve.Name) %>%
-    dplyr::summarise(result = mean(result, na.rm = TRUE))
+  for(param in params) {
 
-  ggplot2::ggplot(df2, ggplot2::aes(x = time_hr, y = Reserve.Name
-                  , height = result, group = Reserve.Name)) +
-    ggridges::geom_density_ridges(stat = "identity", scale = 1)
+    df <- dat_tidy %>%
+      dplyr::filter(parameter == param)
 
-  # # max wind speed
-  # ## multiple reserves
-  # df <- dat_tidy %>% filter(parameter == 'maxwspd')
-  # x <- ggplot(df, aes(x = datetimestamp, y = result, group = station)) +
-  #   geom_density_ridges(scale = 10, size = 0.25, rel_min_height = 0.03) +
-  #   geom_area(fill="lightblue") +
-  #   theme_bw()
+    plt_ttl <- paste('output/wq/ridgeline_one_reserve_one_event/ridgeline_', '_', param, '.png', sep = '')
 
-
-  # wind speed
-  ## Just GTM
-  df <- dat_tidy %>%
-    dplyr::filter(station == 'gtmpcmet', parameter == 'wspd')
-  df$datetime_floor <- lubrdiate::floor_date(df$datetimestamp, unit = 'hour')
-  df_smooth <- df %>%
-    dplyr::group_by(station, parameter, datetime_floor) %>%
-    dplyr::summarise(avg = mean(result, na.rm = T))
-
-  x <- ggplot2::ggplot(df_smooth, ggplot2::aes(x = datetime_floor, y = avg)) +
-    ggplot2::geom_area(fill="lightblue") +
-    ggplot2::theme_bw()
-
-  #can clean up code below to only call ggplot2::theme() once with multiple arguments.
-  x <-
-    x +
-    ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = met_sites[1])) +
-    ggplot2::labs(x = '', y = 'Wind Speed (mph)') +
-    ggplot2::scale_x_datetime(expand = c(0, 0)) +
-    ggplot2::scale_y_continuous(expand = c(0, 0)) +
-    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5)) +
-    ggplot2::theme(axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 8, 0, 0), 'pt'), angle = 90)) +
-    ggplot2::theme(text = ggplot2::element_text(size = 16)) +
-    ggplot2::theme(plot.margin = ggplot2::unit(c(0, 20, 0, 0), 'pt')) +
-    ggplot2::theme(legend.position = 'top')
-
-  x_ttl <- paste('output/met/ridgeline_one_reserve_one_event/ridgeline_', met_sites[1], '_wspd.png', sep = '')
-
-  ggplot2::ggsave(filename = x_ttl, plot = x, height = 4, width = 6, units = 'in', dpi = 300)
+    ggplot2::ggplot(df, ggplot2::aes(x=datetimestamp, y = Reserve.Name,
+                                     height = result, group = Reserve.Name)) +
+      ggridges::geom_density_ridges(stat = "identity", scale = 1, fill = "lightblue") +
+      ggridges::theme_ridges() +
+      ggplot2::ylab(SWMPrExtension::y_labeler(param)) +
+      ggplot2::xlab("Date") +
+      ggplot2::scale_x_datetime(expand = c(0, 0)) +
+      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
+                     axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 8, 0, 0), 'pt'), angle = 90),
+                     text = ggplot2::element_text(size = 16),
+                     plot.margin = ggplot2::unit(c(0, 20, 0, 0), 'pt'),
+                     legend.position = 'top') +
+      ggplot2::ggsave(plt_ttl, height=8, width =8)
 
 
+  }
 
-
-  # precip
-  ## Just GTM
-  df <- dat_tidy %>% dplyr::
-    filter(station == 'gtmpcmet', parameter == 'totprcp')
-  df$datetime_floor <- lubridate::floor_date(df$datetimestamp, unit = 'hour')
-  df_smooth <- df %>%
-    dplyr::group_by(station, parameter, datetime_floor) %>%
-    dplyr::summarise(avg = sum(result, na.rm = T))
-
-  x <- ggplot2::ggplot(df_smooth, ggplot2::aes(x = datetime_floor, y = avg)) +
-    ggplot2::geom_area(fill="lightblue") +
-    ggplot2::theme_bw()
-
-  x <-
-    x +
-    ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = met_sites[1])) +
-    ggplot2::labs(x = '', y = 'Precipitation (in)') +
-    ggplot2::scale_x_datetime(expand = c(0, 0)) +
-    ggplot2::scale_y_continuous(expand = c(0, 0)) +
-    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5)) +
-    ggplot2::theme(axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 8, 0, 0), 'pt'), angle = 90)) +
-    ggplot2::theme(text = ggplot2::element_text(size = 16)) +
-    ggplot2::theme(plot.margin = ggplot2::unit(c(0, 20, 0, 0), 'pt')) +
-    ggplot2::theme(legend.position = 'top')
-
-  x_ttl <- paste('output/met/ridgeline_one_reserve_one_event/ridgeline_', met_sites[1], '_totprcp.png', sep = '')
-
-  ggplot2::ggsave(filename = x_ttl, plot = x, height = 4, width = 6, units = 'in', dpi = 300)
-
-
-  ########## Meteorological #####################################################
-
-  # a few notes -------------------
-  ## Kim Cressman's 2017 eclipse plot: https://github.com/swmpkim/2017_eclipse_viz/blob/master/Eclipse_visualization.Rmd
-  # Define storm ------------------
-  # Matthew
-  storm_nm <- 'Matthew'
-  storm_start <- '2016-10-05 00:00:00' # '2016-9-28 00:00:00'
-  storm_end <- '2016-10-10 00:00:00' # '2016-10-10 00:00:00'
-
-  reserve <- 'gtm'
-  wq_sites <- paste0(c('gtmpc', 'acemc', 'sapld', 'niwol', 'nocrc'), 'wq')
-  met_sites <- paste0(c('gtmpc', 'acebp', 'sapml', 'niwol', 'nocrc'), 'met')
-  met_sites_lvl <- paste0(c('gtmpc', 'acebp', 'sapml', 'niwol', 'nocrc'), 'met')
-  stn_target <- 'gtmpc'
-
-  keep_flags <- c('0', '3', '5', '<-4> [SBL]', '1')
 
   # ----------------------------------------------
-  # Load water quality data ----------------------
+  # Ridgeline plot, hourly smoothing                             ---
+  # ----------------------------------------------
+
+
+  params <- levels(as.factor(dat_tidy$parameter))
+
+
+  for(param in params) {
+
+    df <- dat_tidy %>%
+      dplyr::filter(parameter == param)
+    df$datetime_floor <- lubridate::floor_date(df$datetimestamp, unit = 'hour')
+
+    df_smooth <- df %>%
+      dplyr::group_by(station, Reserve.Name, parameter, datetime_floor) %>%
+      dplyr::summarise(avg = mean(result, na.rm = T))
+
+
+    plt_ttl <- paste('output/wq/ridgeline_one_reserve_one_event/ridgeline_', '_', param, '_smoothed.png', sep = '')
+
+    ggplot2::ggplot(df_smooth, ggplot2::aes(x=datetime_floor, y = Reserve.Name,
+                                     height = avg, group = Reserve.Name)) +
+      ggridges::geom_density_ridges(stat = "identity", scale = 1, fill = "lightblue") +
+      ggridges::theme_ridges() +
+      ggplot2::ylab(SWMPrExtension::y_labeler(param)) +
+      ggplot2::xlab("Date") +
+      ggplot2::scale_x_datetime(expand = c(0, 0)) +
+      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
+                     axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 8, 0, 0), 'pt'), angle = 90),
+                     text = ggplot2::element_text(size = 16),
+                     plot.margin = ggplot2::unit(c(0, 20, 0, 0), 'pt'),
+                     legend.position = 'top') +
+      ggplot2::ggsave(plt_ttl, height=8, width =8)
+
+
+  }
+
+
+
+  # ----------------------------------------------
+  # Load meteorological data ----------------------
   # ----------------------------------------------
 
   ## load, clean, and filter data
   data_type <- 'met'
 
-  ls_par <- lapply(met_sites, SWMPr::import_local, path = 'data/cdmo')
-  ls_par <- lapply(ls_par, qaqc, qaqc_keep = keep_flags)
-  ls_par <- lapply(ls_par, subset, subset = c(storm_start, storm_end))#, select = par) # Note: par <- wb_basic %>% .[[1]]
-
-  ## convert select parameters, add precip intensity (in/hr)
-  ls_par <- lapply(ls_par, function(x) {x$atemp <- x$atemp * 9 / 5 + 32; x}) # C to F
-  ls_par <- lapply(ls_par, function(x) {x$wspd <- x$wspd * 3600 * 1 / 1609.34; x}) # m/s to mph
-  ls_par <- lapply(ls_par, function(x) {x$maxwspd <- x$maxwspd * 3600 * 1 / 1609.34; x}) # m/s to mph
-  ls_par <- lapply(ls_par, function(x) {x$totprcp <- x$totprcp / 25.4; x}) # mm to in
-  ls_par <- lapply(ls_par, function(x) {x$intensprcp <- x$totprcp * 4; x}) # in/15-min to in/hr
+  ls_par <- lapply(met_sites, SWMPr::import_local, path = data_path)
+  ls_par <- lapply(ls_par, SWMPr::qaqc, qaqc_keep = keep_flags)
+  ls_par <- lapply(ls_par, subset, subset = c(storm_start, storm_end))
 
   names(ls_par) <- met_sites
+
 
   ## identify parameters, remove a few
   parm <- unique(names(ls_par[[1]])) %>% subset(!(. %in% c('datetimestamp')))
@@ -231,8 +204,6 @@ event_ridgeline <- function() {
   dat_tidy$evt_start <- storm_start
   dat_tidy$evt_end <- storm_end
 
-  dat_tidy <- dat_tidy %>%
-    dplyr::filter(parameter %in% parm)
 
   # add reserve name
   station_list <-sampling_stations
@@ -240,8 +211,6 @@ event_ridgeline <- function() {
   dat_tidy <- dplyr::left_join(dat_tidy, add_reserve)
 
   # assign factors for plotting
-  ## turn this into a function
-
   f_reservename <- station_list %>%
     dplyr::filter(Station.Code %in% unique(dat_tidy$station)) %>%
     dplyr::select(Reserve.Name, Latitude) %>%
@@ -257,103 +226,73 @@ event_ridgeline <- function() {
   # Ridgeline plot                             ---
   # ----------------------------------------------
 
-  # total precipitation
-  df <- dat_tidy %>%
-    dplyr::filter(parameter == 'totprcp')
 
-  ggplot2::ggplot(df, ggplot2::aes(x = datetimestamp, y = Reserve.Name
-                 , height = result, group = Reserve.Name)) +
-    ggridges::geom_density_ridges(stat = "identity", scale = 1) +
-    ggridges::theme_ridges()
-
-  # wind speed
-  df <- dat_tidy %>%
-    dplyr::filter(parameter == 'wspd')
-
-  ggplot2::ggplot(df, ggplot2::aes(x = datetimestamp, y = Reserve.Name
-                 , height = result, group = Reserve.Name)) +
-    ggridges::geom_density_ridges(stat = "identity", scale = 1)
-
-  # max wind speed
-  df <- dat_tidy %>%
-    dplyr::filter(parameter == 'maxwspd')
-
-  ggplot2::ggplot(df, ggplot2::aes(x = datetimestamp, y = Reserve.Name
-                 , height = result, group = Reserve.Name)) +
-    ggridges::geom_density_ridges(stat = "identity", scale = 1)
-
-  # # max wind speed
-  # ## multiple reserves
-  # df <- dat_tidy %>% filter(parameter == 'maxwspd')
-  # x <- ggplot(df, aes(x = datetimestamp, y = result, group = station)) +
-  #   geom_density_ridges(scale = 10, size = 0.25, rel_min_height = 0.03) +
-  #   geom_area(fill="lightblue") +
-  #   theme_bw()
+  params <- levels(as.factor(dat_tidy$parameter))
 
 
+  for(param in params) {
 
-  # wind speed
-  ## Just GTM
-  df <- dat_tidy %>%
-    dplyr::filter(station == 'gtmpcmet', parameter == 'wspd')
-  df$datetime_floor <- lubridate::floor_date(df$datetimestamp, unit = 'hour')
-  df_smooth <- df %>%
-    dplyr::group_by(station, parameter, datetime_floor) %>%
-    dplyr::summarise(avg = mean(result, na.rm = T))
+    df <- dat_tidy %>%
+      dplyr::filter(parameter == param)
 
-  x <- ggplot2::ggplot(df_smooth, ggplot2::aes(x = datetime_floor, y = avg)) +
-    ggplot2::geom_area(fill="lightblue") +
-    ggplot2::theme_bw()
+    plt_ttl <- paste('output/met/ridgeline_one_reserve_one_event/ridgeline_', '_', param, '.png', sep = '')
 
-  x <-
-    x +
-    ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = met_sites[1])) +
-    # scale_x_datetime(date_breaks = 'day', date_labels = '%b %d') +
-    ggplot2::labs(x = '', y = 'Wind Speed (mph)') +
-    ggplot2::scale_x_datetime(expand = c(0, 0)) +
-    ggplot2::scale_y_continuous(expand = c(0, 0)) +
-    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5)) +
-    ggplot2::theme(axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 8, 0, 0), 'pt'), angle = 90)) +
-    ggplot2::theme(text = ggplot2::element_text(size = 16)) +
-    ggplot2::theme(plot.margin = ggplot2::unit(c(0, 20, 0, 0), 'pt')) +
-    ggplot2::theme(legend.position = 'top')
-
-  x_ttl <- paste('output/met/ridgeline_one_reserve_one_event/ridgeline_', met_sites[1], '_wspd.png', sep = '')
-
-  ggplot2::ggsave(filename = x_ttl, plot = x, height = 4, width = 6, units = 'in', dpi = 300)
+    ggplot2::ggplot(df, ggplot2::aes(x=datetimestamp, y = Reserve.Name,
+                                     height = result, group = Reserve.Name)) +
+      ggridges::geom_density_ridges(stat = "identity", scale = 1, fill = "lightblue") +
+      ggridges::theme_ridges() +
+      ggplot2::ylab(SWMPrExtension::y_labeler(param)) +
+      ggplot2::xlab("Date") +
+      ggplot2::scale_x_datetime(expand = c(0, 0)) +
+      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
+                     axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 8, 0, 0), 'pt'), angle = 90),
+                     text = ggplot2::element_text(size = 16),
+                     plot.margin = ggplot2::unit(c(0, 20, 0, 0), 'pt'),
+                     legend.position = 'top') +
+      ggplot2::ggsave(plt_ttl, height=8, width =8)
 
 
+  }
 
 
-  # precip
-  ## Just GTM
-  df <- dat_tidy %>%
-    dplyr::filter(station == 'gtmpcmet', parameter == 'totprcp')
-  df$datetime_floor <- lubridate::floor_date(df$datetimestamp, unit = 'hour')
-  df_smooth <- df %>%
-    dplyr::group_by(station, parameter, datetime_floor) %>%
-    dplyr::summarise(avg = sum(result, na.rm = T))
+  # ----------------------------------------------
+  # Ridgeline plot, hourly smoothing                             ---
+  # ----------------------------------------------
 
-  x <- ggplot2::ggplot(df_smooth, ggplot2::aes(x = datetime_floor, y = avg)) +
-    ggplot2::geom_area(fill="lightblue") +
-    ggplot2::theme_bw()
 
-  x <-
-    x +
-    ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = met_sites[1])) +
-    # scale_x_datetime(date_breaks = 'day', date_labels = '%b %d') +
-    ggplot2::labs(x = '', y = 'Precipitation (in)') +
-    ggplot2::scale_x_datetime(expand = c(0, 0)) +
-    ggplot2::scale_y_continuous(expand = c(0, 0)) +
-    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5)) +
-    ggplot2::theme(axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 8, 0, 0), 'pt'), angle = 90)) +
-    ggplot2::theme(text = ggplot2::element_text(size = 16)) +
-    ggplot2::theme(plot.margin = ggplot2::unit(c(0, 20, 0, 0), 'pt')) +
-    ggplot2::theme(legend.position = 'top')
+  params <- levels(as.factor(dat_tidy$parameter))
 
-  x_ttl <- paste('output/met/ridgeline_one_reserve_one_event/ridgeline_', met_sites[1], '_totprcp.png', sep = '')
 
-  ggplot2::ggsave(filename = x_ttl, plot = x, height = 4, width = 6, units = 'in', dpi = 300)
+  for(param in params) {
+
+    df <- dat_tidy %>%
+      dplyr::filter(parameter == param)
+    df$datetime_floor <- lubridate::floor_date(df$datetimestamp, unit = 'hour')
+
+    df_smooth <- df %>%
+      dplyr::group_by(station, Reserve.Name, parameter, datetime_floor) %>%
+      dplyr::summarise(avg = mean(result, na.rm = T))
+
+
+    plt_ttl <- paste('output/met/ridgeline_one_reserve_one_event/ridgeline_', '_', param, '_smoothed.png', sep = '')
+
+    ggplot2::ggplot(df_smooth, ggplot2::aes(x=datetime_floor, y = Reserve.Name,
+                                            height = avg, group = Reserve.Name)) +
+      ggridges::geom_density_ridges(stat = "identity", scale = 1, fill = "lightblue") +
+      ggridges::theme_ridges() +
+      ggplot2::ylab(SWMPrExtension::y_labeler(param)) +
+      ggplot2::xlab("Date") +
+      ggplot2::scale_x_datetime(expand = c(0, 0)) +
+      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
+                     axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 8, 0, 0), 'pt'), angle = 90),
+                     text = ggplot2::element_text(size = 16),
+                     plot.margin = ggplot2::unit(c(0, 20, 0, 0), 'pt'),
+                     legend.position = 'top') +
+      ggplot2::ggsave(plt_ttl, height=8, width =8)
+
+
+  }
+
 
 
 

@@ -18,30 +18,37 @@ event_timeseries <- function(var_in,
                              stn_wq = NULL,
                              stn_met = NULL,
                              keep_flags = NULL,
+                             data_path = NULL,
                              ...) {
 
   ### 0. Read variables ########################################################
 
   #a.  Read in the variable input template, var_in
 
-  inputs <- xlsx::read.xlsx()
+  input_data <- xlsx::read.xlsx(var_in, sheetName = "Data")
+  input_Parameters <- xlsx::read.xlsx(var_in, sheetName = "Parameters")
+  input_Sites <- xlsx::read.xlsx(var_in, sheetName = "Sites")
+  input_Flags <- xlsx::read.xlsx(var_in, sheetName = "Flags")
+
   #b.  Read the following variables from template spreadsheet if not provided as optional arguments
 
-  if(!is.null(storm_nm)) storm_nm <- ###### finish with proper location in excel file, var_in
-  if(!is.null(storm_start)) storm_start <-
-  if(!is.null(storm_end)) storm_end <-
-  if(!is.null(view_start)) view_start <-
-  if(!is.null(view_end)) view_end <-
-  if(!is.null(recovery_start)) recovery_start <-
-  if(!is.null(recovery_end)) recovery_end <-
-  if(!is.null(reserve)) reserve <-
-  if(!is.null(stn_wq)) stn_wq <-
-  if(!is.null(stn_met)) stn_met <-
-  if(!is.null(keep_flags)) keep_flags <-
+  if(is.null(storm_nm)) storm_nm <- input_Parameters[1,2]
+  if(is.null(storm_start)) storm_start <- input_Parameters[2,2]
+  if(is.null(storm_end)) storm_end <- input_Parameters[3,2]
+  if(is.null(view_start)) view_start <- input_Parameters[4,2]
+  if(is.null(view_end)) view_end <- input_Parameters[5,2]
+  if(is.null(recovery_start)) recovery_start <- storm_end
+  if(is.null(recovery_end)) recovery_end <- input_Parameters[6,2]
+  if(is.null(reserve)) reserve <- input_Parameters[7,2]
+  if(is.null(stn_wq)) stn_wq <- input_Parameters[9,2]
+  if(is.null(stn_met)) stn_met <- input_Parameters[10,2]
+  if(is.null(keep_flags)) keep_flags <- input_Flags$keep_flags
+  if(is.null(data_path)) data_path <- 'data/cdmo'
+
 
   ### 1. Read in data and wrangle ##############################################
   #data will be placed in the data folder within the Event Level Template
-  dat_wq <- SWMPr::import_local(path = 'data/cdmo', stn_wq)
+  dat_wq <- SWMPr::import_local(path = data_path, stn_wq)
   dat_wq <- SWMPr::qaqc(dat_wq, qaqc_keep = keep_flags)
 
   # tidy the data ------------------------------------
@@ -55,7 +62,7 @@ event_timeseries <- function(var_in,
   ### Plot Data ################################################################
 
   df <- dat_wq %>%
-    dplyr::filter(between(datetimestamp, as.POSIXct(view_start), as.POSIXct(view_end)))
+    dplyr::filter(dplyr::between(datetimestamp, as.POSIXct(view_start), as.POSIXct(view_end)))
 
   parm_wq <- unique(dat_wq$parameter)
 
@@ -110,10 +117,10 @@ event_timeseries <- function(var_in,
   # one station, daily smooth, with recovery -----------------------------------
 
   df_day <- dat_wq %>%
-    dplyr::filter(between(datetimestamp
+    dplyr::filter(dplyr::between(datetimestamp
                    , as.POSIXct(view_start)
                    , as.POSIXct(view_end))) %>%
-    dplyr::mutate(datetimestamp_day = floor_date(datetimestamp, unit = 'day')) %>%
+    dplyr::mutate(datetimestamp_day = lubridate::floor_date(datetimestamp, unit = 'day')) %>%
     dplyr::group_by(datetimestamp_day, parameter) %>%
     dplyr::summarize(value = mean(value, na.rm = T))
 
@@ -130,10 +137,10 @@ event_timeseries <- function(var_in,
     x <-
       df_day %>%
       dplyr::filter(parameter == parm) %>%
-      ggplot2::ggplot(., aes(x = datetimestamp_day, y = value)) +
+      ggplot2::ggplot(., ggplot2::aes(x = datetimestamp_day, y = value)) +
       ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = stn_wq)) +
-      ggplot2::geom_line(aes(color = 'Daily Avg'), lwd = 1) +# 'steelblue3') +
-      ggplot2::geom_rect(data=df,aes(xmin=xmin,ymin=ymin,xmax=xmax,ymax=ymax,fill=years),
+      ggplot2::geom_line(ggplot2::aes(color = 'Daily Avg'), lwd = 1) +
+      ggplot2::geom_rect(data=df,ggplot2::aes(xmin=xmin,ymin=ymin,xmax=xmax,ymax=ymax,fill=years),
                 alpha=0.1,inherit.aes=FALSE) +
       ggplot2::scale_x_datetime(date_breaks = '2 weeks', date_labels = '%b %d') +
       ggplot2::labs(x = '', y = SWMPrExtension::y_labeler(parm))
