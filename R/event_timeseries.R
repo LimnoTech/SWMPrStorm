@@ -7,16 +7,13 @@
 #'
 #' @examples
 event_timeseries <- function(var_in,
-                             storm_nm = NULL,
                              storm_start = NULL,
                              storm_end = NULL,
                              view_start = NULL,
                              view_end = NULL,
                              recovery_start = NULL,
                              recovery_end = NULL,
-                             reserve = NULL,
                              stn_wq = NULL,
-                             stn_met = NULL,
                              keep_flags = NULL,
                              data_path = NULL,
                              ...) {
@@ -32,14 +29,14 @@ event_timeseries <- function(var_in,
 
   #b.  Read the following variables from template spreadsheet if not provided as optional arguments
 
-  if(is.null(storm_nm)) storm_nm <- input_Parameters[1,2]
+  #if(is.null(storm_nm)) storm_nm <- input_Parameters[1,2]
   if(is.null(storm_start)) storm_start <- input_Parameters[2,2]
   if(is.null(storm_end)) storm_end <- input_Parameters[3,2]
   if(is.null(view_start)) view_start <- input_Parameters[4,2]
   if(is.null(view_end)) view_end <- input_Parameters[5,2]
   if(is.null(recovery_start)) recovery_start <- storm_end
   if(is.null(recovery_end)) recovery_end <- input_Parameters[6,2]
-  if(is.null(reserve)) reserve <- input_Parameters[7,2]
+  #if(is.null(reserve)) reserve <- input_Parameters[7,2]
   if(is.null(stn_wq)) stn_wq <- input_Parameters[9,2]
   if(is.null(stn_met)) stn_met <- input_Parameters[10,2]
   if(is.null(keep_flags)) keep_flags <- input_Flags$keep_flags
@@ -152,13 +149,13 @@ event_timeseries <- function(var_in,
 
     x <- x +
       ggplot2::theme_bw() +
-      ggplot2::theme(plot.title = element_text(hjust = 0.5)) +
-      ggplot2::theme(strip.background = element_blank(),
-            panel.grid = element_blank(),
-            panel.border = element_rect(color = 'black', fill = NA)) +
-      ggplot2::theme(axis.title.y = element_text(margin = unit(c(0, 8, 0, 0), 'pt'), angle = 90)) +
-      ggplot2::theme(text = element_text(size = 16)) +
-      ggplot2::theme(legend.position = 'top')
+      ggplot2::theme(plot.title = element_text(hjust = 0.5),
+                     strip.background = element_blank(),
+                     panel.grid = element_blank(),
+                     panel.border = element_rect(color = 'black', fill = NA),
+                     axis.title.y = element_text(margin = unit(c(0, 8, 0, 0), 'pt'), angle = 90),
+                     text = element_text(size = 16),
+                     legend.position = 'top')
 
 
     x_ttl <- paste('output/wq/timeseries_event_recovery/timeseries_event_recovery_', stn_wq, '_', parm, '.png', sep = '')

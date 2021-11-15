@@ -24,20 +24,13 @@
 #' @examples
 event_timeseries_precip <- function(var_in,
                                     data_path,
-                                    storm_nm = NULL,
                                     storm_start = NULL,
                                     storm_end = NULL,
                                     view_start = NULL,
                                     view_end = NULL,
-                                    recovery_start = NULL,
-                                    recovery_end = NULL,
-                                    reserve = NULL,
-                                    stn_wq = NULL,
-                                    wq_sites = NULL,
                                     stn_met = NULL,
-                                    met_sites = NULL,
-                                    stn_target = NULL,
                                     keep_flags = NULL,
+                                    flip = FALSE,
                                     ...) {
 
 
@@ -55,22 +48,13 @@ event_timeseries_precip <- function(var_in,
 
   #b.  Read the following variables from template spreadsheet if not provided as optional arguments
 
-  if(is.null(storm_nm)) storm_nm <- input_Parameters[1,2]
   if(is.null(storm_start)) storm_start <- input_Parameters[2,2]
   if(is.null(storm_end)) storm_end <- input_Parameters[3,2]
   if(is.null(view_start)) view_start <- input_Parameters[4,2]
   if(is.null(view_end)) view_end <- input_Parameters[5,2]
-  if(is.null(recovery_start)) recovery_start <- storm_end
-  if(is.null(recovery_end)) recovery_end <- input_Parameters[6,2]
-  if(is.null(reserve)) reserve <- input_Parameters[7,2]
-  if(is.null(stn_wq)) stn_wq <- input_Parameters[9,2]
-  if(is.null(wq_sites)) wq_sites <- input_Sites$wq_sites[!is.na(input_Sites$wq_sites)]
   if(is.null(stn_met)) stn_met <- input_Parameters[10,2]
-  if(is.null(met_sites)) met_sites <- input_Sites$met_sites[!is.na(input_Sites$met_sites)]
-  if(is.null(stn_target)) stn_target <- input_Parameters[8,2]
   if(is.null(keep_flags)) keep_flags <- input_Flags$keep_flags
   if(is.null(data_path)) data_path <- 'data/cdmo'
-
 
 
   # ----------------------------------------------
@@ -81,8 +65,8 @@ event_timeseries_precip <- function(var_in,
   data_type <- 'met'
 
   ls_par <- lapply(stn_met, SWMPr::import_local, path = data_path)
-  ls_par <- lapply(ls_par, qaqc, qaqc_keep = keep_flags)
-  ls_par <- lapply(ls_par, subset, subset = c(storm_start, storm_end))#, select = par) # Note: par <- wb_basic %>% .[[1]]
+  ls_par <- lapply(ls_par, SWMPr::qaqc, qaqc_keep = keep_flags)
+  ls_par <- lapply(ls_par, subset, subset = c(storm_start, storm_end)) #, select = par) # Note: par <- wb_basic %>% .[[1]]
 
   ## convert select parameters, add precip intensity (in/hr)
   ls_par <- lapply(ls_par, function(x) {x$atemp <- x$atemp * 9 / 5 + 32; x}) # C to F
@@ -91,13 +75,13 @@ event_timeseries_precip <- function(var_in,
   ls_par <- lapply(ls_par, function(x) {x$totprcp <- x$totprcp / 25.4; x}) # mm to in
   ls_par <- lapply(ls_par, function(x) {x$intensprcp <- x$totprcp * 4; x}) # in/15-min to in/hr
 
-  names(ls_par) <- met_sites
+  names(ls_par) <- stn_met
 
   ## identify parameters, remove a few
   parm <- unique(names(ls_par[[1]])) %>% subset(!(. %in% c('datetimestamp')))
   parm <- parm %>%  subset(!(. %in% c('wdir', 'sdwdir', 'totpar', 'totsorad')))
 
-  names(ls_par) <- met_sites
+  names(ls_par) <- stn_met
 
   ## identify parameters
   parm <- unique(names(ls_par[[1]])) %>% subset(!(. %in% c('datetimestamp')))
@@ -119,14 +103,16 @@ event_timeseries_precip <- function(var_in,
   precip_day$mo <- paste(month.abb[lubridate::month(precip_day$datetimestamp_day)]
                          , lubridate::day(precip_day$datetimestamp_day)
                          , sep = ' ') %>%
-    factor ##### Note to revisit this line of code.
+    factor
 
-  # precip_day$date_fac <- paste(as.factor(precip_day$datetimestamp_day), sep = ' ')
+  precip_day <- precip_day %>%
+    dplyr::mutate(mo = factor(mo, levels = mo[order(datetimestamp_day)]))
 
+  if(flip == FALSE) {
   # basic plot
   x <- ggplot2::ggplot(precip_day, ggplot2::aes(x = mo, y = value)) +
     ggplot2::geom_bar(stat = 'identity', fill = 'steelblue3') +
-    ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = met_sites)) +
+    ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = stn_met)) +
     ggplot2::coord_flip() +
     ggplot2::scale_x_discrete(limits = rev(levels(precip_day$mo)))
 
@@ -138,18 +124,102 @@ event_timeseries_precip <- function(var_in,
   x <-
     x +
     ggplot2::theme_bw() +
-    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5)) +
-    ggplot2::theme(strip.background = ggplot2::element_blank(),
-          panel.grid = ggplot2::element_blank(),
-          panel.border = ggplot2::element_rect(color = 'black', fill = NA)) +
-    theme(axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 8, 0, 0), 'pt'), angle = 90)) +
-    theme(text = ggplot2::element_text(size = 16)) +
-    theme(plot.margin = ggplot2::unit(c(0, 16, 0, 0), 'pt')) +
-    theme(legend.position = 'top')
+    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
+                   strip.background = ggplot2::element_blank(),
+                   panel.grid = ggplot2::element_blank(),
+                   panel.border = ggplot2::element_rect(color = 'black', fill = NA),
+                   axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 8, 0, 0), 'pt'), angle = 90),
+                   text = ggplot2::element_text(size = 16),
+                   plot.margin = ggplot2::unit(c(0, 16, 0, 0), 'pt'),
+                   legend.position = 'top')
+
 
   x_ttl <- paste('output/met/barplot/barplot_daily_', stn_met, '_', 'intensprcp', '.png', sep = '')
 
   ggplot2::ggsave(filename = x_ttl, plot = x, height = 6, width = 4, units = 'in', dpi = 300)
+
+  } else if(flip == TRUE) {
+    x <- ggplot2::ggplot(precip_day, ggplot2::aes(x = mo, y = value)) +
+      ggplot2::geom_bar(stat = 'identity', fill = 'steelblue3') +
+      ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = stn_met))
+
+    # colors
+    x <- x +
+      ggplot2::scale_y_continuous(expand = c(0, 0), limits = c(0, 1.5), breaks = seq(0 , 1.6, 0.25)) +
+      ggplot2::labs(x = NULL, y = 'Daily Precipitation (in)')
+
+    x <-
+      x +
+      ggplot2::theme_bw() +
+      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
+                     strip.background = ggplot2::element_blank(),
+                     panel.grid = ggplot2::element_blank(),
+                     panel.border = ggplot2::element_rect(color = 'black', fill = NA),
+                     axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 8, 0, 0), 'pt'), angle = 90),
+                     text = ggplot2::element_text(size = 16),
+                     plot.margin = ggplot2::unit(c(0, 16, 0, 0), 'pt'),
+                     legend.position = 'top')
+  }
+
+
+
+  # ----------------------------------------------
+  # Cumulative Precip                        -----
+  # ----------------------------------------------
+
+  precip_all <- precip_day %>%
+    dplyr::summarize(total_precip_in = sum(value)) %>%
+    dplyr::mutate(Date = paste0(precip_day$mo[1], " - ", tail(precip_day$mo,n=1))) %>%
+    dplyr::mutate(label = round(total_precip_in, 2))
+
+
+  if(flip == TRUE) {
+  x <- ggplot2::ggplot(precip_all, ggplot2::aes(x=Date, y = total_precip_in)) +
+    ggplot2::geom_col(fill = "steelblue3", width = 0.5) +
+    ggplot2::geom_text(ggplot2::aes(x=Date, y = total_precip_in +0.2, label = label), color = "steelblue3", fontface="bold") +
+    ggplot2::scale_y_continuous(expand = c(0,0), limits = c(0, ceiling(max(precip_all$total_precip_in)*1.25))) +
+    ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = stn_met)) +
+    ggplot2::xlab("") +
+    ggplot2::ylab("Total Precipitation (in)") +
+    ggplot2::theme_bw() +
+    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
+                   strip.background = ggplot2::element_blank(),
+                   panel.grid = ggplot2::element_blank(),
+                   panel.border = ggplot2::element_rect(color = 'black', fill = NA),
+                   axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 8, 0, 0), 'pt'), angle = 90),
+                   text = ggplot2::element_text(size = 16),
+                   plot.margin = ggplot2::unit(c(0, 16, 0, 0), 'pt'),
+                   legend.position = 'top')
+
+
+  } else if(flip == FALSE) {
+    x <- ggplot2::ggplot(precip_all, ggplot2::aes(x=Date, y = total_precip_in)) +
+      ggplot2::geom_col(fill = "steelblue3", width = 0.5) +
+      ggplot2::geom_text(ggplot2::aes(x=Date, y = total_precip_in +0.3, label = label), color = "steelblue3", fontface="bold",hjust=0) +
+      ggplot2::coord_flip() +
+      ggplot2::scale_y_continuous(expand = c(0,0), limits = c(0, ceiling(max(precip_all$total_precip_in)*1.25))) +
+      ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = stn_met)) +
+      ggplot2::xlab("") +
+      ggplot2::ylab("Total Precipitation (in)") +
+      ggplot2::theme_bw() +
+      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
+                     strip.background = ggplot2::element_blank(),
+                     axis.ticks.x = ggplot2::element_blank(),
+                     panel.grid = ggplot2::element_blank(),
+                     panel.border = ggplot2::element_rect(color = 'black', fill = NA),
+                     axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 8, 0, 0), 'pt'), angle = 90),
+                     text = ggplot2::element_text(size = 16),
+                     plot.margin = ggplot2::unit(c(0, 16, 0, 0), 'pt'),
+                     legend.position = 'top')
+
+
+  }
+
+
+  x_ttl <- paste('output/met/barplot/barplot_cumulative_', stn_met, '_', 'intensprcp', '.png', sep = '')
+
+  ggplot2::ggsave(filename = x_ttl, plot = x, height = 4, width = 6, units = 'in', dpi = 300)
+
 
 
 }

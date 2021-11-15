@@ -141,16 +141,6 @@ event_roc <- function(var_in,
     dplyr::filter(station == stn, parameter == param)
 
 
-  ### i think these next few lines of code can be removed... sealevel is a default dataset with 'oce' package?
-  tmp <- oce::tidem(t = dat_tidy$datetimestamp, x = dat_tidy$result)
-  plot(tmp)
-
-  data(sealevel)
-  tide <- oce::tidem(sealevel)
-  plot(tide)
-  ###
-
-
 
   # ----------------------------------------------
   # Load met data ----------------------

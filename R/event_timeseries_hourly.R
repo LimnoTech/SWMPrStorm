@@ -133,13 +133,13 @@ event_timeseries_hourly <- function(var_in,
 
       x <- x +
         ggplot2::theme_bw() +
-        ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5)) +
-        ggplot2::theme(strip.background = ggplot2::element_blank(),
-              panel.grid = ggplot2::element_blank(),
-              panel.border = ggplot2::element_rect(color = 'black', fill = NA)) +
-        ggplot2::theme(axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 8, 0, 0), 'pt'), angle = 90)) +
-        ggplot2::theme(text = ggplot2::element_text(size = 16)) +
-        ggplot2::theme(legend.position = 'top')
+        ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
+                       strip.background = ggplot2::element_blank(),
+                       panel.grid = ggplot2::element_blank(),
+                       panel.border = ggplot2::element_rect(color = 'black', fill = NA),
+                       axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 8, 0, 0), 'pt'), angle = 90),
+                       text = ggplot2::element_text(size = 16),
+                       legend.position = 'top')
 
       x_ttl <- paste('output/met/timeseries_event_hourly/timeseries_event_hourly_', sta, '_', parm[j], '.png', sep = '')
 
@@ -185,14 +185,14 @@ event_timeseries_hourly <- function(var_in,
   x <-
     x +
     ggplot2::theme_bw() +
-    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5)) +
-    ggplot2::theme(strip.background = ggplot2::element_blank(),
-          panel.grid = ggplot2::element_blank(),
-          panel.border = ggplot2::element_rect(color = 'black', fill = NA)) +
-    ggplot2::theme(axis.title.y = ggplot2::element_text(margin = unit(c(0, 8, 0, 0), 'pt'), angle = 90)) +
-    ggplot2::theme(text = ggplot2::element_text(size = 16)) +
-    ggplot2::theme(plot.margin = ggplot2::unit(c(0, 16, 0, 0), 'pt')) +
-    ggplot2::theme(legend.position = 'top')
+    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
+                   strip.background = ggplot2::element_blank(),
+                   panel.grid = ggplot2::element_blank(),
+                   panel.border = ggplot2::element_rect(color = 'black', fill = NA),
+                   axis.title.y = ggplot2::element_text(margin = unit(c(0, 8, 0, 0), 'pt'), angle = 90),
+                   text = ggplot2::element_text(size = 16),
+                   plot.margin = ggplot2::unit(c(0, 16, 0, 0), 'pt'),
+                   legend.position = 'top')
 
   x_ttl <- paste('output/met/barplot/barplot_daily_', sta, '_', parm[j], '.png', sep = '')
 
@@ -271,14 +271,14 @@ event_timeseries_hourly <- function(var_in,
 
       x <- x +
         ggplot2::theme_bw() +
-        ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5)) +
-        ggplot2::theme(strip.background = ggplot2::element_blank(),
-              panel.grid = ggplot2::element_blank(),
-              panel.border = ggplot2::element_rect(color = 'black', fill = NA)) +
-        ggplot2::theme(plot.margin = ggplot2::margin(5.5, 10, 5.5, 5.5, unit = 'pt')) +
-        ggplot2::theme(axis.title.y = ggplot2::element_text(margin = unit(c(0, 8, 0, 0), 'pt'), angle = 90)) +
-        ggplot2::theme(text = ggplot2::element_text(size = 16)) +
-        ggplot2::theme(legend.position = 'top')
+        ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
+                       strip.background = ggplot2::element_blank(),
+                       panel.grid = ggplot2::element_blank(),
+                       panel.border = ggplot2::element_rect(color = 'black', fill = NA),
+                       plot.margin = ggplot2::margin(5.5, 10, 5.5, 5.5, unit = 'pt'),
+                       axis.title.y = ggplot2::element_text(margin = unit(c(0, 8, 0, 0), 'pt'), angle = 90),
+                       text = ggplot2::element_text(size = 16),
+                       legend.position = 'top')
 
       x_ttl <- paste('output/wq/timeseries_event/timeseries_event_hourly_', sta, '_', parm[j], '_', storm_nm, '.png', sep = '')
 
