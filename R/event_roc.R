@@ -96,10 +96,8 @@ event_roc <- function(var_in,
   # Rate of change plot                        ---
   # ----------------------------------------------
 
-  unique(dat_tidy$parameter)
 
-  p <- 'temp'
-  s <- 'gtmpcwq'
+
 
   for(p in parm) {
     for(s in wq_sites) {
