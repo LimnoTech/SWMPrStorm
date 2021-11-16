@@ -4,7 +4,22 @@
 \alias{event_timeseires_dual}
 \title{Title}
 \usage{
-event_timeseires_dual()
+event_timeseires_dual(
+  var_in,
+  data_path,
+  storm_nm = NULL,
+  view_start = NULL,
+  view_end = NULL,
+  stn_wq = NULL,
+  stn_met = NULL,
+  param_primary = NULL,
+  param_secondary = NULL,
+  keep_flags = NULL,
+  ...
+)
+}
+\arguments{
+\item{...}{}
 }
 \value{
 

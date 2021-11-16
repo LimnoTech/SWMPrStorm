@@ -47,7 +47,6 @@ event_timeseries <- function(var_in,
   if(is.null(recovery_end)) recovery_end <- input_Parameters[6,2]
   if(is.null(reserve)) reserve <- input_Parameters[7,2]
   if(is.null(stn_wq)) stn_wq <- input_Parameters[9,2]
-  if(is.null(stn_met)) stn_met <- input_Parameters[10,2]
   if(is.null(keep_flags)) keep_flags <- input_Flags$keep_flags
   if(is.null(data_path)) data_path <- 'data/cdmo'
 
