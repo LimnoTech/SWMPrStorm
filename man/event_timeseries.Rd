@@ -6,22 +6,20 @@
 \usage{
 event_timeseries(
   var_in,
-  storm_nm = NULL,
+  data_path = NULL,
   storm_start = NULL,
   storm_end = NULL,
   view_start = NULL,
   view_end = NULL,
   recovery_start = NULL,
   recovery_end = NULL,
-  reserve = NULL,
   stn_wq = NULL,
-  stn_met = NULL,
   keep_flags = NULL,
   ...
 )
 }
 \arguments{
-\item{var_in}{}
+\item{...}{}
 }
 \value{
 

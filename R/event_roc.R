@@ -54,7 +54,7 @@ event_roc <- function(var_in,
   ## load, clean, and filter data
   data_type <- 'wq'
 
-  ls_par <- lapply(wq_sites, SWMPr::import_local, path = 'data/cdmo')
+  ls_par <- lapply(wq_sites, SWMPr::import_local, path = data_path)
   ls_par <- lapply(ls_par, qaqc, qaqc_keep = keep_flags)
   ls_par <- lapply(ls_par, subset, subset = c(storm_start, storm_end))#, select = par) # Note: par <- wb_basic %>% .[[1]]
 
@@ -98,47 +98,92 @@ event_roc <- function(var_in,
 
   unique(dat_tidy$parameter)
 
-  param <- 'temp'
-  stn <- 'gtmpcwq'
+  p <- 'temp'
+  s <- 'gtmpcwq'
 
-  roc <- dat_tidy %>%
-    dplyr::filter(station == stn, parameter == param) %>%
-    dplyr::mutate(diff_result = result - lag(result))
+  for(p in parm) {
+    for(s in wq_sites) {
 
-  roc_smooth <- dat_tidy %>%
-    dplyr::filter(station == stn, parameter == param) %>%
-    dplyr::group_by(time_hr = lubridate::floor_date(datetimestamp, "hour")) %>%
-    dplyr::summarise(result = mean(result, na.rm = T)) %>%
-    dplyr::mutate(diff_result = result - lag(result))
+      roc <- dat_tidy %>%
+        dplyr::filter(station == s, parameter == p) %>%
+        dplyr::mutate(diff_result = result - dplyr::lag(result))
 
-  roc %>%
-    ggplot2::ggplot(., ggplot2::aes(x = datetimestamp, y = diff_result)) +
-    ggplot2::geom_line() +
-    ggplot2::scale_x_datetime(date_breaks = '1 day', labels = date_format('%b %d')) +
-    ggplot2::ggtitle(param)
+      roc_smooth <- dat_tidy %>%
+        dplyr::filter(station == s, parameter == p) %>%
+        dplyr::group_by(time_hr = lubridate::floor_date(datetimestamp, "hour")) %>%
+        dplyr::summarise(result = mean(result, na.rm = T)) %>%
+        dplyr::mutate(diff_result = result - dplyr::lag(result))
 
-  roc_smooth %>%
-    ggplot2::ggplot(., ggplot2::aes(x = time_hr, y = diff_result)) +
-    ggplot2::geom_line() +
-    ggplot2::scale_x_datetime(limits = c(as.POSIXct(storm_start), as.POSIXct(storm_end))
-                     , date_breaks = '1 day', labels = date_format('%b %d')) +
-    ggplot2::ggtitle(param)
 
-  dat_tidy %>%
-    dplyr::filter(station == stn, parameter == param) %>%
-    ggplot2::ggplot(., ggplot2::aes(x = datetimestamp, y = result)) +
-    ggplot2::geom_line() +
-    ggplot2::scale_x_datetime(limits = c(as.POSIXct(storm_start), as.POSIXct(storm_end))
-                     , date_breaks = '1 day', labels = date_format('%b %d')) +
-    ggplot2::ggtitle(param)
+      p1 <- ggplot2::ggplot(roc, ggplot2::aes(x = datetimestamp, y = diff_result)) +
+        ggplot2::geom_line() +
+        ggplot2::scale_x_datetime(date_breaks = '1 day'
+                                  , labels = scales::date_format('%b %d')
+                                  , guide = guide_axis(check.overlap = TRUE)) +
+        ggplot2::ggtitle(p) +
+        ggplot2::ylab(SWMPrStorm::y_labeler_delta(p)) +
+        ggplot2::theme_bw() +
+        ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
+                       strip.background = ggplot2::element_blank(),
+                       panel.grid = ggplot2::element_blank(),
+                       panel.border = ggplot2::element_rect(color = 'black', fill = NA),
+                       plot.margin = ggplot2::margin(5.5, 10, 5.5, 15, unit = 'pt'),
+                       axis.title.y = ggplot2::element_text(margin = unit(c(0, 8, 0, 0), 'pt'), angle = 90),
+                       text = ggplot2::element_text(size = 16),
+                       legend.position = 'top') +
+        ggplot2::ggsave(paste0("output/wq/event_roc/roc_", s, "_", p, "_stepwise.png"), height=4, width=6, dpi=300)
 
-  # ----------------------------------------------
-  # Rate of change plot                        ---
-  # ----------------------------------------------
-  param <- 'depth'
 
-  roc <- dat_tidy %>%
-    dplyr::filter(station == stn, parameter == param)
+      p2 <- ggplot2::ggplot(roc_smooth, ggplot2::aes(x = time_hr, y = diff_result)) +
+        ggplot2::geom_line() +
+        ggplot2::scale_x_datetime(limits = c(as.POSIXct(storm_start), as.POSIXct(storm_end))
+                                  , date_breaks = '1 day'
+                                  , labels = scales::date_format('%b %d')
+                                  , guide = guide_axis(check.overlap = TRUE)) +
+        ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = s)) +
+        ggplot2::ylab(SWMPrStorm::y_labeler_delta(p)) +
+        ggplot2::xlab("Datetime, smoothed hourly") +
+        ggplot2::theme_bw() +
+        ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
+                       strip.background = ggplot2::element_blank(),
+                       panel.grid = ggplot2::element_blank(),
+                       panel.border = ggplot2::element_rect(color = 'black', fill = NA),
+                       plot.margin = ggplot2::margin(5.5, 10, 5.5, 15, unit = 'pt'),
+                       axis.title.y = ggplot2::element_text(margin = unit(c(0, 8, 0, 0), 'pt'), angle = 90),
+                       text = ggplot2::element_text(size = 16),
+                       legend.position = 'top') +
+        ggplot2::ggsave(paste0("output/wq/event_roc/roc_", s, "_", p, "_hourly.png"), height=4, width=6, dpi=300)
+
+      p3 <- dat_tidy %>%
+        dplyr::filter(station == s, parameter == p) %>%
+        ggplot2::ggplot(., ggplot2::aes(x = datetimestamp, y = result)) +
+        ggplot2::geom_line() +
+        ggplot2::scale_x_datetime(limits = c(as.POSIXct(storm_start), as.POSIXct(storm_end))
+                                  , date_breaks = '1 day'
+                                  , labels = scales::date_format('%b %d')
+                                  , guide = guide_axis(check.overlap = TRUE)) +
+        ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = s)) +
+        ggplot2::ylab(SWMPrStorm::y_labeler(p)) +
+        ggplot2::theme_bw() +
+        ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
+                       strip.background = ggplot2::element_blank(),
+                       panel.grid = ggplot2::element_blank(),
+                       panel.border = ggplot2::element_rect(color = 'black', fill = NA),
+                       plot.margin = ggplot2::margin(5.5, 10, 5.5, 15, unit = 'pt'),
+                       axis.title.y = ggplot2::element_text(margin = unit(c(0, 8, 0, 0), 'pt'), angle = 90),
+                       text = ggplot2::element_text(size = 16),
+                       legend.position = 'top') +
+        ggplot2::ggsave(paste0("output/wq/event_roc/roc_", s, "_", p, "_raw.png"), height=4, width=6, dpi=300)
+
+
+
+    }
+  }
+
+
+
+
+
 
 
 
@@ -149,7 +194,7 @@ event_roc <- function(var_in,
   ## load, clean, and filter data
   data_type <- 'met'
 
-  ls_par <- lapply(met_sites, SWMPr::import_local, path = 'data/cdmo')
+  ls_par <- lapply(met_sites, SWMPr::import_local, path = data_path)
   ls_par <- lapply(ls_par, qaqc, qaqc_keep = keep_flags)
   ls_par <- lapply(ls_par, subset, subset = c(storm_start, storm_end))#, select = par) # Note: par <- wb_basic %>% .[[1]]
 
@@ -199,36 +244,88 @@ event_roc <- function(var_in,
   # Rate of change plot                        ---
   # ----------------------------------------------
 
-  unique(dat_tidy$parameter)
+  p <- "atemp"
+  s <- "gtmpcmet"
 
-  param <- 'bp'
-  stn <- 'gtmpcmet'
+  for(p in parm) {
+    for (s in met_sites) {
 
-  roc <- dat_tidy %>%
-    dplyr::filter(station == stn, parameter == param) %>%
-    dplyr::mutate(diff_result = result - lag(result))
+      roc <- dat_tidy %>%
+        dplyr::filter(station == s, parameter == p) %>%
+        dplyr::mutate(diff_result = result - dplyr::lag(result))
 
-  roc_smooth <- dat_tidy %>%
-    dplyr::filter(station == 'gtmpcmet', parameter == param) %>%
-    dplyr::group_by(time_hr = lubridate::floor_date(datetimestamp, "hour")) %>%
-    dplyr::summarise(result = mean(result, na.rm = T)) %>%
-    dplyr::mutate(diff_result = result - stats::lag(result))
+      roc_smooth <- dat_tidy %>%
+        dplyr::filter(station == s, parameter == p) %>%
+        dplyr::group_by(time_hr = lubridate::floor_date(datetimestamp, "hour")) %>%
+        dplyr::summarise(result = mean(result, na.rm = T)) %>%
+        dplyr::mutate(diff_result = result - dplyr::lag(result))
 
-  roc %>%
-    ggplot2::ggplot(., ggplot2::aes(x = datetimestamp, y = diff_result)) +
-    ggplot2::geom_line() +
-    ggplot2::ggtitle(param)
+      p1 <- ggplot2::ggplot(roc, ggplot2::aes(x = datetimestamp, y = diff_result)) +
+        ggplot2::geom_line() +
+        ggplot2::scale_x_datetime(date_breaks = '1 day'
+                                  , labels = scales::date_format('%b %d')
+                                  , guide = guide_axis(check.overlap = TRUE)) +
+        ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = s)) +
+        ggplot2::ylab(SWMPrStorm::y_labeler_delta(p)) +
+        ggplot2::xlab("Datetime") +
+        ggplot2::theme_bw() +
+        ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
+                       strip.background = ggplot2::element_blank(),
+                       panel.grid = ggplot2::element_blank(),
+                       panel.border = ggplot2::element_rect(color = 'black', fill = NA),
+                       plot.margin = ggplot2::margin(5.5, 10, 5.5, 15, unit = 'pt'),
+                       axis.title.y = ggplot2::element_text(margin = unit(c(0, 8, 0, 0), 'pt'), angle = 90),
+                       text = ggplot2::element_text(size = 16),
+                       legend.position = 'top') +
+        ggplot2::ggsave(paste0("output/met/event_roc/roc_", s, "_", p, "_stepwise.png"), height=4, width=6, dpi=300)
 
-  roc_smooth %>%
-    ggplot2::ggplot(., ggplot2::aes(x = time_hr, y = diff_result)) +
-    ggplot2::geom_line() +
-    ggplot2::ggtitle(param)
 
-  dat_tidy %>%
-    ggplot2::filter(station == 'gtmpcmet', parameter == param) %>%
-    ggplot2::ggplot(., aes(x = datetimestamp, y = result)) +
-    ggplot2::geom_line() +
-    ggplot2::ggtitle(param)
 
+      p2 <- ggplot2::ggplot(roc_smooth, ggplot2::aes(x = time_hr, y = diff_result)) +
+        ggplot2::geom_line() +
+        ggplot2::scale_x_datetime(limits = c(as.POSIXct(storm_start), as.POSIXct(storm_end))
+                                  , date_breaks = '1 day'
+                                  , labels = scales::date_format('%b %d')
+                                  , guide = guide_axis(check.overlap = TRUE)) +
+        ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = s)) +
+        ggplot2::ylab(SWMPrStorm::y_labeler_delta(p)) +
+        ggplot2::xlab("Datetime, smoothed hourly") +
+        ggplot2::theme_bw() +
+        ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
+                       strip.background = ggplot2::element_blank(),
+                       panel.grid = ggplot2::element_blank(),
+                       panel.border = ggplot2::element_rect(color = 'black', fill = NA),
+                       plot.margin = ggplot2::margin(5.5, 10, 5.5, 15, unit = 'pt'),
+                       axis.title.y = ggplot2::element_text(margin = unit(c(0, 8, 0, 0), 'pt'), angle = 90),
+                       text = ggplot2::element_text(size = 16),
+                       legend.position = 'top') +
+        ggplot2::ggsave(paste0("output/met/event_roc/roc_", s, "_", p, "_hourly.png"), height=4, width=6, dpi=300)
+
+
+      p3 <- dat_tidy %>%
+        dplyr::filter(station == s, parameter == p) %>%
+        ggplot2::ggplot(., aes(x = datetimestamp, y = result)) +
+        ggplot2::geom_line() +
+        ggplot2::scale_x_datetime(limits = c(as.POSIXct(storm_start), as.POSIXct(storm_end))
+                                  , date_breaks = '1 day'
+                                  , labels = scales::date_format('%b %d')
+                                  , guide = guide_axis(check.overlap = TRUE)) +
+        ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = s)) +
+        ggplot2::ylab(SWMPrStorm::y_labeler(p)) +
+        ggplot2::xlab("Datetime") +
+        ggplot2::theme_bw() +
+        ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
+                       strip.background = ggplot2::element_blank(),
+                       panel.grid = ggplot2::element_blank(),
+                       panel.border = ggplot2::element_rect(color = 'black', fill = NA),
+                       plot.margin = ggplot2::margin(5.5, 10, 5.5, 15, unit = 'pt'),
+                       axis.title.y = ggplot2::element_text(margin = unit(c(0, 8, 0, 0), 'pt'), angle = 90),
+                       text = ggplot2::element_text(size = 16),
+                       legend.position = 'top') +
+        ggplot2::ggsave(paste0("output/met/event_roc/roc_", s, "_", p, "_raw.png"), height=4, width=6, dpi=300)
+
+
+    }
+  }
 
 }

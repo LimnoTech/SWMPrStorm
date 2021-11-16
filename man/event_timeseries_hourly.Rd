@@ -4,10 +4,24 @@
 \alias{event_timeseries_hourly}
 \title{event_timeseries_hourly}
 \usage{
-event_timeseries_hourly(var_in)
+event_timeseries_hourly(
+  var_in,
+  data_path,
+  storm_nm = NULL,
+  storm_start = NULL,
+  storm_end = NULL,
+  view_start = NULL,
+  view_end = NULL,
+  recovery_start = NULL,
+  recovery_end = NULL,
+  wq_sites = NULL,
+  met_sites = NULL,
+  keep_flags = NULL,
+  ...
+)
 }
 \arguments{
-\item{var_in}{}
+\item{...}{}
 }
 \value{
 
