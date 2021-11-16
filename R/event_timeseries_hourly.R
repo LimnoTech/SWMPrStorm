@@ -1,6 +1,18 @@
 #' event_timeseries_hourly
 #'
 #' @param var_in
+#' @param data_path
+#' @param storm_nm
+#' @param storm_start
+#' @param storm_end
+#' @param view_start
+#' @param view_end
+#' @param recovery_start
+#' @param recovery_end
+#' @param wq_sites
+#' @param met_sites
+#' @param keep_flags
+#' @param ...
 #'
 #' @return
 #' @export
@@ -15,12 +27,8 @@ event_timeseries_hourly <- function(var_in,
                                     view_end = NULL,
                                     recovery_start = NULL,
                                     recovery_end = NULL,
-                                    reserve = NULL,
-                                    stn_wq = NULL,
                                     wq_sites = NULL,
-                                    stn_met = NULL,
                                     met_sites = NULL,
-                                    stn_target = NULL,
                                     keep_flags = NULL,
                                     ...){
 
@@ -43,14 +51,10 @@ event_timeseries_hourly <- function(var_in,
   if(is.null(storm_end)) storm_end <- input_Parameters[3,2]
   if(is.null(view_start)) view_start <- input_Parameters[4,2]
   if(is.null(view_end)) view_end <- input_Parameters[5,2]
-  if(is.null(recovery_start)) recovery_start <- storm_end
-  if(is.null(recovery_end)) recovery_end <- input_Parameters[6,2]
-  if(is.null(reserve)) reserve <- input_Parameters[7,2]
-  if(is.null(stn_wq)) stn_wq <- input_Parameters[9,2]
+  if(is.null(recovery_start)) recovery_start <- storm_end #remove as input if not ultimately used in later version for release
+  if(is.null(recovery_end)) recovery_end <- input_Parameters[6,2] #remove as input if not ultimately used in later version for release
   if(is.null(wq_sites)) wq_sites <- input_Sites$wq_sites[!is.na(input_Sites$wq_sites)]
-  if(is.null(stn_met)) stn_met <- input_Parameters[10,2]
   if(is.null(met_sites)) met_sites <- input_Sites$met_sites[!is.na(input_Sites$met_sites)]
-  if(is.null(stn_target)) stn_target <- input_Parameters[8,2]
   if(is.null(keep_flags)) keep_flags <- input_Flags$keep_flags
   if(is.null(data_path)) data_path <- 'data/cdmo'
 
@@ -123,7 +127,7 @@ event_timeseries_hourly <- function(var_in,
         ggplot2::geom_line(aes(color = 'Hourly Avg'), lwd = 1) +# 'steelblue3') +
         ggplot2::geom_rect(data=df,ggplot2::aes(xmin=xmin,ymin=ymin,xmax=xmax,ymax=ymax,fill=years),
                   alpha=0.1,inherit.aes=FALSE) +
-        ggplot2::scale_x_datetime(date_breaks = 'day', date_labels = '%b %d') +
+        ggplot2::scale_x_datetime(date_breaks = 'day', date_labels = '%b %d', guide = guide_axis(check.overlap = TRUE)) +
         ggplot2::labs(x = '', y = SWMPrExtension::y_labeler(parm[j]))
 
       x <-
@@ -147,56 +151,6 @@ event_timeseries_hourly <- function(var_in,
 
     }
   }
-
-
-  # ----------------------------------------------
-  # Time series, precip                      -----
-  # ----------------------------------------------
-
-  precip <- ls_par[[1]]
-
-  precip_day <- precip %>%
-    dplyr::filter(dplyr::between(datetimestamp
-                   , as.POSIXct(view_start)
-                   , as.POSIXct(view_end))) %>%
-    dplyr::mutate(datetimestamp_day = lubridate::floor_date(datetimestamp, unit = 'day')) %>%
-    dplyr::group_by(datetimestamp_day) %>%
-    dplyr::summarize(value = sum(totprcp, na.rm = T))
-
-  precip_day$mo <- paste(month.abb[lubridate::month(precip_day$datetimestamp_day)]
-                         , lubridate::day(precip_day$datetimestamp_day)
-                         , sep = ' ') %>%
-    factor
-
-  # precip_day$date_fac <- paste(as.factor(precip_day$datetimestamp_day), sep = ' ')
-
-  # basic plot
-  x <- ggplot2::ggplot(precip_day, ggplot2::aes(x = mo, y = value)) +
-    ggplot2::geom_bar(stat = 'identity', fill = 'steelblue3') +
-    ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = met_sites)) +
-    ggplot2::coord_flip() +
-    ggplot2::scale_x_discrete(limits = rev(levels(precip_day$mo)))
-
-  # colors
-  x <- x +
-    ggplot2::scale_y_continuous(expand = c(0, 0), limits = c(0, 1.5), breaks = seq(0 , 1.6, 0.25)) +
-    ggplot2::labs(x = NULL, y = 'Daily Precipitation (in)')
-
-  x <-
-    x +
-    ggplot2::theme_bw() +
-    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
-                   strip.background = ggplot2::element_blank(),
-                   panel.grid = ggplot2::element_blank(),
-                   panel.border = ggplot2::element_rect(color = 'black', fill = NA),
-                   axis.title.y = ggplot2::element_text(margin = unit(c(0, 8, 0, 0), 'pt'), angle = 90),
-                   text = ggplot2::element_text(size = 16),
-                   plot.margin = ggplot2::unit(c(0, 16, 0, 0), 'pt'),
-                   legend.position = 'top')
-
-  x_ttl <- paste('output/met/barplot/barplot_daily_', sta, '_', parm[j], '.png', sep = '')
-
-  ggplot2::ggsave(filename = x_ttl, plot = x, height = 6, width = 4, units = 'in', dpi = 300)
 
 
 

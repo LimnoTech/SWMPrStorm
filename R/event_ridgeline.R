@@ -1,26 +1,32 @@
+#' Title
+#'
+#' @param var_in
+#' @param data_path
+#' @param storm_nm
+#' @param storm_start
+#' @param storm_end
+#' @param wq_sites
+#' @param met_sites
+#' @param keep_flags
+#' @param ...
+#'
+#' @return
+#' @export
+#'
+#' @examples
 event_ridgeline <- function(var_in,
                             data_path,
                             storm_nm = NULL,
                             storm_start = NULL,
                             storm_end = NULL,
-                            view_start = NULL,
-                            view_end = NULL,
-                            recovery_start = NULL,
-                            recovery_end = NULL,
-                            reserve = NULL,
-                            stn_wq = NULL,
                             wq_sites = NULL,
-                            stn_met = NULL,
                             met_sites = NULL,
-                            stn_target = NULL,
                             keep_flags = NULL,
                             ...) {
 
   # ----------------------------------------------------------------------------
   # Read in Data
   # ----------------------------------------------------------------------------
-
-
 
 
   #a.  Read in the variable input template, var_in
@@ -33,36 +39,13 @@ event_ridgeline <- function(var_in,
   if(is.null(storm_nm)) storm_nm <- input_Parameters[1,2]
   if(is.null(storm_start)) storm_start <- input_Parameters[2,2]
   if(is.null(storm_end)) storm_end <- input_Parameters[3,2]
-  if(is.null(view_start)) view_start <- input_Parameters[4,2]
-  if(is.null(view_end)) view_end <- input_Parameters[5,2]
-  if(is.null(recovery_start)) recovery_start <- storm_end
-  if(is.null(recovery_end)) recovery_end <- input_Parameters[6,2]
-  if(is.null(reserve)) reserve <- input_Parameters[7,2]
-  if(is.null(stn_wq)) stn_wq <- input_Parameters[9,2]
   if(is.null(wq_sites)) wq_sites <- input_Sites$wq_sites[!is.na(input_Sites$wq_sites)]
-  if(is.null(stn_met)) stn_met <- input_Parameters[10,2]
   if(is.null(met_sites)) met_sites <- input_Sites$met_sites[!is.na(input_Sites$met_sites)]
-  if(is.null(stn_target)) stn_target <- input_Parameters[8,2]
   if(is.null(keep_flags)) keep_flags <- input_Flags$keep_flags
   if(is.null(data_path)) data_path <- 'data/cdmo'
 
 
   ########## WATER QUALITY #####################################################
-  #a few notes -------------------
-    ## Kim Cressman's 2017 eclipse plot: https://github.com/swmpkim/2017_eclipse_viz/blob/master/Eclipse_visualization.Rmd
-    # Define storm ------------------
-  # Matthew
-  storm_nm <- 'Matthew'
-  storm_start <- '2016-10-05 00:00:00' # '2016-9-28 00:00:00'
-  storm_end <- '2016-10-10 00:00:00' # '2016-10-10 00:00:00'
-
-  reserve <- 'gtm'
-  wq_sites <- paste0(c('gtmpc', 'acemc', 'sapld', 'niwol', 'nocrc'), 'wq')
-  met_sites <- paste0(c('gtmpc', 'acebp', 'sapml', 'niwol', 'nocrc'), 'met')
-  met_sites_lvl <- paste0(c('gtmpc', 'acebp', 'sapml', 'niwol', 'nocrc'), 'met')
-  stn_target <- 'gtmpc'
-
-  keep_flags <- c('0', '3', '5', '<-4> [SBL]', '1')
 
   # ----------------------------------------------
   # Load water quality data ----------------------

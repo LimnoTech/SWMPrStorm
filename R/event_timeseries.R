@@ -1,12 +1,23 @@
 #' event_timeseries
 #'
 #' @param var_in
+#' @param storm_start
+#' @param storm_end
+#' @param view_start
+#' @param view_end
+#' @param recovery_start
+#' @param recovery_end
+#' @param stn_wq
+#' @param keep_flags
+#' @param data_path
+#' @param ...
 #'
 #' @return
 #' @export
 #'
 #' @examples
 event_timeseries <- function(var_in,
+                             data_path = NULL,
                              storm_start = NULL,
                              storm_end = NULL,
                              view_start = NULL,
@@ -15,7 +26,6 @@ event_timeseries <- function(var_in,
                              recovery_end = NULL,
                              stn_wq = NULL,
                              keep_flags = NULL,
-                             data_path = NULL,
                              ...) {
 
   ### 0. Read variables ########################################################
@@ -29,14 +39,13 @@ event_timeseries <- function(var_in,
 
   #b.  Read the following variables from template spreadsheet if not provided as optional arguments
 
-  #if(is.null(storm_nm)) storm_nm <- input_Parameters[1,2]
   if(is.null(storm_start)) storm_start <- input_Parameters[2,2]
   if(is.null(storm_end)) storm_end <- input_Parameters[3,2]
   if(is.null(view_start)) view_start <- input_Parameters[4,2]
   if(is.null(view_end)) view_end <- input_Parameters[5,2]
   if(is.null(recovery_start)) recovery_start <- storm_end
   if(is.null(recovery_end)) recovery_end <- input_Parameters[6,2]
-  #if(is.null(reserve)) reserve <- input_Parameters[7,2]
+  if(is.null(reserve)) reserve <- input_Parameters[7,2]
   if(is.null(stn_wq)) stn_wq <- input_Parameters[9,2]
   if(is.null(stn_met)) stn_met <- input_Parameters[10,2]
   if(is.null(keep_flags)) keep_flags <- input_Flags$keep_flags
@@ -91,7 +100,7 @@ event_timeseries <- function(var_in,
   #    ggplot2::geom_rect(data=df,aes(xmin=xmin,ymin=ymin,xmax=xmax,ymax=ymax,fill=years),
   #              alpha=0.2,inherit.aes=FALSE) +
   #    ggplot2::scale_x_datetime(date_breaks = '2 weeks', date_labels = '%b %d') +
-  #    ggplot2::labs(x = '', y = SWMPrExtension::y_labeler(parm))
+  #    ggplot2::labs(x = '', y = SWMPrStorm::y_labeler(parm))
   #
   #  x <-
   #    x +
@@ -139,8 +148,9 @@ event_timeseries <- function(var_in,
       ggplot2::geom_line(ggplot2::aes(color = 'Daily Avg'), lwd = 1) +
       ggplot2::geom_rect(data=df,ggplot2::aes(xmin=xmin,ymin=ymin,xmax=xmax,ymax=ymax,fill=years),
                 alpha=0.1,inherit.aes=FALSE) +
-      ggplot2::scale_x_datetime(date_breaks = '2 weeks', date_labels = '%b %d') +
-      ggplot2::labs(x = '', y = SWMPrExtension::y_labeler(parm))
+      ggplot2::scale_x_datetime(date_breaks = '2 weeks', date_labels = '%b %d', guide = guide_axis(check.overlap = TRUE)) +
+      ggplot2::labs(x = '', y = SWMPrStorm::y_labeler(parm))
+
 
     x <-
       x +

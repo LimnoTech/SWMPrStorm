@@ -5,16 +5,8 @@
 #' @param storm_nm
 #' @param storm_start
 #' @param storm_end
-#' @param view_start
-#' @param view_end
-#' @param recovery_start
-#' @param recovery_end
-#' @param reserve
-#' @param stn_wq
 #' @param wq_sites
-#' @param stn_met
 #' @param met_sites
-#' @param stn_target
 #' @param keep_flags
 #' @param ...
 #'
@@ -27,16 +19,8 @@ compare_one_event_multi_reserve <- function(var_in,
                                             storm_nm = NULL,
                                             storm_start = NULL,
                                             storm_end = NULL,
-                                            view_start = NULL,
-                                            view_end = NULL,
-                                            recovery_start = NULL,
-                                            recovery_end = NULL,
-                                            reserve = NULL,
-                                            stn_wq = NULL,
                                             wq_sites = NULL,
-                                            stn_met = NULL,
                                             met_sites = NULL,
-                                            stn_target = NULL,
                                             keep_flags = NULL,
                                             ...) {
 
@@ -58,16 +42,8 @@ compare_one_event_multi_reserve <- function(var_in,
   if(is.null(storm_nm)) storm_nm <- input_Parameters[1,2]
   if(is.null(storm_start)) storm_start <- input_Parameters[2,2]
   if(is.null(storm_end)) storm_end <- input_Parameters[3,2]
-  if(is.null(view_start)) view_start <- input_Parameters[4,2]
-  if(is.null(view_end)) view_end <- input_Parameters[5,2]
-  if(is.null(recovery_start)) recovery_start <- storm_end
-  if(is.null(recovery_end)) recovery_end <- input_Parameters[6,2]
-  if(is.null(reserve)) reserve <- input_Parameters[7,2]
-  if(is.null(stn_wq)) stn_wq <- input_Parameters[9,2]
   if(is.null(wq_sites)) wq_sites <- input_Sites$wq_sites[!is.na(input_Sites$wq_sites)]
-  if(is.null(stn_met)) stn_met <- input_Parameters[10,2]
   if(is.null(met_sites)) met_sites <- input_Sites$met_sites[!is.na(input_Sites$met_sites)]
-  if(is.null(stn_target)) stn_target <- input_Parameters[8,2]
   if(is.null(keep_flags)) keep_flags <- input_Flags$keep_flags
   if(is.null(data_path)) data_path <- 'data/cdmo'
 

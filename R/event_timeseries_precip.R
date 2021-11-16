@@ -2,21 +2,14 @@
 #'
 #' @param var_in
 #' @param data_path
-#' @param storm_nm
 #' @param storm_start
 #' @param storm_end
 #' @param view_start
 #' @param view_end
-#' @param recovery_start
-#' @param recovery_end
-#' @param reserve
-#' @param stn_wq
-#' @param wq_sites
 #' @param stn_met
-#' @param met_sites
-#' @param stn_target
 #' @param keep_flags
 #' @param ...
+#' @param flip
 #'
 #' @return
 #' @export
