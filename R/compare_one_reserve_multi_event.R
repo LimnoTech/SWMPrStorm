@@ -46,8 +46,8 @@ compare_one_reserve_multi_event <- function(var_in,
   if(is.null(storm_start)) storm_start <- input_Multi$storm_start
   if(is.null(storm_end)) storm_end <- input_Multi$storm_end
   if(is.null(reserve)) reserve <- input_Parameters[7,2]
-  if(is.null(wq_sites)) wq_sites <- input_Multi$wq_sites[!is.na(input_Sites$wq_sites)]
-  if(is.null(met_sites)) met_sites <- input_Multi$met_sites[!is.na(input_Sites$met_sites)]
+  if(is.null(wq_sites)) wq_sites <- input_Multi$wq_sites[!is.na(input_Multi$wq_sites)]
+  if(is.null(met_sites)) met_sites <- input_Multi$met_sites[!is.na(input_Multi$met_sites)]
   if(is.null(keep_flags)) keep_flags <- input_Flags$keep_flags
   if(is.null(data_path)) data_path <- 'data/cdmo'
 
@@ -92,6 +92,7 @@ compare_one_reserve_multi_event <- function(var_in,
 
   summary <- dat_tidy %>%
     dplyr::group_by(event, parameter, station) %>%
+    tidyr::drop_na(result) %>%
     dplyr::summarise(min = min(result, na.rm = T)
               , max = max(result, na.rm = T)
               , mean = mean(result, na.rm = T)
@@ -149,7 +150,8 @@ compare_one_reserve_multi_event <- function(var_in,
   dat <- evts %>% dplyr::relocate(event)
 
   # combine data.frames into one and tidy
-  dat_tidy <- dat %>% tidyr::pivot_longer(., 4:length(names(dat)), names_to = 'parameter', values_to = 'result')
+  dat_tidy <- dat %>%
+    tidyr::pivot_longer(., 4:length(names(dat)), names_to = 'parameter', values_to = 'result')
 
   # ----------------------------------------------
   # Single Event Comparison, Multiple Reserves ---
@@ -157,6 +159,7 @@ compare_one_reserve_multi_event <- function(var_in,
 
   summary <- dat_tidy %>%
     dplyr::group_by(event, parameter, station) %>%
+    tidyr::drop_na(result) %>%
     dplyr::summarise(min = min(result, na.rm = T)
               , max = max(result, na.rm = T)
               , mean = mean(result, na.rm = T)

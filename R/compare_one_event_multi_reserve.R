@@ -88,6 +88,7 @@ compare_one_event_multi_reserve <- function(var_in,
 
   summary <- dat_tidy %>%
     dplyr::group_by(event, evt_start, evt_end, parameter, station) %>%
+    tidyr::drop_na(result) %>%
     dplyr::summarise(min = min(result, na.rm = T)
               , max = max(result, na.rm = T)
               , mean = mean(result, na.rm = T)
@@ -147,6 +148,7 @@ compare_one_event_multi_reserve <- function(var_in,
 
   summary <- dat_tidy %>%
     dplyr::group_by(event, evt_start, evt_end, parameter, station) %>%
+    tidyr::drop_na(result) %>%
     dplyr::summarise(min = min(result, na.rm = T)
               , max = max(result, na.rm = T)
               , mean = mean(result, na.rm = T)

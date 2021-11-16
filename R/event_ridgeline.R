@@ -108,7 +108,7 @@ event_ridgeline <- function(var_in,
                                      height = result, group = Reserve.Name)) +
       ggridges::geom_density_ridges(stat = "identity", scale = 1, fill = "lightblue") +
       ggridges::theme_ridges() +
-      ggplot2::ylab(SWMPrExtension::y_labeler(param)) +
+      ggplot2::ylab(SWMPrStorm::y_labeler(param)) +
       ggplot2::xlab("Date") +
       ggplot2::scale_x_datetime(expand = c(0, 0)) +
       ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
@@ -147,7 +147,7 @@ event_ridgeline <- function(var_in,
                                      height = avg, group = Reserve.Name)) +
       ggridges::geom_density_ridges(stat = "identity", scale = 1, fill = "lightblue") +
       ggridges::theme_ridges() +
-      ggplot2::ylab(SWMPrExtension::y_labeler(param)) +
+      ggplot2::ylab(SWMPrStorm::y_labeler(param)) +
       ggplot2::xlab("Date") +
       ggplot2::scale_x_datetime(expand = c(0, 0)) +
       ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
@@ -224,7 +224,7 @@ event_ridgeline <- function(var_in,
                                      height = result, group = Reserve.Name)) +
       ggridges::geom_density_ridges(stat = "identity", scale = 1, fill = "lightblue") +
       ggridges::theme_ridges() +
-      ggplot2::ylab(SWMPrExtension::y_labeler(param)) +
+      ggplot2::ylab(SWMPrStorm::y_labeler(param)) +
       ggplot2::xlab("Date") +
       ggplot2::scale_x_datetime(expand = c(0, 0)) +
       ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
@@ -263,7 +263,7 @@ event_ridgeline <- function(var_in,
                                             height = avg, group = Reserve.Name)) +
       ggridges::geom_density_ridges(stat = "identity", scale = 1, fill = "lightblue") +
       ggridges::theme_ridges() +
-      ggplot2::ylab(SWMPrExtension::y_labeler(param)) +
+      ggplot2::ylab(SWMPrStorm::y_labeler(param)) +
       ggplot2::xlab("Date") +
       ggplot2::scale_x_datetime(expand = c(0, 0)) +
       ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),

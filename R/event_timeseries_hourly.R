@@ -128,7 +128,7 @@ event_timeseries_hourly <- function(var_in,
         ggplot2::geom_rect(data=df,ggplot2::aes(xmin=xmin,ymin=ymin,xmax=xmax,ymax=ymax,fill=years),
                   alpha=0.1,inherit.aes=FALSE) +
         ggplot2::scale_x_datetime(date_breaks = 'day', date_labels = '%b %d', guide = guide_axis(check.overlap = TRUE)) +
-        ggplot2::labs(x = '', y = SWMPrExtension::y_labeler(parm[j]))
+        ggplot2::labs(x = '', y = SWMPrStorm::y_labeler(parm[j]))
 
       x <-
         x +
@@ -216,7 +216,7 @@ event_timeseries_hourly <- function(var_in,
         ggplot2::geom_rect(data=df,ggplot2::aes(xmin=xmin,ymin=ymin,xmax=xmax,ymax=ymax,fill=years),
                   alpha=0.1,inherit.aes=FALSE) +
         ggplot2::scale_x_datetime(date_breaks = '1 week', date_labels = '%b %d') +
-        ggplot2::labs(x = '', y = SWMPrExtension::y_labeler(parm[j]))
+        ggplot2::labs(x = '', y = SWMPrStorm::y_labeler(parm[j]))
 
       x <-
         x +
