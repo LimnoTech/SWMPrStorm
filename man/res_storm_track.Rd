@@ -6,6 +6,7 @@
 \usage{
 res_storm_track(
   nerr_site_id = NULL,
+  storm_nm = NULL,
   stations = NULL,
   bbox = NULL,
   path_to_shp = NULL,

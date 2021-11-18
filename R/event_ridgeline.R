@@ -104,7 +104,7 @@ event_ridgeline <- function(var_in,
 
     plt_ttl <- paste('output/wq/ridgeline_one_reserve_one_event/ridgeline_', '_', param, '.png', sep = '')
 
-    ggplot2::ggplot(df, ggplot2::aes(x=datetimestamp, y = Reserve.Name,
+    p1 <- ggplot2::ggplot(df, ggplot2::aes(x=datetimestamp, y = Reserve.Name,
                                      height = result, group = Reserve.Name)) +
       ggridges::geom_density_ridges(stat = "identity", scale = 1, fill = "lightblue") +
       ggridges::theme_ridges() +
@@ -115,8 +115,9 @@ event_ridgeline <- function(var_in,
                      axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 8, 0, 0), 'pt'), angle = 90),
                      text = ggplot2::element_text(size = 16),
                      plot.margin = ggplot2::unit(c(0, 20, 0, 0), 'pt'),
-                     legend.position = 'top') +
-      ggplot2::ggsave(plt_ttl, height=8, width =8)
+                     legend.position = 'top')
+
+      ggplot2::ggsave(filename = plt_ttl, plot = p1, height=8, width =8)
 
 
   }
@@ -143,7 +144,7 @@ event_ridgeline <- function(var_in,
 
     plt_ttl <- paste('output/wq/ridgeline_one_reserve_one_event/ridgeline_', '_', param, '_smoothed.png', sep = '')
 
-    ggplot2::ggplot(df_smooth, ggplot2::aes(x=datetime_floor, y = Reserve.Name,
+    p2 <- ggplot2::ggplot(df_smooth, ggplot2::aes(x=datetime_floor, y = Reserve.Name,
                                      height = avg, group = Reserve.Name)) +
       ggridges::geom_density_ridges(stat = "identity", scale = 1, fill = "lightblue") +
       ggridges::theme_ridges() +
@@ -154,8 +155,9 @@ event_ridgeline <- function(var_in,
                      axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 8, 0, 0), 'pt'), angle = 90),
                      text = ggplot2::element_text(size = 16),
                      plot.margin = ggplot2::unit(c(0, 20, 0, 0), 'pt'),
-                     legend.position = 'top') +
-      ggplot2::ggsave(plt_ttl, height=8, width =8)
+                     legend.position = 'top')
+
+      ggplot2::ggsave(filename = plt_ttl, plot = p2, height = 8, width = 8)
 
 
   }
@@ -220,7 +222,7 @@ event_ridgeline <- function(var_in,
 
     plt_ttl <- paste('output/met/ridgeline_one_reserve_one_event/ridgeline_', '_', param, '.png', sep = '')
 
-    ggplot2::ggplot(df, ggplot2::aes(x=datetimestamp, y = Reserve.Name,
+    p3 <- ggplot2::ggplot(df, ggplot2::aes(x=datetimestamp, y = Reserve.Name,
                                      height = result, group = Reserve.Name)) +
       ggridges::geom_density_ridges(stat = "identity", scale = 1, fill = "lightblue") +
       ggridges::theme_ridges() +
@@ -231,8 +233,9 @@ event_ridgeline <- function(var_in,
                      axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 8, 0, 0), 'pt'), angle = 90),
                      text = ggplot2::element_text(size = 16),
                      plot.margin = ggplot2::unit(c(0, 20, 0, 0), 'pt'),
-                     legend.position = 'top') +
-      ggplot2::ggsave(plt_ttl, height=8, width =8)
+                     legend.position = 'top')
+
+      ggplot2::ggsave(filename = plt_ttl, plot = p3, height=8, width =8)
 
 
   }
@@ -259,7 +262,7 @@ event_ridgeline <- function(var_in,
 
     plt_ttl <- paste('output/met/ridgeline_one_reserve_one_event/ridgeline_', '_', param, '_smoothed.png', sep = '')
 
-    ggplot2::ggplot(df_smooth, ggplot2::aes(x=datetime_floor, y = Reserve.Name,
+    p4 <- ggplot2::ggplot(df_smooth, ggplot2::aes(x=datetime_floor, y = Reserve.Name,
                                             height = avg, group = Reserve.Name)) +
       ggridges::geom_density_ridges(stat = "identity", scale = 1, fill = "lightblue") +
       ggridges::theme_ridges() +
@@ -270,8 +273,9 @@ event_ridgeline <- function(var_in,
                      axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 8, 0, 0), 'pt'), angle = 90),
                      text = ggplot2::element_text(size = 16),
                      plot.margin = ggplot2::unit(c(0, 20, 0, 0), 'pt'),
-                     legend.position = 'top') +
-      ggplot2::ggsave(plt_ttl, height=8, width =8)
+                     legend.position = 'top')
+
+      ggplot2::ggsave(filename = plt_ttl, plot = p4, height=8, width =8)
 
 
   }

@@ -97,7 +97,8 @@ event_roc <- function(var_in,
   # ----------------------------------------------
 
 
-
+p <- parm[1]
+s <- wq_sites[1]
 
   for(p in parm) {
     for(s in wq_sites) {
@@ -128,8 +129,11 @@ event_roc <- function(var_in,
                        plot.margin = ggplot2::margin(5.5, 10, 5.5, 15, unit = 'pt'),
                        axis.title.y = ggplot2::element_text(margin = unit(c(0, 8, 0, 0), 'pt'), angle = 90),
                        text = ggplot2::element_text(size = 16),
-                       legend.position = 'top') +
-        ggplot2::ggsave(paste0("output/wq/event_roc/roc_", s, "_", p, "_stepwise.png"), height=4, width=6, dpi=300)
+                       legend.position = 'top')
+
+        ggplot2::ggsave(filename = paste0("output/wq/event_roc/roc_", s, "_", p, "_stepwise.png"), plot = p1, height=4, width=6, dpi=300)
+
+
 
 
       p2 <- ggplot2::ggplot(roc_smooth, ggplot2::aes(x = time_hr, y = diff_result)) +
@@ -149,8 +153,9 @@ event_roc <- function(var_in,
                        plot.margin = ggplot2::margin(5.5, 10, 5.5, 15, unit = 'pt'),
                        axis.title.y = ggplot2::element_text(margin = unit(c(0, 8, 0, 0), 'pt'), angle = 90),
                        text = ggplot2::element_text(size = 16),
-                       legend.position = 'top') +
-        ggplot2::ggsave(paste0("output/wq/event_roc/roc_", s, "_", p, "_hourly.png"), height=4, width=6, dpi=300)
+                       legend.position = 'top')
+
+        ggplot2::ggsave(filename = paste0("output/wq/event_roc/roc_", s, "_", p, "_hourly.png"), plot = p2, height=4, width=6, dpi=300)
 
       p3 <- dat_tidy %>%
         dplyr::filter(station == s, parameter == p) %>%
@@ -170,8 +175,10 @@ event_roc <- function(var_in,
                        plot.margin = ggplot2::margin(5.5, 10, 5.5, 15, unit = 'pt'),
                        axis.title.y = ggplot2::element_text(margin = unit(c(0, 8, 0, 0), 'pt'), angle = 90),
                        text = ggplot2::element_text(size = 16),
-                       legend.position = 'top') +
-        ggplot2::ggsave(paste0("output/wq/event_roc/roc_", s, "_", p, "_raw.png"), height=4, width=6, dpi=300)
+                       legend.position = 'top')
+
+
+        ggplot2::ggsave(filename = paste0("output/wq/event_roc/roc_", s, "_", p, "_raw.png"), plot = p3, height=4, width=6, dpi=300)
 
 
 
@@ -274,8 +281,9 @@ event_roc <- function(var_in,
                        plot.margin = ggplot2::margin(5.5, 10, 5.5, 15, unit = 'pt'),
                        axis.title.y = ggplot2::element_text(margin = unit(c(0, 8, 0, 0), 'pt'), angle = 90),
                        text = ggplot2::element_text(size = 16),
-                       legend.position = 'top') +
-        ggplot2::ggsave(paste0("output/met/event_roc/roc_", s, "_", p, "_stepwise.png"), height=4, width=6, dpi=300)
+                       legend.position = 'top')
+
+        ggplot2::ggsave(filename = paste0("output/met/event_roc/roc_", s, "_", p, "_stepwise.png"), plot = p1, height=4, width=6, dpi=300)
 
 
 
@@ -296,8 +304,9 @@ event_roc <- function(var_in,
                        plot.margin = ggplot2::margin(5.5, 10, 5.5, 15, unit = 'pt'),
                        axis.title.y = ggplot2::element_text(margin = unit(c(0, 8, 0, 0), 'pt'), angle = 90),
                        text = ggplot2::element_text(size = 16),
-                       legend.position = 'top') +
-        ggplot2::ggsave(paste0("output/met/event_roc/roc_", s, "_", p, "_hourly.png"), height=4, width=6, dpi=300)
+                       legend.position = 'top')
+
+        ggplot2::ggsave(filename = paste0("output/met/event_roc/roc_", s, "_", p, "_hourly.png"), plot = p2, height=4, width=6, dpi=300)
 
 
       p3 <- dat_tidy %>%
@@ -319,8 +328,9 @@ event_roc <- function(var_in,
                        plot.margin = ggplot2::margin(5.5, 10, 5.5, 15, unit = 'pt'),
                        axis.title.y = ggplot2::element_text(margin = unit(c(0, 8, 0, 0), 'pt'), angle = 90),
                        text = ggplot2::element_text(size = 16),
-                       legend.position = 'top') +
-        ggplot2::ggsave(paste0("output/met/event_roc/roc_", s, "_", p, "_raw.png"), height=4, width=6, dpi=300)
+                       legend.position = 'top')
+
+        ggplot2::ggsave(filename = paste0("output/met/event_roc/roc_", s, "_", p, "_raw.png"), plot=p3, height=4, width=6, dpi=300)
 
 
     }

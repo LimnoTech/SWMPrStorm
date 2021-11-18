@@ -16,7 +16,7 @@
 #' @export
 #'
 #' @examples
-event_timeseires_dual <- function(var_in,
+event_timeseries_dual <- function(var_in,
                                   data_path,
                                   storm_nm = NULL,
                                   view_start = NULL,
@@ -42,7 +42,6 @@ event_timeseires_dual <- function(var_in,
 
   if(is.null(view_start)) view_start <- input_Parameters[4,2]
   if(is.null(view_end)) view_end <- input_Parameters[5,2]
-  if(is.null(reserve)) reserve <- input_Parameters[7,2]
   if(is.null(stn_wq)) stn_wq <- input_Parameters[9,2] #if both null, can ignore pending param_primary and param_secondary. build logic below.
   if(is.null(stn_met)) stn_met <- input_Parameters[10,2] #if both null, can ignore param_primary and param_secondary. build logic below.
   if(is.null(param_primary)) param_primary <- input_Parameters[11,2]
