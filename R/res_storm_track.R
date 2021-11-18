@@ -1,3 +1,16 @@
+#' res_storm_track
+#'
+#' @param nerr_site_id
+#' @param stations
+#' @param bbox
+#' @param path_to_shp
+#' @param lab_loc
+#' @param scale_pos
+#'
+#' @return
+#' @export
+#'
+#' @examples
 res_storm_track <- function(nerr_site_id = NULL
                             , stations = NULL
                             , bbox = NULL
