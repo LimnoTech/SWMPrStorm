@@ -19,6 +19,7 @@ initialize_project <- function(path_to_project = NULL) {
   if(!dir.exists(paste0(path_to_project, "/output"))) {dir.create(paste0(path_to_project, "/output"))}
   if(!dir.exists(paste0(path_to_project, "/output/maps/"))) {dir.create(paste0(path_to_project, "/output/maps/"))}
   if(!dir.exists(paste0(path_to_project, "/output/combined/"))) {dir.create(paste0(path_to_project, "/output/combined/"))}
+  if(!dir.exists(paste0(path_to_project, "/output/combined/timeseries_dual_axis"))) {dir.create(paste0(path_to_project, "/output/combined/timeseries_dual_axis"))}
   if(!dir.exists(paste0(path_to_project, "/output/wq/"))) {dir.create(paste0(path_to_project, "/output/wq/"))}
   if(!dir.exists(paste0(path_to_project, "/output/wq/comparison_one_evt_multi_reserve/"))) {dir.create(paste0(path_to_project, "/output/wq/comparison_one_evt_multi_reserve/"))}
   if(!dir.exists(paste0(path_to_project, "/output/wq/comparison_one_reserve_multi_event/"))) {dir.create(paste0(path_to_project, "/output/wq/comparison_one_reserve_multi_event/"))}

@@ -112,7 +112,7 @@ event_ridgeline <- function(var_in,
       ggplot2::xlab("Date") +
       ggplot2::scale_x_datetime(expand = c(0, 0)) +
       ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
-                     axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 8, 0, 0), 'pt'), angle = 90),
+                     axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 16, 0, 0), 'pt'), angle = 90),
                      text = ggplot2::element_text(size = 16),
                      plot.margin = ggplot2::unit(c(0, 20, 0, 0), 'pt'),
                      legend.position = 'top')
@@ -152,7 +152,7 @@ event_ridgeline <- function(var_in,
       ggplot2::xlab("Date") +
       ggplot2::scale_x_datetime(expand = c(0, 0)) +
       ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
-                     axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 8, 0, 0), 'pt'), angle = 90),
+                     axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 16, 0, 0), 'pt'), angle = 90),
                      text = ggplot2::element_text(size = 16),
                      plot.margin = ggplot2::unit(c(0, 20, 0, 0), 'pt'),
                      legend.position = 'top')
@@ -230,7 +230,7 @@ event_ridgeline <- function(var_in,
       ggplot2::xlab("Date") +
       ggplot2::scale_x_datetime(expand = c(0, 0)) +
       ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
-                     axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 8, 0, 0), 'pt'), angle = 90),
+                     axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 16, 0, 0), 'pt'), angle = 90),
                      text = ggplot2::element_text(size = 16),
                      plot.margin = ggplot2::unit(c(0, 20, 0, 0), 'pt'),
                      legend.position = 'top')
@@ -270,7 +270,7 @@ event_ridgeline <- function(var_in,
       ggplot2::xlab("Date") +
       ggplot2::scale_x_datetime(expand = c(0, 0)) +
       ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
-                     axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 8, 0, 0), 'pt'), angle = 90),
+                     axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 16, 0, 0), 'pt'), angle = 90),
                      text = ggplot2::element_text(size = 16),
                      plot.margin = ggplot2::unit(c(0, 20, 0, 0), 'pt'),
                      legend.position = 'top')
