@@ -1,4 +1,4 @@
-#' initialize_project
+#' initialize_project()
 #'
 #' @param path_to_project
 #'

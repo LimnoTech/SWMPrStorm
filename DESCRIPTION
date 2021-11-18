@@ -31,7 +31,12 @@ Imports:
     oce,
     magrittr,
     leaflet,
-    sf
+    sf,
+    sp,
+    ggthemes,
+    maptools,
+    rgdal, 
+    rlang
 Depends: 
     SWMPr,
     SWMPrExtension
