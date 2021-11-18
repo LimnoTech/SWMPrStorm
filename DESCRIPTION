@@ -29,7 +29,9 @@ Imports:
     xlsx,
     scales,
     oce,
-    magrittr
+    magrittr,
+    leaflet,
+    sf
 Depends: 
     SWMPr,
     SWMPrExtension
