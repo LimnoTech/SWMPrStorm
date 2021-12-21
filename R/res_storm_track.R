@@ -11,7 +11,8 @@
 #' @export
 #'
 #' @examples
-res_storm_track <- function(nerr_site_id = NULL
+res_storm_track <- function(map_in
+                            , nerr_site_id = NULL
                             , storm_nm = NULL
                             , stations = NULL
                             , bbox = NULL

@@ -5,6 +5,7 @@
 \title{res_storm_track}
 \usage{
 res_storm_track(
+  map_in,
   nerr_site_id = NULL,
   storm_nm = NULL,
   stations = NULL,
