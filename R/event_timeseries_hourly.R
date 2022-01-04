@@ -79,6 +79,11 @@ event_timeseries_hourly <- function(var_in,
   ls_par <- lapply(ls_par, function(x) {x$totprcp <- x$totprcp / 25.4; x}) # mm to in
   ls_par <- lapply(ls_par, function(x) {x$intensprcp <- x$totprcp * 4; x}) # in/15-min to in/hr
 
+  ## list unit conversions for plot labels
+  param <- c('atemp', 'wspd', 'maxwspd', 'totprcp', 'intensprcp')
+  unit <- rep(TRUE, length(parm))
+  conversions <- data.frame(parameter = param, con = unit)
+
   names(ls_par) <- met_sites
 
 
@@ -109,7 +114,9 @@ event_timeseries_hourly <- function(var_in,
                      , as.POSIXct(view_end))) %>%
       dplyr::mutate(datetimestamp_day = lubridate::floor_date(datetimestamp, unit = 'hour')) %>%
       dplyr::group_by(datetimestamp_day, parameter) %>%
-      dplyr::summarize(value = mean(value, na.rm = T))
+      dplyr::summarize(value = mean(value, na.rm = T)) %>%
+      dplyr::left_join(conversions) %>%
+      dplyr::mutate(con = tidyr::replace_na(con, FALSE))
 
     for(j in 1:length(parm)) {
 
@@ -120,6 +127,10 @@ event_timeseries_hourly <- function(var_in,
                        ymax=c(Inf),
                        years=c('Event Onset'))
 
+      converted <- df_day %>% filter(parameter == parm[j])
+      converted <- converted$con[1]
+
+
       x <-
         df_day %>% dplyr::filter(parameter == parm[j]) %>%
         ggplot2::ggplot(., ggplot2::aes(x = datetimestamp_day, y = value)) +
@@ -128,7 +139,7 @@ event_timeseries_hourly <- function(var_in,
         ggplot2::geom_rect(data=df,ggplot2::aes(xmin=xmin,ymin=ymin,xmax=xmax,ymax=ymax,fill=years),
                   alpha=0.1,inherit.aes=FALSE) +
         ggplot2::scale_x_datetime(date_breaks = 'day', date_labels = '%b %d', guide = guide_axis(check.overlap = TRUE)) +
-        ggplot2::labs(x = '', y = SWMPrStorm::y_labeler(parm[j]))
+        ggplot2::labs(x = '', y = SWMPrStorm::y_labeler(parm[j], converted=converted))
 
       x <-
         x +
@@ -141,7 +152,7 @@ event_timeseries_hourly <- function(var_in,
                        strip.background = ggplot2::element_blank(),
                        panel.grid = ggplot2::element_blank(),
                        panel.border = ggplot2::element_rect(color = 'black', fill = NA),
-                       axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 8, 0, 0), 'pt'), angle = 90),
+                       axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 8, 0, 8), 'pt'), angle = 90),
                        text = ggplot2::element_text(size = 16),
                        legend.position = 'top')
 
@@ -216,7 +227,7 @@ event_timeseries_hourly <- function(var_in,
         ggplot2::geom_rect(data=df,ggplot2::aes(xmin=xmin,ymin=ymin,xmax=xmax,ymax=ymax,fill=years),
                   alpha=0.1,inherit.aes=FALSE) +
         ggplot2::scale_x_datetime(date_breaks = '1 week', date_labels = '%b %d') +
-        ggplot2::labs(x = '', y = SWMPrStorm::y_labeler(parm[j]))
+        ggplot2::labs(x = '', y = SWMPrStorm::y_labeler(parm[j],converted = TRUE))
 
       x <-
         x +
@@ -230,7 +241,7 @@ event_timeseries_hourly <- function(var_in,
                        panel.grid = ggplot2::element_blank(),
                        panel.border = ggplot2::element_rect(color = 'black', fill = NA),
                        plot.margin = ggplot2::margin(5.5, 10, 5.5, 5.5, unit = 'pt'),
-                       axis.title.y = ggplot2::element_text(margin = unit(c(0, 8, 0, 0), 'pt'), angle = 90),
+                       axis.title.y = ggplot2::element_text(margin = unit(c(0, 8, 0, 8), 'pt'), angle = 90),
                        text = ggplot2::element_text(size = 16),
                        legend.position = 'top')
 

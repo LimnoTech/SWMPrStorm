@@ -1,6 +1,5 @@
 #' Generate y-axis Label Based on SWMP Parameter Abbreviation
 #'
-#' Generate a y-axis label based on SWMP parameter abbreviation
 #'
 #' @param param chr string of variable abbreviation
 #' @param converted logical, should the parameter label units be converted from metric to english? Defaults to \code{FALSE}. Currently available for \code{temp}, \code{depth}, \code{cdepth}, \code{level}, \code{clevel}, \code{atemp}, \code{wspd}, \code{maxwspd}, and \code{totprcp}
@@ -23,13 +22,40 @@
 y_labeler <- function(param, converted = FALSE) {
 
   # Parameter abbreviations
-  wq_params <- c('temp', 'spcond', 'sal', 'do_pct', 'do_mgl'
-                 , 'depth', 'cdepth', 'level', 'clevel'
-                 , 'ph', 'turb', 'chlfluor')
-  met_params <- c('atemp', 'rh', 'bp', 'wspd', 'maxwspd'
-                  , 'maxwspdt', 'wdir', 'swdir', 'totpar'
-                  , 'totprcp', 'totsorad')
-  nut_params <- c('po4f', 'nh4f', 'no2f', 'no3f', 'no23f', 'chla_n', 'din', 'dip')
+  wq_params <- c('temp',
+                 'spcond',
+                 'sal',
+                 'do_pct',
+                 'do_mgl'
+                 , 'depth',
+                 'cdepth',
+                 'level',
+                 'clevel',
+                 'ph',
+                 'turb',
+                 'chlfluor')
+
+  met_params <- c('atemp',
+                  'rh',
+                  'bp',
+                  'wspd',
+                  'maxwspd',
+                  'maxwspdt',
+                  'wdir',
+                  'sdwdir',
+                  'totpar',
+                  'totprcp',
+                  'intensprcp',
+                  'totsorad')
+
+  nut_params <- c('po4f',
+                  'nh4f',
+                  'no2f',
+                  'no3f',
+                  'no23f',
+                  'chla_n',
+                  'din',
+                  'dip')
 
   if(!std_param_check(param)){
     # if user enters a non-std parameter, return the name of the parameter for a label
@@ -37,16 +63,35 @@ y_labeler <- function(param, converted = FALSE) {
   } else {
 
     # Parameter labels
-    wq_lab <- c(quote('Water Temperature (' ~degree~ 'C)'), 'Specific Conductivity (mS/cm)', 'Salinity (psu)', 'Dissolved Oxygen Saturation (%)'
-                , 'Dissolved Oxygen (mg/L)', 'Sonde Depth (m)', 'Depth, Corrected for \nBarometric Pressure (m)', 'Level (m)'
-                , 'Level, corrected for \nBarometric Pressure (m)', 'pH (su)', 'Turbidity (NTU)', quote('Chlorophyll Fluorescence (' ~mu~ 'g/L)'))
+    wq_lab <- c(quote('Water Temperature (' ~degree~ 'C)'),
+                'Specific Conductivity (mS/cm)',
+                'Salinity (psu)',
+                'Dissolved Oxygen Saturation (%)',
+                'Dissolved Oxygen (mg/L)', 'Sonde Depth (m)',
+                'Depth, Corrected for \nBarometric Pressure (m)',
+                'Level (m)',
+                'Level, corrected for \nBarometric Pressure (m)',
+                'pH (su)', 'Turbidity (NTU)',
+                quote('Chlorophyll Fluorescence (' ~mu~ 'g/L)'))
 
-    met_lab <- c(quote('Air Temperature (' ~degree~ 'C)'), 'Relative Humidity (%)', 'Barometric Pressure (mb)', 'Wind Speed (m/s)'
-                 , 'Maximum Wind Speed (m/s)', 'Maximum Time of \nWind Speed Measurement (hh:mm)', 'Wind Direction', 'Wind Direction \nStandard Deviation (sd)'
-                 , quote('Photosynthetically \nActive Radiation (mmol/' ~m^2~ ')'), 'Precipitiation (mm)', quote('Total Solar \nRadiation (W/ '~m^2~ ')'))
+    met_lab <- c(quote('Air Temperature (' ~degree~ 'C)'),
+                 'Relative Humidity (%)', 'Barometric Pressure (mb)',
+                 'Wind Speed (m/s)',
+                 'Maximum Wind Speed (m/s)',
+                 'Maximum Time of \nWind Speed Measurement (hh:mm)',
+                 quote('Wind Direction (' ~degree~ ')'),
+                 'Wind Direction \nStandard Deviation (sd)',
+                 quote('Photosynthetically \nActive Radiation (mmol/' ~m^2~ ')'),
+                 'Precipitiation (mm)',
+                 'Precipitation Intensity (mm/hr)',
+                 quote('Total Solar \nRadiation (W/ '~m^2~ ')'))
 
-    nut_lab <- c('Orthophosphate (mg/L)', 'Ammonium (mg/L)', 'Nitrite (mg/L)', 'Nitrate  (mg/L)', 'Nitrite + Nitrate  (mg/L)', quote('Chlorophyll-a (' ~mu~ 'g/L)')
-                 , 'Diss. Inorganic Nitrogen (mg/L)', 'Diss. Inorganic Phosphorus (mg/L)')
+    nut_lab <- c('Orthophosphate (mg/L)',
+                 'Ammonium (mg/L)', 'Nitrite (mg/L)',
+                 'Nitrate  (mg/L)', 'Nitrite + Nitrate  (mg/L)',
+                 quote('Chlorophyll-a (' ~mu~ 'g/L)'),
+                 'Diss. Inorganic Nitrogen (mg/L)',
+                 'Diss. Inorganic Phosphorus (mg/L)')
 
     # Combine together for lookup
     all_params <- c(wq_params, met_params, nut_params)
@@ -56,11 +101,27 @@ y_labeler <- function(param, converted = FALSE) {
 
     if(converted){
       # Create labels for select parameters in english units
-      converted_param <- c('temp', 'depth', 'cdepth', 'level', 'clevel'
-                           , 'atemp', 'wspd', 'maxwspd', 'totprcp')
-      converted_labs <- c(quote('Water Temperature (' ~degree~ 'F)'), 'Sonde Depth (ft)', 'Depth, Corrected for \nBarometric Pressure (ft)', 'Level (ft)'
-                          , 'Level, corrected for \nBarometric Pressure (ft)', quote('Air Temperature (' ~degree~ 'F)'), 'Wind Speed (ft/s)'
-                          , 'Maximum Wind Speed (ft/s)','Precipitiation (in)')
+      converted_param <- c('temp',
+                           'depth',
+                           'cdepth',
+                           'level',
+                           'clevel',
+                           'atemp',
+                           'wspd',
+                           'maxwspd',
+                           'totprcp',
+                           'intensprcp')
+
+      converted_labs <- c(quote('Water Temperature (' ~degree~ 'F)'),
+                          'Sonde Depth (ft)',
+                          'Depth, Corrected for \nBarometric Pressure (ft)',
+                          'Level (ft)',
+                          'Level, corrected for \nBarometric Pressure (ft)',
+                          quote('Air Temperature (' ~degree~ 'F)'),
+                          'Wind Speed (mph)',
+                          'Maximum Wind Speed (mph)',
+                          'Precipitiation (in)',
+                          'Precipitation Intensity (in/hr)')
 
       names(converted_labs) <- converted_param
 

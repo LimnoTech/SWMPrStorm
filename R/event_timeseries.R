@@ -161,7 +161,7 @@ event_timeseries <- function(var_in,
                      strip.background = element_blank(),
                      panel.grid = element_blank(),
                      panel.border = element_rect(color = 'black', fill = NA),
-                     axis.title.y = element_text(margin = unit(c(0, 8, 0, 0), 'pt'), angle = 90),
+                     axis.title.y = element_text(margin = unit(c(0, 8, 0, 8), 'pt'), angle = 90),
                      text = element_text(size = 16),
                      legend.position = 'top')
 
