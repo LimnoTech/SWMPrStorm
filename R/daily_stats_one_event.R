@@ -1,4 +1,4 @@
-#' Title
+#' produce daily stat time series for single event at one reserve
 #'
 #' @param var_in
 #' @param data_path
@@ -36,7 +36,7 @@ compare_one_reserve_multi_event <- function(var_in,
 
   #a.  Read in the variable input template, var_in
 
-  input_Parameters <- xlsx::read.xlsx(var_in, sheetName = "stats_one_reserve")
+  input_Parameters <- xlsx::read.xlsx(var_in, sheetName = "table_timeseries")
 
   if(is.null(storm_nm)) storm_nm <- unlist(strsplit(input_Parameters[1,2],", "))
   if(is.null(storm_start)) storm_start <- unlist(strsplit(input_Parameters[2,2],", "))
@@ -79,19 +79,21 @@ compare_one_reserve_multi_event <- function(var_in,
 
 
   # combine data.frames into one and tidy
-  dat_tidy <- dat %>% tidyr::pivot_longer(., 4:length(names(dat)), names_to = 'parameter', values_to = 'result')
+  dat_tidy <- dat %>%
+    tidyr::pivot_longer(., 4:length(names(dat)), names_to = 'parameter', values_to = 'result') %>%
+    dplyr::mutate(date = as.Date(datetimestamp))
 
   # ----------------------------------------------
   # Single Event Comparison, Multiple Reserves ---
   # ----------------------------------------------
 
   summary <- dat_tidy %>%
-    dplyr::group_by(event, parameter, station) %>%
+    dplyr::group_by(event, parameter, station, date) %>%
     tidyr::drop_na(result) %>%
     dplyr::summarise(min = min(result, na.rm = T)
-              , max = max(result, na.rm = T)
-              , mean = mean(result, na.rm = T)
-              , median = median(result, na.rm = T))
+                     , max = max(result, na.rm = T)
+                     , mean = mean(result, na.rm = T)
+                     , median = median(result, na.rm = T))
 
   # add readable station names
   summary$station_name <- sapply(summary$station, SWMPrExtension::title_labeler)
@@ -103,7 +105,7 @@ compare_one_reserve_multi_event <- function(var_in,
   # summary <- summary %>% arrange(., parameter, station_fac)
 
   # write table
-  tbl_ttl <- paste('output/wq/comparison_one_reserve_multi_event/comparison_', reserve, '_multievent.csv', sep = '')
+  tbl_ttl <- paste('output/wq/table_timeseries/daily_wq_timeseries_', reserve, '.csv', sep = '')
   write.csv(summary, file = tbl_ttl, quote = F, row.names = F)
 
 
@@ -146,27 +148,28 @@ compare_one_reserve_multi_event <- function(var_in,
 
   # combine data.frames into one and tidy
   dat_tidy <- dat %>%
-    tidyr::pivot_longer(., 4:length(names(dat)), names_to = 'parameter', values_to = 'result')
+    tidyr::pivot_longer(., 4:length(names(dat)), names_to = 'parameter', values_to = 'result') %>%
+    dplyr::mutate(date = as.Date(datetimestamp))
 
   # ----------------------------------------------
   # Single Event Comparison, Multiple Reserves ---
   # ----------------------------------------------
 
   summary <- dat_tidy %>%
-    dplyr::group_by(event, parameter, station) %>%
+    dplyr::group_by(event, parameter, station, date) %>%
     tidyr::drop_na(result) %>%
     dplyr::summarise(min = min(result, na.rm = T)
-              , max = max(result, na.rm = T)
-              , mean = mean(result, na.rm = T)
-              , median = median(result, na.rm = T)
-              , total = sum(result, na.rm = T))
+                     , max = max(result, na.rm = T)
+                     , mean = mean(result, na.rm = T)
+                     , median = median(result, na.rm = T)
+                     , total = sum(result, na.rm = T))
 
   # add readable station names
   summary$station_name <- sapply(summary$station, SWMPrExtension::title_labeler)
 
 
   # write table
-  tbl_ttl <- paste('output/met/comparison_one_reserve_multi_event/comparison_', reserve, '_multievent.csv', sep = '')
+  tbl_ttl <- paste('output/met/table_timeseries/daily_met_timeseries_', reserve, '.csv', sep = '')
   write.csv(summary, file = tbl_ttl, quote = F, row.names = F)
 
 

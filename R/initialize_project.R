@@ -27,6 +27,7 @@ initialize_project <- function(path_to_project = NULL) {
   if(!dir.exists(paste0(path_to_project, "/output/wq/ridgeline_one_reserve_one_event/"))) {dir.create(paste0(path_to_project, "/output/wq/ridgeline_one_reserve_one_event/"))}
   if(!dir.exists(paste0(path_to_project, "/output/wq/timeseries_event/"))) {dir.create(paste0(path_to_project, "/output/wq/timeseries_event/"))}
   if(!dir.exists(paste0(path_to_project, "/output/wq/timeseries_event_recovery"))) {dir.create(paste0(path_to_project, "/output/wq/timeseries_event_recovery"))}
+  if(!dir.exists(paste0(path_to_project, "/output/wq/table_timeseries/"))) { dir.create(paste0(path_to_project, "/output/wq/table_timeseries/"))}
   if(!dir.exists(paste0(path_to_project, "/output/met/"))) {dir.create(paste0(path_to_project, "/output/met/"))}
   if(!dir.exists(paste0(path_to_project,  "/output/met/barplot/"))) {dir.create(paste0(path_to_project, "/output/met/barplot/"))}
   if(!dir.exists(paste0(path_to_project, "/output/met/comparison_one_evt_multi_reserve/"))) {dir.create(paste0(path_to_project, "/output/met/comparison_one_evt_multi_reserve/"))}
@@ -35,5 +36,6 @@ initialize_project <- function(path_to_project = NULL) {
   if(!dir.exists(paste0(path_to_project, "/output/met/ridgeline_one_reserve_one_event/"))) {dir.create(paste0(path_to_project, "/output/met/ridgeline_one_reserve_one_event/"))}
   if(!dir.exists(paste0(path_to_project, "/output/met/timeseries_event_hourly/"))) {dir.create(paste0(path_to_project, "/output/met/timeseries_event_hourly/"))}
   if(!dir.exists(paste0(path_to_project, "/output/met/windrose/"))) { dir.create(paste0(path_to_project, "/output/met/windrose/"))}
+  if(!dir.exists(paste0(path_to_project, "/output/met/table_timeseries/"))) { dir.create(paste0(path_to_project, "/output/met/table_timeseries/"))}
 
 }
