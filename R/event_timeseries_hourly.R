@@ -81,7 +81,7 @@ event_timeseries_hourly <- function(var_in,
 
   ## list unit conversions for plot labels
   param <- c('atemp', 'wspd', 'maxwspd', 'totprcp', 'intensprcp')
-  unit <- rep(TRUE, length(parm))
+  unit <- rep(TRUE, length(param))
   conversions <- data.frame(parameter = param, con = unit)
 
   names(ls_par) <- met_sites
