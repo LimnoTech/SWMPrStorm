@@ -36,21 +36,16 @@ compare_one_reserve_multi_event <- function(var_in,
 
   #a.  Read in the variable input template, var_in
 
-  input_data <- xlsx::read.xlsx(var_in, sheetName = "Data")
-  input_Parameters <- xlsx::read.xlsx(var_in, sheetName = "Parameters")
-  input_Sites <- xlsx::read.xlsx(var_in, sheetName = "Sites")
-  input_Flags <- xlsx::read.xlsx(var_in, sheetName = "Flags")
-  input_Multi <- xlsx::read.xlsx(var_in, sheetName = "Multi")
+  input_Parameters <- xlsx::read.xlsx(var_in, sheetName = "stats_one_reserve")
 
-  if(is.null(storm_nm)) storm_nm <- input_Multi$storm_nm
-  if(is.null(storm_start)) storm_start <- input_Multi$storm_start
-  if(is.null(storm_end)) storm_end <- input_Multi$storm_end
-  if(is.null(reserve)) reserve <- input_Parameters[7,2]
-  if(is.null(wq_sites)) wq_sites <- input_Multi$wq_sites[!is.na(input_Multi$wq_sites)]
-  if(is.null(met_sites)) met_sites <- input_Multi$met_sites[!is.na(input_Multi$met_sites)]
-  if(is.null(keep_flags)) keep_flags <- input_Flags$keep_flags
+  if(is.null(storm_nm)) storm_nm <- unlist(strsplit(input_Parameters[1,2],", "))
+  if(is.null(storm_start)) storm_start <- unlist(strsplit(input_Parameters[2,2],", "))
+  if(is.null(storm_end)) storm_end <- unlist(strsplit(input_Parameters[3,2],", "))
+  if(is.null(reserve)) reserve <- unlist(strsplit(input_Parameters[4,2],", "))
+  if(is.null(wq_sites)) wq_sites <- unlist(strsplit(input_Parameters[5,2],", "))
+  if(is.null(met_sites)) met_sites <- unlist(strsplit(input_Parameters[6,2],", "))
+  if(is.null(keep_flags)) keep_flags <- unlist(strsplit(input_Parameters[7,2],", "))
   if(is.null(data_path)) data_path <- 'data/cdmo'
-
 
 
   ########## WATER QUALITY #####################################################

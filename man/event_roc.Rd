@@ -6,7 +6,7 @@
 \usage{
 event_roc(
   var_in,
-  data_path,
+  data_path = NULL,
   storm_nm = NULL,
   storm_start = NULL,
   storm_end = NULL,

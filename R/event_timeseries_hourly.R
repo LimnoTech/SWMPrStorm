@@ -3,8 +3,8 @@
 #' @param var_in
 #' @param data_path
 #' @param storm_nm
-#' @param storm_start
-#' @param storm_end
+#' @param onset_start
+#' @param onset_end
 #' @param view_start
 #' @param view_end
 #' @param recovery_start
@@ -19,10 +19,10 @@
 #'
 #' @examples
 event_timeseries_hourly <- function(var_in,
-                                    data_path,
+                                    data_path = NULL,
                                     storm_nm = NULL,
-                                    storm_start = NULL,
-                                    storm_end = NULL,
+                                    onset_start = NULL,
+                                    onset_end = NULL,
                                     view_start = NULL,
                                     view_end = NULL,
                                     recovery_start = NULL,
@@ -39,23 +39,21 @@ event_timeseries_hourly <- function(var_in,
 
   #a.  Read in the variable input template, var_in
 
-  input_data <- xlsx::read.xlsx(var_in, sheetName = "Data")
-  input_Parameters <- xlsx::read.xlsx(var_in, sheetName = "Parameters")
-  input_Sites <- xlsx::read.xlsx(var_in, sheetName = "Sites")
-  input_Flags <- xlsx::read.xlsx(var_in, sheetName = "Flags")
+  input_Parameters <- xlsx::read.xlsx(var_in, sheetName = "timeseries_hourly")
+
 
   #b.  Read the following variables from template spreadsheet if not provided as optional arguments
 
   if(is.null(storm_nm)) storm_nm <- input_Parameters[1,2]
-  if(is.null(storm_start)) storm_start <- input_Parameters[2,2]
-  if(is.null(storm_end)) storm_end <- input_Parameters[3,2]
+  if(is.null(onset_start)) onset_start <- input_Parameters[2,2]
+  if(is.null(onset_end)) onset_end <- input_Parameters[3,2]
   if(is.null(view_start)) view_start <- input_Parameters[4,2]
   if(is.null(view_end)) view_end <- input_Parameters[5,2]
-  if(is.null(recovery_start)) recovery_start <- storm_end #remove as input if not ultimately used in later version for release
-  if(is.null(recovery_end)) recovery_end <- input_Parameters[6,2] #remove as input if not ultimately used in later version for release
-  if(is.null(wq_sites)) wq_sites <- input_Sites$wq_sites[!is.na(input_Sites$wq_sites)]
-  if(is.null(met_sites)) met_sites <- input_Sites$met_sites[!is.na(input_Sites$met_sites)]
-  if(is.null(keep_flags)) keep_flags <- input_Flags$keep_flags
+  if(is.null(recovery_start)) recovery_start <- input_Parameters[6,2]
+  if(is.null(recovery_end)) recovery_end <- input_Parameters[7,2]
+  if(is.null(wq_sites)) wq_sites <- unlist(strsplit(input_Parameters[8,2],", "))
+  if(is.null(met_sites)) met_sites <- unlist(strsplit(input_Parameters[9,2],", "))
+  if(is.null(keep_flags)) keep_flags <- unlist(strsplit(input_Parameters[10,2],", "))
   if(is.null(data_path)) data_path <- 'data/cdmo'
 
 
@@ -70,7 +68,7 @@ event_timeseries_hourly <- function(var_in,
 
   ls_par <- lapply(met_sites, SWMPr::import_local, path = data_path)
   ls_par <- lapply(ls_par, SWMPr::qaqc, qaqc_keep = keep_flags)
-  ls_par <- lapply(ls_par, subset, subset = c(storm_start, storm_end))#, select = par) # Note: par <- wb_basic %>% .[[1]]
+  ls_par <- lapply(ls_par, subset, subset = c(view_start, view_end))#, select = par) # Note: par <- wb_basic %>% .[[1]]
 
   ## convert select parameters, add precip intensity (in/hr)
   ls_par <- lapply(ls_par, function(x) {x$atemp <- x$atemp * 9 / 5 + 32; x}) # C to F
@@ -121,8 +119,8 @@ event_timeseries_hourly <- function(var_in,
     for(j in 1:length(parm)) {
 
       # Create a dummy data.frame for events and recovery
-      df <- data.frame(xmin=as.POSIXct(c(storm_start)),
-                       xmax=as.POSIXct(c(storm_end)),
+      df <- data.frame(xmin=as.POSIXct(c(onset_start)),
+                       xmax=as.POSIXct(c(onset_end)),
                        ymin=c(-Inf),
                        ymax=c(Inf),
                        years=c('Event Onset'))
@@ -212,8 +210,8 @@ event_timeseries_hourly <- function(var_in,
     for(j in 1:length(parm)) {
 
       # Create a dummy data.frame for events and recovery
-      df <- data.frame(xmin=as.POSIXct(c(storm_start)),
-                       xmax=as.POSIXct(c(storm_end)),
+      df <- data.frame(xmin=as.POSIXct(c(onset_start)),
+                       xmax=as.POSIXct(c(onset_end)),
                        ymin=c(-Inf),
                        ymax=c(Inf),
                        years=c('Event Onset'))

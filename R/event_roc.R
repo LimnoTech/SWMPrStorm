@@ -15,7 +15,7 @@
 #'
 #' @examples
 event_roc <- function(var_in,
-                      data_path,
+                      data_path = NULL,
                       storm_nm = NULL,
                       storm_start = NULL,
                       storm_end = NULL,
@@ -31,19 +31,17 @@ event_roc <- function(var_in,
 
   #a.  Read in the variable input template, var_in
 
-  input_data <- xlsx::read.xlsx(var_in, sheetName = "Data")
-  input_Parameters <- xlsx::read.xlsx(var_in, sheetName = "Parameters")
-  input_Sites <- xlsx::read.xlsx(var_in, sheetName = "Sites")
-  input_Flags <- xlsx::read.xlsx(var_in, sheetName = "Flags")
+
+  input_Parameters <- xlsx::read.xlsx(var_in, sheetName = "rate_of_change")
 
   #b.  Read the following variables from template spreadsheet if not provided as optional arguments
 
   if(is.null(storm_nm)) storm_nm <- input_Parameters[1,2]
   if(is.null(storm_start)) storm_start <- input_Parameters[2,2]
   if(is.null(storm_end)) storm_end <- input_Parameters[3,2]
-  if(is.null(wq_sites)) wq_sites <- input_Sites$wq_sites[!is.na(input_Sites$wq_sites)]
-  if(is.null(met_sites)) met_sites <- input_Sites$met_sites[!is.na(input_Sites$met_sites)]
-  if(is.null(keep_flags)) keep_flags <- input_Flags$keep_flags
+  if(is.null(wq_sites)) wq_sites <- unlist(strsplit(input_Parameters[4,2],", "))
+  if(is.null(met_sites)) met_sites <- unlist(strsplit(input_Parameters[5,2],", "))
+  if(is.null(keep_flags)) keep_flags <- unlist(strsplit(input_Parameters[6,2],", "))
   if(is.null(data_path)) data_path <- 'data/cdmo'
 
 

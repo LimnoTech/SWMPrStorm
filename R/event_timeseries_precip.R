@@ -4,8 +4,6 @@
 #' @param data_path
 #' @param storm_start
 #' @param storm_end
-#' @param view_start
-#' @param view_end
 #' @param stn_met
 #' @param keep_flags
 #' @param ...
@@ -19,8 +17,6 @@ event_timeseries_precip <- function(var_in,
                                     data_path,
                                     storm_start = NULL,
                                     storm_end = NULL,
-                                    view_start = NULL,
-                                    view_end = NULL,
                                     stn_met = NULL,
                                     keep_flags = NULL,
                                     flip = FALSE,
@@ -34,19 +30,14 @@ event_timeseries_precip <- function(var_in,
 
   #a.  Read in the variable input template, var_in
 
-  input_data <- xlsx::read.xlsx(var_in, sheetName = "Data")
-  input_Parameters <- xlsx::read.xlsx(var_in, sheetName = "Parameters")
-  input_Sites <- xlsx::read.xlsx(var_in, sheetName = "Sites")
-  input_Flags <- xlsx::read.xlsx(var_in, sheetName = "Flags")
+  input_Parameters <- xlsx::read.xlsx(var_in, sheetName = "precip_barplots")
 
   #b.  Read the following variables from template spreadsheet if not provided as optional arguments
 
-  if(is.null(storm_start)) storm_start <- input_Parameters[2,2]
-  if(is.null(storm_end)) storm_end <- input_Parameters[3,2]
-  if(is.null(view_start)) view_start <- input_Parameters[4,2]
-  if(is.null(view_end)) view_end <- input_Parameters[5,2]
-  if(is.null(stn_met)) stn_met <- input_Parameters[10,2]
-  if(is.null(keep_flags)) keep_flags <- input_Flags$keep_flags
+  if(is.null(storm_start)) storm_start <- input_Parameters[1,2]
+  if(is.null(storm_end)) storm_end <- input_Parameters[2,2]
+  if(is.null(stn_met)) stn_met <- input_Parameters[3,2]
+  if(is.null(keep_flags)) keep_flags <- unlist(strsplit(input_Parameters[4,2],", "))
   if(is.null(data_path)) data_path <- 'data/cdmo'
 
 
@@ -87,8 +78,8 @@ event_timeseries_precip <- function(var_in,
 
   precip_day <- precip %>%
     dplyr::filter(dplyr::between(datetimestamp
-                   , as.POSIXct(view_start)
-                   , as.POSIXct(view_end))) %>%
+                   , as.POSIXct(storm_start)
+                   , as.POSIXct(storm_end))) %>%
     dplyr::mutate(datetimestamp_day = lubridate::floor_date(datetimestamp, unit = 'day')) %>%
     dplyr::group_by(datetimestamp_day) %>%
     dplyr::summarize(value = sum(totprcp, na.rm = T))
@@ -230,8 +221,8 @@ event_timeseries_precip <- function(var_in,
 
   precip_int <- precip %>%
     dplyr::filter(dplyr::between(datetimestamp
-                                 , as.POSIXct(view_start)
-                                 , as.POSIXct(view_end))) %>%
+                                 , as.POSIXct(storm_start)
+                                 , as.POSIXct(storm_end))) %>%
     dplyr::mutate(datetimestamp_day = lubridate::floor_date(datetimestamp, unit = 'day')) %>%
     dplyr::group_by(datetimestamp_day) %>%
     dplyr::summarize(value = max(intensprcp, na.rm = T))

@@ -6,10 +6,10 @@
 \usage{
 event_timeseries_hourly(
   var_in,
-  data_path,
+  data_path = NULL,
   storm_nm = NULL,
-  storm_start = NULL,
-  storm_end = NULL,
+  onset_start = NULL,
+  onset_end = NULL,
   view_start = NULL,
   view_end = NULL,
   recovery_start = NULL,

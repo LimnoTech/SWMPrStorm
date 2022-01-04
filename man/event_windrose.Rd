@@ -6,7 +6,7 @@
 \usage{
 event_windrose(
   var_in,
-  data_path,
+  data_path = NULL,
   storm_start = NULL,
   storm_end = NULL,
   met_sites = NULL,

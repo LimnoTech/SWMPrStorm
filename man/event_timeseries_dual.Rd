@@ -6,7 +6,7 @@
 \usage{
 event_timeseries_dual(
   var_in,
-  data_path,
+  data_path = NULL,
   storm_nm = NULL,
   view_start = NULL,
   view_end = NULL,

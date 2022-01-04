@@ -9,8 +9,6 @@ event_timeseries_precip(
   data_path,
   storm_start = NULL,
   storm_end = NULL,
-  view_start = NULL,
-  view_end = NULL,
   stn_met = NULL,
   keep_flags = NULL,
   flip = FALSE,
