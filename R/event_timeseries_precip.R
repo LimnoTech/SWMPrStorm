@@ -111,7 +111,7 @@ event_timeseries_precip <- function(var_in,
     ggplot2::scale_x_discrete(limits = rev(levels(precip_day$mo)))
 
   x <- x +
-    ggplot2::scale_y_continuous(limits = c(0, max(ceiling(precip_day$value))))
+    ggplot2::scale_y_continuous(limits = c(0, max(ceiling(precip_day$value))), expand = c(0,0))
 
   x <-
     x +
@@ -138,7 +138,7 @@ event_timeseries_precip <- function(var_in,
 
     # colors
     x <- x +
-      ggplot2::scale_y_continuous(limits = c(0, max(ceiling(precip_day$value))))
+      ggplot2::scale_y_continuous(limits = c(0, max(ceiling(precip_day$value))), expand = c(0,0))
 
     x <-
       x +
@@ -172,7 +172,7 @@ event_timeseries_precip <- function(var_in,
   if(flip == TRUE) {
   x <- ggplot2::ggplot(precip_all, ggplot2::aes(x=Date, y = total_precip_in)) +
     ggplot2::geom_col(fill = "steelblue3", width = 0.5) +
-    ggplot2::geom_text(ggplot2::aes(x=Date, y = total_precip_in +0.2, label = label), color = "steelblue3", fontface="bold") +
+    ggplot2::geom_text(ggplot2::aes(x=Date, y = (total_precip_in + + ceiling(max(precip_all$total_precip_in)*1.25)*.05), label = label), color = "steelblue3", fontface="bold") +
     ggplot2::scale_y_continuous(expand = c(0,0), limits = c(0, ceiling(max(precip_all$total_precip_in)*1.25))) +
     ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = stn_met)) +
     ggplot2::xlab("") +
@@ -184,8 +184,8 @@ event_timeseries_precip <- function(var_in,
                    panel.border = ggplot2::element_rect(color = 'black', fill = NA),
                    axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 8, 0, 0), 'pt'), angle = 90),
                    text = ggplot2::element_text(size = 16),
-                   axis.text.x = ggplot2::element_blank(),
-                   axis.ticks.x = ggplot2::element_blank(),
+                   axis.text = ggplot2::element_blank(),
+                   axis.ticks = ggplot2::element_blank(),
                    plot.margin = ggplot2::unit(c(0, 16, 0, 0), 'pt'),
                    legend.position = 'top')
 
@@ -193,7 +193,7 @@ event_timeseries_precip <- function(var_in,
   } else if(flip == FALSE) {
     x <- ggplot2::ggplot(precip_all, ggplot2::aes(x=Date, y = total_precip_in)) +
       ggplot2::geom_col(fill = "steelblue3", width = 0.5) +
-      ggplot2::geom_text(ggplot2::aes(x=Date, y = total_precip_in +0.3, label = label), color = "steelblue3", fontface="bold",hjust=0) +
+      ggplot2::geom_text(ggplot2::aes(x=Date, y = (total_precip_in + ceiling(max(precip_all$total_precip_in)*1.25)*.05), label = label), color = "steelblue3", fontface="bold",hjust=0) +
       ggplot2::coord_flip() +
       ggplot2::scale_y_continuous(expand = c(0,0), limits = c(0, ceiling(max(precip_all$total_precip_in)*1.25))) +
       ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = stn_met)) +
@@ -202,13 +202,12 @@ event_timeseries_precip <- function(var_in,
       ggplot2::theme_bw() +
       ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
                      strip.background = ggplot2::element_blank(),
-                     axis.ticks.x = ggplot2::element_blank(),
                      panel.grid = ggplot2::element_blank(),
                      panel.border = ggplot2::element_rect(color = 'black', fill = NA),
                      axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 8, 0, 0), 'pt'), angle = 90),
                      text = ggplot2::element_text(size = 16),
-                     axis.text.x = ggplot2::element_blank(),
-                     axis.ticks.x = ggplot2::element_blank(),
+                     axis.text = ggplot2::element_blank(),
+                     axis.ticks = ggplot2::element_blank(),
                      plot.margin = ggplot2::unit(c(0, 16, 0, 0), 'pt'),
                      legend.position = 'top')
 
@@ -256,7 +255,7 @@ event_timeseries_precip <- function(var_in,
 
     # colors
     x <- x +
-      ggplot2::scale_y_continuous(limits = c(0, max(ceiling(precip_day$value))))
+      ggplot2::scale_y_continuous(limits = c(0, max(ceiling(precip_day$value))), expand = c(0,0))
 
 
     x <-
@@ -284,7 +283,7 @@ event_timeseries_precip <- function(var_in,
 
     # colors
     x <- x +
-      ggplot2::scale_y_continuous(limits = c(0, max(ceiling(precip_day$value))))
+      ggplot2::scale_y_continuous(limits = c(0, max(ceiling(precip_day$value))), expand = c(0,0))
 
 
     x <-
