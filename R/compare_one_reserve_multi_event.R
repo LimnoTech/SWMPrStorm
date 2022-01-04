@@ -66,7 +66,7 @@ compare_one_reserve_multi_event <- function(var_in,
   evts <- data.frame()
   for(i in 1:length(storm_nm)) {
 
-    evt <- lapply(ls_par, subset, subset = c(storm_start[i], storm_end[i]))
+    evt <- lapply(ls_par, subset, subset = c(as.POSIXct(storm_start[i]), as.POSIXct(storm_end[i])))
     evt <- dplyr::bind_rows(evt, .id = 'station')
     evt$event <- storm_nm[i]
 
