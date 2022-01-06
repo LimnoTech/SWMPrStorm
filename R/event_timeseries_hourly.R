@@ -172,12 +172,17 @@ event_timeseries_hourly <- function(var_in,
   data_type <- 'wq'
 
   ls_par <- lapply(wq_sites, SWMPr::import_local, path = data_path)
-  ls_par <- lapply(ls_par, qaqc, qaqc_keep = keep_flags)
+  ls_par <- lapply(ls_par, SWMPr::qaqc, qaqc_keep = keep_flags)
   ls_par <- lapply(ls_par, subset, subset = c(view_start, view_end))#, select = par) # Note: par <- wb_basic %>% .[[1]]
 
   ## convert select parameters
   ls_par <- lapply(ls_par, function(x) {x$temp <- x$temp * 9 / 5 + 32; x})
   ls_par <- lapply(ls_par, function(x) {x$depth <- x$depth * 3.28; x})
+
+  ## list unit conversions for plot labels
+  param <- c('temp', 'depth')
+  unit <- rep(TRUE, length(param))
+  conversions <- data.frame(parameter = param, con = unit)
 
   names(ls_par) <- wq_sites
 
@@ -205,7 +210,9 @@ event_timeseries_hourly <- function(var_in,
                      , as.POSIXct(view_end))) %>%
       dplyr::mutate(datetimestamp_day = lubridate::floor_date(datetimestamp, unit = 'hour')) %>%
       dplyr::group_by(datetimestamp_day, parameter) %>%
-      dplyr::summarize(value = mean(value, na.rm = T))
+      dplyr::summarize(value = mean(value, na.rm = T)) %>%
+      dplyr::left_join(conversions) %>%
+      dplyr::mutate(con = tidyr::replace_na(con, FALSE))
 
     for(j in 1:length(parm)) {
 
@@ -216,6 +223,9 @@ event_timeseries_hourly <- function(var_in,
                        ymax=c(Inf),
                        years=c('Event Onset'))
 
+      converted <- df_day %>% filter(parameter == parm[j])
+      converted <- converted$con[1]
+
       x <-
         df_day %>%
         dplyr::filter(parameter == parm[j]) %>%
@@ -225,7 +235,7 @@ event_timeseries_hourly <- function(var_in,
         ggplot2::geom_rect(data=df,ggplot2::aes(xmin=xmin,ymin=ymin,xmax=xmax,ymax=ymax,fill=years),
                   alpha=0.1,inherit.aes=FALSE) +
         ggplot2::scale_x_datetime(date_breaks = '1 week', date_labels = '%b %d') +
-        ggplot2::labs(x = '', y = SWMPrStorm::y_labeler(parm[j],converted = TRUE))
+        ggplot2::labs(x = '', y = SWMPrStorm::y_labeler(parm[j],converted=converted))
 
       x <-
         x +
