@@ -14,23 +14,23 @@
 #' @export
 #'
 #' @examples
-multi_storm_track <- function(map_in
-                            , nerr_site_id = NULL
-                            , storm_nm = NULL
-                            , storm_rank = NULL
-                            , stations = NULL
-                            , bbox = NULL
-                            , path_to_shp = NULL
-                            , path_to_base = NULL
-                            , lab_loc = NULL
-                            , scale_pos = 'bottomleft') {
+single_storm_track <- function(map_in
+                                  , nerr_site_id = NULL
+                                  , storm_nm = NULL
+                                  , storm_rank = NULL
+                                  , stations = NULL
+                                  , bbox = NULL
+                                  , path_to_shp = NULL
+                                  , path_to_base = NULL
+                                  , lab_loc = NULL
+                                  , scale_pos = 'bottomleft') {
 
   ### 0. Read variables ########################################################
 
   #a.  Read in the variable input template, var_in
 
-  input_Parameters <- xlsx::read.xlsx(map_in, sheetName = "Multi-storm parameters")
-  input_Shp <- xlsx::read.xlsx(map_in, sheetName = "Multi-storm shps")
+  input_Parameters <- xlsx::read.xlsx(map_in, sheetName = "Single-storm parameters")
+  input_Shp <- xlsx::read.xlsx(map_in, sheetName = "Single-storm shps")
 
 
   if(is.null(nerr_site_id)) nerr_site_id <- unlist(strsplit(input_Parameters[1,2],", "))
@@ -160,9 +160,9 @@ multi_storm_track <- function(map_in
     ggplot2::geom_segment(data=arr, aes(x = X, xend = X.after, y = Y, yend = Y.after, color = NAME),
                           arrow = arrow(
                             length=unit(0.15, "cm"),
-                                        type = "closed")) +
+                            type = "closed")) +
     ggplot2::geom_point(data=reserve, aes(x = avgx, y = avgy), color = "grey30") +
-    ggrepel::geom_text_repel(data=reserve, aes(x = avgx, y = avgy, label = abbrev), fontface = "bold", color = "grey30") +
+    ggrepel::geom_label_repel(data=reserve, aes(x = avgx, y = avgy, label = abbrev), fill = "grey90",  fontface = "bold", color = "grey30") +
     ggrepel::geom_label_repel(data=labs, aes(x = X , y = Y , label = NAME, fill = NAME),
                               color = "white",
                               alpha = 0.5) +
@@ -177,21 +177,16 @@ multi_storm_track <- function(map_in
     #                       pad_x = unit(0.75, "in"), pad_y = unit(0.5, "in")) +
     ggplot2::theme_minimal() +
     ggplot2::theme(panel.grid.major = ggplot2::element_line(color = gray(0.9), linetype = "dashed",
-                                          size = 0.25),
-          panel.background = ggplot2::element_rect(color = NA, fill = "aliceblue"),
-          axis.title.x = ggplot2::element_text(color = "grey30"),
-          axis.title.y = ggplot2::element_text(color = "grey30"))
+                                                            size = 0.25),
+                   panel.background = ggplot2::element_rect(color = NA, fill = "aliceblue"),
+                   axis.title.x = ggplot2::element_text(color = "grey30"),
+                   axis.title.y = ggplot2::element_text(color = "grey30"))
 
 
 
 
-  ggsave("output/maps/multi_storm_track.png", m, width = 6, height = 6)
+  ggsave("output/maps/single_storm_track.png", m, width = 6, height = 6)
 
 
 }
-
-
-
-
-
 
