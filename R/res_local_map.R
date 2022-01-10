@@ -84,9 +84,6 @@ res_local_map <- function(nerr_site_id
                           , lab_loc = NULL
                           , scale_pos = 'bottomleft') {
 
-  # check that a shape file exists
-  if(class(shp) != 'SpatialPolygons')
-    stop('shapefile (shp) must be SpatialPolygons object')
 
   # check that length(lab_loc) = length(stations)
   if(!is.null(station_labs) && length(lab_loc) != length(stations))
