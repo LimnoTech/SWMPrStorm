@@ -15,7 +15,7 @@
 #' @export
 #'
 #' @examples
-daily_stats_one_event <- function(var_in,
+compare_one_reserve_one_event <- function(var_in,
                                   data_path,
                                   storm_nm = NULL,
                                   storm_start = NULL,

@@ -3,7 +3,7 @@
 export("%>%")
 export(compare_one_event_multi_reserve)
 export(compare_one_reserve_multi_event)
-export(daily_stats_one_event)
+export(compare_one_reserve_one_event)
 export(event_ridgeline)
 export(event_roc)
 export(event_timeseries)
