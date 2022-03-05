@@ -95,30 +95,38 @@ event_roc <- function(var_in,
   # ----------------------------------------------
 
 
-p <- parm[1]
-s <- wq_sites[1]
+#p <- parm[1]
+#s <- wq_sites[1]
 
   for(p in parm) {
     for(s in wq_sites) {
 
       roc <- dat_tidy %>%
         dplyr::filter(station == s, parameter == p) %>%
-        dplyr::mutate(diff_result = result - dplyr::lag(result))
+        dplyr::mutate(diff_result = result - dplyr::lag(result),
+                      legend = "Raw Data")
 
       roc_smooth <- dat_tidy %>%
         dplyr::filter(station == s, parameter == p) %>%
         dplyr::group_by(time_hr = lubridate::floor_date(datetimestamp, "hour")) %>%
         dplyr::summarise(result = mean(result, na.rm = T)) %>%
-        dplyr::mutate(diff_result = result - dplyr::lag(result))
+        dplyr::mutate(diff_result = result - dplyr::lag(result),
+                      legend = "Hourly Avg")
+
+      roc_raw <- dat_tidy %>%
+        dplyr::filter(station == s, parameter == p) %>%
+        dplyr::mutate(legend = "Raw Data")
 
 
       p1 <- ggplot2::ggplot(roc, ggplot2::aes(x = datetimestamp, y = diff_result)) +
-        ggplot2::geom_line() +
+        ggplot2::geom_line(aes(color = legend), lwd = 1) +
         ggplot2::scale_x_datetime(date_breaks = '1 day'
                                   , labels = scales::date_format('%b %d')
                                   , guide = guide_axis(check.overlap = TRUE)) +
+        ggplot2::scale_color_manual(values = c("steelblue3"), name = "") +
         ggplot2::ggtitle(p) +
         ggplot2::ylab(SWMPrStorm::y_labeler_delta(p)) +
+        ggplot2::xlab("") +
         ggplot2::theme_bw() +
         ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
                        strip.background = ggplot2::element_blank(),
@@ -135,14 +143,15 @@ s <- wq_sites[1]
 
 
       p2 <- ggplot2::ggplot(roc_smooth, ggplot2::aes(x = time_hr, y = diff_result)) +
-        ggplot2::geom_line() +
+        ggplot2::geom_line(aes(color = legend), lwd = 1) +
         ggplot2::scale_x_datetime(limits = c(as.POSIXct(storm_start), as.POSIXct(storm_end))
                                   , date_breaks = '1 day'
                                   , labels = scales::date_format('%b %d')
                                   , guide = guide_axis(check.overlap = TRUE)) +
+        ggplot2::scale_color_manual(values = c("steelblue3"), name = "") +
         ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = s)) +
         ggplot2::ylab(SWMPrStorm::y_labeler_delta(p)) +
-        ggplot2::xlab("Datetime, smoothed hourly") +
+        ggplot2::xlab("") +
         ggplot2::theme_bw() +
         ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
                        strip.background = ggplot2::element_blank(),
@@ -155,16 +164,16 @@ s <- wq_sites[1]
 
         ggplot2::ggsave(filename = paste0("output/wq/event_roc/roc_", s, "_", p, "_hourly.png"), plot = p2, height=4, width=6, dpi=300)
 
-      p3 <- dat_tidy %>%
-        dplyr::filter(station == s, parameter == p) %>%
-        ggplot2::ggplot(., ggplot2::aes(x = datetimestamp, y = result)) +
-        ggplot2::geom_line() +
+      p3 <- ggplot2::ggplot(roc_raw, ggplot2::aes(x = datetimestamp, y = result)) +
+        ggplot2::geom_line(aes(color = legend), lwd = 1) +
         ggplot2::scale_x_datetime(limits = c(as.POSIXct(storm_start), as.POSIXct(storm_end))
                                   , date_breaks = '1 day'
                                   , labels = scales::date_format('%b %d')
                                   , guide = guide_axis(check.overlap = TRUE)) +
+        ggplot2::scale_color_manual(values = c("steelblue3"), name = "") +
         ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = s)) +
         ggplot2::ylab(SWMPrStorm::y_labeler(p)) +
+        ggplot2::xlab("") +
         ggplot2::theme_bw() +
         ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
                        strip.background = ggplot2::element_blank(),
@@ -263,14 +272,20 @@ s <- wq_sites[1]
         dplyr::summarise(result = mean(result, na.rm = T)) %>%
         dplyr::mutate(diff_result = result - dplyr::lag(result))
 
+      roc_raw <- dat_tidy %>%
+        dplyr::filter(station == s, parameter == p) %>%
+        dplyr::mutate(legend = "Raw Data")
+
+
       p1 <- ggplot2::ggplot(roc, ggplot2::aes(x = datetimestamp, y = diff_result)) +
-        ggplot2::geom_line() +
+        ggplot2::geom_line(aes(color = legend), lwd = 1) +
         ggplot2::scale_x_datetime(date_breaks = '1 day'
                                   , labels = scales::date_format('%b %d')
                                   , guide = guide_axis(check.overlap = TRUE)) +
+        ggplot2::scale_color_manual(values = c("steelblue3"), name = "") +
         ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = s)) +
         ggplot2::ylab(SWMPrStorm::y_labeler_delta(p)) +
-        ggplot2::xlab("Datetime") +
+        ggplot2::xlab("") +
         ggplot2::theme_bw() +
         ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
                        strip.background = ggplot2::element_blank(),
@@ -286,14 +301,15 @@ s <- wq_sites[1]
 
 
       p2 <- ggplot2::ggplot(roc_smooth, ggplot2::aes(x = time_hr, y = diff_result)) +
-        ggplot2::geom_line() +
+        ggplot2::geom_line(aes(color = legend), lwd = 1) +
         ggplot2::scale_x_datetime(limits = c(as.POSIXct(storm_start), as.POSIXct(storm_end))
                                   , date_breaks = '1 day'
                                   , labels = scales::date_format('%b %d')
                                   , guide = guide_axis(check.overlap = TRUE)) +
+        ggplot2::scale_color_manual(values = c("steelblue3"), name = "") +
         ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = s)) +
         ggplot2::ylab(SWMPrStorm::y_labeler_delta(p)) +
-        ggplot2::xlab("Datetime, smoothed hourly") +
+        ggplot2::xlab("") +
         ggplot2::theme_bw() +
         ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
                        strip.background = ggplot2::element_blank(),
@@ -307,17 +323,17 @@ s <- wq_sites[1]
         ggplot2::ggsave(filename = paste0("output/met/event_roc/roc_", s, "_", p, "_hourly.png"), plot = p2, height=4, width=6, dpi=300)
 
 
-      p3 <- dat_tidy %>%
-        dplyr::filter(station == s, parameter == p) %>%
+      p3 <-  ggplot2::ggplot(roc_raw, ggplot2::aes(x = datetimestamp, y = result)) +
         ggplot2::ggplot(., aes(x = datetimestamp, y = result)) +
-        ggplot2::geom_line() +
+        ggplot2::geom_line(aes(color = legend), lwd = 1) +
         ggplot2::scale_x_datetime(limits = c(as.POSIXct(storm_start), as.POSIXct(storm_end))
                                   , date_breaks = '1 day'
                                   , labels = scales::date_format('%b %d')
                                   , guide = guide_axis(check.overlap = TRUE)) +
+        ggplot2::scale_color_manual(values = c("steelblue3"), name = "") +
         ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = s)) +
         ggplot2::ylab(SWMPrStorm::y_labeler(p)) +
-        ggplot2::xlab("Datetime") +
+        ggplot2::xlab("") +
         ggplot2::theme_bw() +
         ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
                        strip.background = ggplot2::element_blank(),

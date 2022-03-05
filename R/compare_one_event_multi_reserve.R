@@ -144,6 +144,8 @@ compare_one_event_multi_reserve <- function(var_in,
   # Single Event Comparison, Multiple Reserves ---
   # ----------------------------------------------
 
+  total_nalist <- c("atemp", "bp", "intensprcp", "maxwspd", "rh", "sdwdir", "wdir", "wspd")
+
   summary <- dat_tidy %>%
     dplyr::group_by(event, evt_start, evt_end, parameter, station) %>%
     tidyr::drop_na(result) %>%
@@ -151,7 +153,9 @@ compare_one_event_multi_reserve <- function(var_in,
               , max = max(result, na.rm = T)
               , mean = mean(result, na.rm = T)
               , median = median(result, na.rm = T)
-              , total = sum(result, na.rm = T))
+              , total = sum(result, na.rm = T)) %>%
+    dplyr::mutate(total = dplyr::case_when(parameter %in% total_nalist == FALSE ~ total))
+
 
   # add readable station names
   summary$station_name <- sapply(summary$station, SWMPrExtension::title_labeler)

@@ -84,7 +84,7 @@ compare_one_reserve_one_event <- function(var_in,
     dplyr::mutate(date = as.Date(datetimestamp))
 
   # ----------------------------------------------
-  # Single Event Comparison, Multiple Reserves ---
+  # Single Event Comparison, Single Reserves ---
   # ----------------------------------------------
 
   summary <- dat_tidy %>%
@@ -140,7 +140,7 @@ compare_one_reserve_one_event <- function(var_in,
   ## convert select parameters
   evts$atemp <- evts$atemp * 9 / 5 + 3
   evts$wspd <- evts$wspd * 3600 * 1 / 1609.34
-  evts$wspd <- evts$maxwspd * 3600 * 1 / 1609.34
+  evts$maxwspd <- evts$maxwspd * 3600 * 1 / 1609.34
   evts$totprcp <- evts$totprcp / 25.4
   evts$intensprcp <- evts$totprcp * 4
 
@@ -152,8 +152,11 @@ compare_one_reserve_one_event <- function(var_in,
     dplyr::mutate(date = as.Date(datetimestamp))
 
   # ----------------------------------------------
-  # Single Event Comparison, Multiple Reserves ---
+  # Single Event Comparison, One Reserves ---
   # ----------------------------------------------
+
+
+  total_nalist <- c("atemp", "bp", "intensprcp", "maxwspd", "rh", "sdwdir", "wdir", "wspd")
 
   summary <- dat_tidy %>%
     dplyr::group_by(event, parameter, station, date) %>%
@@ -162,10 +165,14 @@ compare_one_reserve_one_event <- function(var_in,
                      , max = max(result, na.rm = T)
                      , mean = mean(result, na.rm = T)
                      , median = median(result, na.rm = T)
-                     , total = sum(result, na.rm = T))
+                     , total = sum(result, na.rm = T)) %>%
+    dplyr::mutate(total = dplyr::case_when(parameter %in% total_nalist == FALSE ~ total))
+
+
 
   # add readable station names
   summary$station_name <- sapply(summary$station, SWMPrExtension::title_labeler)
+
 
 
   # write table

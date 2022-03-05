@@ -117,6 +117,9 @@ event_timeseries <- function(var_in,
 
   # one station, daily smooth, with recovery -----------------------------------
 
+  plot_start <- as.POSIXct(view_start, format = "%Y-%m-%d %H:%M:%S")
+  plot_end <- as.POSIXct(view_end, format = "%Y-%m-%d %H:%M:%S")
+
   df_day <- dat_wq %>%
     dplyr::filter(dplyr::between(datetimestamp
                    , as.POSIXct(view_start)
@@ -143,14 +146,16 @@ event_timeseries <- function(var_in,
       ggplot2::geom_line(ggplot2::aes(color = 'Daily Avg'), lwd = 1) +
       ggplot2::geom_rect(data=df,ggplot2::aes(xmin=xmin,ymin=ymin,xmax=xmax,ymax=ymax,fill=years),
                 alpha=0.1,inherit.aes=FALSE) +
-      ggplot2::scale_x_datetime(date_breaks = '2 weeks', date_labels = '%b %d', guide = guide_axis(check.overlap = TRUE)) +
       ggplot2::labs(x = '', y = SWMPrStorm::y_labeler(parm))
 
 
     x <-
       x +
       ggplot2::scale_color_manual('', values = c('steelblue3')) +
-      ggplot2::scale_fill_manual('', values = c('steelblue3', 'green'))
+      ggplot2::scale_fill_manual('', values = c('steelblue3', 'green')) +
+      ggplot2::scale_x_datetime(date_breaks = '1 day',
+                                date_labels = '%b\n%d',
+                                guide = guide_axis(check.overlap = TRUE))
 
     x <- x +
       ggplot2::theme_bw() +
@@ -158,6 +163,7 @@ event_timeseries <- function(var_in,
                      strip.background = element_blank(),
                      panel.grid = element_blank(),
                      panel.border = element_rect(color = 'black', fill = NA),
+                     plot.margin = ggplot2::margin(5.5, 24, 5.5, 5.5, unit = 'pt'),
                      axis.title.y = element_text(margin = unit(c(0, 8, 0, 8), 'pt'), angle = 90),
                      text = element_text(size = 16),
                      legend.position = 'top')

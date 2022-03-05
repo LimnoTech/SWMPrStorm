@@ -105,11 +105,16 @@ event_ridgeline <- function(var_in,
     p1 <- ggplot2::ggplot(df, ggplot2::aes(x=datetimestamp, y = Reserve.Name,
                                      height = result, group = Reserve.Name)) +
       ggridges::geom_density_ridges(stat = "identity", scale = 1, fill = "lightblue") +
-      ggridges::theme_ridges() +
-      ggplot2::ylab(SWMPrStorm::y_labeler(param)) +
-      ggplot2::xlab("Date") +
+      #ggridges::theme_ridges() +
+      ggplot2::ggtitle(SWMPrStorm::y_labeler(param)) +
+      ggplot2::ylab("") +
+      ggplot2::xlab("") +
       ggplot2::scale_x_datetime(expand = c(0, 0)) +
-      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
+      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5, margin = ggplot2::unit(c(0,0,16,0),'pt')),
+                     panel.background = ggplot2::element_rect(fill = "white"),
+                     panel.grid.major.x = ggplot2::element_line(color = "grey90"),
+                     axis.ticks.x = ggplot2::element_line(color = "grey90"),
+                     axis.ticks.y = ggplot2::element_blank(),
                      axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 16, 0, 0), 'pt'), angle = 90),
                      text = ggplot2::element_text(size = 16),
                      plot.margin = ggplot2::unit(c(0, 20, 0, 0), 'pt'),
@@ -145,11 +150,16 @@ event_ridgeline <- function(var_in,
     p2 <- ggplot2::ggplot(df_smooth, ggplot2::aes(x=datetime_floor, y = Reserve.Name,
                                      height = avg, group = Reserve.Name)) +
       ggridges::geom_density_ridges(stat = "identity", scale = 1, fill = "lightblue") +
-      ggridges::theme_ridges() +
-      ggplot2::ylab(SWMPrStorm::y_labeler(param)) +
-      ggplot2::xlab("Date") +
+      #ggridges::theme_ridges() +
+      ggplot2::ggtitle(SWMPrStorm::y_labeler(param)) +
+      ggplot2::ylab("") +
+      ggplot2::xlab("") +
       ggplot2::scale_x_datetime(expand = c(0, 0)) +
-      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
+      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5, margin = ggplot2::unit(c(0,0,16,0),'pt')),
+                     panel.background = ggplot2::element_rect(fill = "white"),
+                     panel.grid.major.x = ggplot2::element_line(color = "grey90"),
+                     axis.ticks.x = ggplot2::element_line(color = "grey90"),
+                     axis.ticks.y = ggplot2::element_blank(),
                      axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 16, 0, 0), 'pt'), angle = 90),
                      text = ggplot2::element_text(size = 16),
                      plot.margin = ggplot2::unit(c(0, 20, 0, 0), 'pt'),
@@ -223,11 +233,16 @@ event_ridgeline <- function(var_in,
     p3 <- ggplot2::ggplot(df, ggplot2::aes(x=datetimestamp, y = Reserve.Name,
                                      height = result, group = Reserve.Name)) +
       ggridges::geom_density_ridges(stat = "identity", scale = 1, fill = "lightblue") +
-      ggridges::theme_ridges() +
-      ggplot2::ylab(SWMPrStorm::y_labeler(param)) +
-      ggplot2::xlab("Date") +
+      #ggridges::theme_ridges() +
+      ggplot2::ggtitle(SWMPrStorm::y_labeler(param)) +
+      ggplot2::ylab("") +
+      ggplot2::xlab("") +
       ggplot2::scale_x_datetime(expand = c(0, 0)) +
-      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
+      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5, margin = ggplot2::unit(c(0,0,16,0),'pt')),
+                     panel.background = ggplot2::element_rect(fill = "white"),
+                     panel.grid.major.x = ggplot2::element_line(color = "grey90"),
+                     axis.ticks.x = ggplot2::element_line(color = "grey90"),
+                     axis.ticks.y = ggplot2::element_blank(),
                      axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 16, 0, 0), 'pt'), angle = 90),
                      text = ggplot2::element_text(size = 16),
                      plot.margin = ggplot2::unit(c(0, 20, 0, 0), 'pt'),
@@ -263,11 +278,16 @@ event_ridgeline <- function(var_in,
     p4 <- ggplot2::ggplot(df_smooth, ggplot2::aes(x=datetime_floor, y = Reserve.Name,
                                             height = avg, group = Reserve.Name)) +
       ggridges::geom_density_ridges(stat = "identity", scale = 1, fill = "lightblue") +
-      ggridges::theme_ridges() +
-      ggplot2::ylab(SWMPrStorm::y_labeler(param)) +
-      ggplot2::xlab("Date") +
+      #ggridges::theme_ridges() +
+      ggplot2::ggtitle(SWMPrStorm::y_labeler(param)) +
+      ggplot2::ylab("") +
+      ggplot2::xlab("") +
       ggplot2::scale_x_datetime(expand = c(0, 0)) +
-      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
+      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5, margin = ggplot2::unit(c(0,0,16,0),'pt')),
+                     panel.background = ggplot2::element_rect(fill = "white"),
+                     panel.grid.major.x = ggplot2::element_line(color = "grey90"),
+                     axis.ticks.x = ggplot2::element_line(color = "grey90"),
+                     axis.ticks.y = ggplot2::element_blank(),
                      axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 16, 0, 0), 'pt'), angle = 90),
                      text = ggplot2::element_text(size = 16),
                      plot.margin = ggplot2::unit(c(0, 20, 0, 0), 'pt'),

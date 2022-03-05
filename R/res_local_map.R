@@ -110,9 +110,13 @@ res_local_map <- function(nerr_site_id
   }
 
   # set map label styles
+
   label_style <- list(
     "box-shadow" = "none",
     "border-radius" = "5px",
+    "border" = "4px solid rgba(0, 0, 0, 0.7)",
+    "background-color" = "rgba(255, 255, 255, 0.8)",
+    "border-color" = "rgba(0,0,0,0.5)",
     "font" = "bold 16px/1.5 'Helvetica Neue', Arial, Helvetica, sans-serif",
     "padding" = "1px 5px 1px 5px"
   )
@@ -133,10 +137,12 @@ res_local_map <- function(nerr_site_id
                        , label = loc$abbrev[left_labs]
                        , labelOptions = labelOptions(noHide = station_labs
                                                      , direction = c('left')
-                                                     , opacity = 1
+                                                     , opacity = 0.75
                                                      , offset = c(-5, 0)
                                                      , style = label_style))
   }
+
+
 
   if(exists('right_labs')){
     m <- m %>%
@@ -146,7 +152,7 @@ res_local_map <- function(nerr_site_id
                        , label = loc$abbrev[right_labs]
                        , labelOptions = labelOptions(noHide = station_labs
                                                      , direction = c('right')
-                                                     , opacity = 1
+                                                     , opacity = .75
                                                      , offset = c(5, 0)
                                                      , style = label_style))
   }
