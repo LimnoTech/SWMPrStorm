@@ -2,7 +2,7 @@
 % Please edit documentation in R/multi_storm_track.R
 \name{multi_storm_track}
 \alias{multi_storm_track}
-\title{Title}
+\title{multi_storm_track}
 \usage{
 multi_storm_track(
   map_in,
@@ -24,5 +24,5 @@ multi_storm_track(
 
 }
 \description{
-Title
+multi_storm_track
 }

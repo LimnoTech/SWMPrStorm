@@ -2,7 +2,7 @@
 % Please edit documentation in R/single_storm_track.R
 \name{single_storm_track}
 \alias{single_storm_track}
-\title{Title}
+\title{single_storm_track}
 \usage{
 single_storm_track(
   map_in,
@@ -24,5 +24,5 @@ single_storm_track(
 
 }
 \description{
-Title
+single_storm_track
 }
