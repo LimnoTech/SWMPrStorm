@@ -16,6 +16,7 @@ initialize_project <- function(path_to_project = NULL) {
 
   print(path_to_project)
 
+  #Lookup paths and create directories if they do not exist
   if(!dir.exists(paste0(path_to_project, "/output"))) {dir.create(paste0(path_to_project, "/output"))}
   if(!dir.exists(paste0(path_to_project, "/output/maps/"))) {dir.create(paste0(path_to_project, "/output/maps/"))}
   if(!dir.exists(paste0(path_to_project, "/output/combined/"))) {dir.create(paste0(path_to_project, "/output/combined/"))}
