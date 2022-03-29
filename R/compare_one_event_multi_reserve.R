@@ -9,6 +9,7 @@
 #' @param met_sites
 #' @param keep_flags
 #' @param ...
+#' @param reserve
 #'
 #' @return
 #' @export
@@ -16,6 +17,7 @@
 #' @examples
 compare_one_event_multi_reserve <- function(var_in,
                                             data_path,
+                                            reserve = NULL,
                                             storm_nm = NULL,
                                             storm_start = NULL,
                                             storm_end = NULL,
@@ -33,15 +35,32 @@ compare_one_event_multi_reserve <- function(var_in,
   #a.  Read in the variable input template, var_in
 
   input_Parameters <- xlsx::read.xlsx(var_in, sheetName = "stats_one_event")
+  input_Master <- xlsx::read.xlsx(var_in, sheetName = "MASTER")
 
 
   #b.  Read the following variables from template spreadsheet if not provided as optional arguments
 
+  if(is.null(reserve)) reserve <- input_Master[1,2]
+
+
+  stations <- sampling_stations %>%
+    filter(NERR.Site.ID == reserve) %>%
+    filter(Status == "Active")
+
+  wq_stations <- stations %>%
+    filter(Station.Type == 1)
+
+  met_stations <- stations %>%
+    filter(Station.Type == 0)
+
+
   if(is.null(storm_nm)) storm_nm <- unlist(strsplit(input_Parameters[1,2],", "))
   if(is.null(storm_start)) storm_start <- unlist(strsplit(input_Parameters[2,2],", "))
   if(is.null(storm_end)) storm_end <- unlist(strsplit(input_Parameters[3,2],", "))
-  if(is.null(wq_sites)) wq_sites <- unlist(strsplit(input_Parameters[4,2],", "))
-  if(is.null(met_sites)) met_sites <- unlist(strsplit(input_Parameters[5,2],", "))
+  #if(is.null(wq_sites)) wq_sites <- unlist(strsplit(input_Parameters[4,2],", "))
+  if(is.null(wq_sites)) wq_sites <- if(is.na(input_Parameters[4,2])) {wq_stations$Station.Code} else {input_Parameters[4,2]}
+  #if(is.null(met_sites)) met_sites <- unlist(strsplit(input_Parameters[5,2],", "))
+  if(is.null(met_sites)) met_sites <- if(is.na(input_Parameters[5,2])) {met_stations$Station.Code} else {input_Parameters[5,2]}
   if(is.null(keep_flags)) keep_flags <- unlist(strsplit(input_Parameters[6,2],", "))
   if(is.null(data_path)) data_path <- 'data/cdmo'
 

@@ -16,6 +16,7 @@
 #' @examples
 event_ridgeline <- function(var_in,
                             data_path,
+                            reserve = NULL,
                             storm_nm = NULL,
                             storm_start = NULL,
                             storm_end = NULL,
@@ -32,13 +33,34 @@ event_ridgeline <- function(var_in,
   #a.  Read in the variable input template, var_in
 
   input_Parameters <- xlsx::read.xlsx(var_in, sheetName = "ridgeline")
+  input_Master <- xlsx::read.xlsx(var_in, sheetName = "MASTER")
+
+
+
+  #b.  Read the following variables from template spreadsheet if not provided as optional arguments
+
+  if(is.null(reserve)) reserve <- input_Master[1,2]
+
+
+  stations <- sampling_stations %>%
+    filter(NERR.Site.ID == reserve) %>%
+    filter(Status == "Active")
+
+  wq_stations <- stations %>%
+    filter(Station.Type == 1)
+
+  met_stations <- stations %>%
+    filter(Station.Type == 0)
+
 
 
   if(is.null(storm_nm)) storm_nm <- input_Parameters[1,2]
   if(is.null(storm_start)) storm_start <- input_Parameters[2,2]
   if(is.null(storm_end)) storm_end <- input_Parameters[3,2]
-  if(is.null(wq_sites)) wq_sites <- unlist(strsplit(input_Parameters[4,2],", "))
-  if(is.null(met_sites)) met_sites <- unlist(strsplit(input_Parameters[5,2],", "))
+  #if(is.null(wq_sites)) wq_sites <- unlist(strsplit(input_Parameters[4,2],", "))
+  if(is.null(wq_sites)) wq_sites <- if(is.na(input_Parameters[4,2])) {wq_stations$Station.Code[1]} else {input_Parameters[4,2]}
+  #if(is.null(met_sites)) met_sites <- unlist(strsplit(input_Parameters[5,2],", ")),
+  if(is.null(met_sites)) met_sites <- if(is.na(input_Parameters[5,2])) {met_stations$Station.Code[1]} else {input_Parameters[5,2]}
   if(is.null(keep_flags)) keep_flags <- unlist(strsplit(input_Parameters[6,2],", "))
   if(is.null(data_path)) data_path <- 'data/cdmo'
 
@@ -100,7 +122,7 @@ event_ridgeline <- function(var_in,
     df <- dat_tidy %>%
       dplyr::filter(parameter == param)
 
-    plt_ttl <- paste('output/wq/ridgeline_one_reserve_one_event/ridgeline_', '_', param, '.png', sep = '')
+    plt_ttl <- paste('output/wq/ridgelines/ridgeline_', '_', param, '.png', sep = '')
 
     p1 <- ggplot2::ggplot(df, ggplot2::aes(x=datetimestamp, y = Reserve.Name,
                                      height = result, group = Reserve.Name)) +
@@ -145,7 +167,7 @@ event_ridgeline <- function(var_in,
       dplyr::summarise(avg = mean(result, na.rm = T))
 
 
-    plt_ttl <- paste('output/wq/ridgeline_one_reserve_one_event/ridgeline_', '_', param, '_smoothed.png', sep = '')
+    plt_ttl <- paste('output/wq/ridgelines/ridgeline_', '_', param, '_smoothed.png', sep = '')
 
     p2 <- ggplot2::ggplot(df_smooth, ggplot2::aes(x=datetime_floor, y = Reserve.Name,
                                      height = avg, group = Reserve.Name)) +
@@ -228,7 +250,7 @@ event_ridgeline <- function(var_in,
     df <- dat_tidy %>%
       dplyr::filter(parameter == param)
 
-    plt_ttl <- paste('output/met/ridgeline_one_reserve_one_event/ridgeline_', '_', param, '.png', sep = '')
+    plt_ttl <- paste('output/met/ridgelines/ridgeline_', '_', param, '.png', sep = '')
 
     p3 <- ggplot2::ggplot(df, ggplot2::aes(x=datetimestamp, y = Reserve.Name,
                                      height = result, group = Reserve.Name)) +
@@ -273,7 +295,7 @@ event_ridgeline <- function(var_in,
       dplyr::summarise(avg = mean(result, na.rm = T))
 
 
-    plt_ttl <- paste('output/met/ridgeline_one_reserve_one_event/ridgeline_', '_', param, '_smoothed.png', sep = '')
+    plt_ttl <- paste('output/met/ridgelines/ridgeline_', '_', param, '_smoothed.png', sep = '')
 
     p4 <- ggplot2::ggplot(df_smooth, ggplot2::aes(x=datetime_floor, y = Reserve.Name,
                                             height = avg, group = Reserve.Name)) +

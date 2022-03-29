@@ -7,6 +7,7 @@
 event_timeseries_precip(
   var_in,
   data_path,
+  reserve = NULL,
   storm_start = NULL,
   storm_end = NULL,
   stn_met = NULL,
@@ -16,7 +17,7 @@ event_timeseries_precip(
 )
 }
 \arguments{
-\item{flip}{}
+\item{reserve}{}
 }
 \value{
 

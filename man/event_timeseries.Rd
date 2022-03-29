@@ -7,6 +7,7 @@
 event_timeseries(
   var_in,
   data_path = NULL,
+  reserve = NULL,
   storm_start = NULL,
   storm_end = NULL,
   view_start = NULL,
@@ -19,7 +20,7 @@ event_timeseries(
 )
 }
 \arguments{
-\item{...}{}
+\item{reserve}{}
 }
 \value{
 

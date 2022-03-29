@@ -7,6 +7,7 @@
 event_windrose(
   var_in,
   data_path = NULL,
+  reserve = NULL,
   storm_start = NULL,
   storm_end = NULL,
   met_sites = NULL,
@@ -15,7 +16,7 @@ event_windrose(
 )
 }
 \arguments{
-\item{...}{}
+\item{reserve}{}
 }
 \value{
 

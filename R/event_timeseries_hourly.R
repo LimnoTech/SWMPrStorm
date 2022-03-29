@@ -13,6 +13,7 @@
 #' @param met_sites
 #' @param keep_flags
 #' @param ...
+#' @param reserve
 #'
 #' @return
 #' @export
@@ -20,6 +21,7 @@
 #' @examples
 event_timeseries_hourly <- function(var_in,
                                     data_path = NULL,
+                                    reserve = NULL,
                                     storm_nm = NULL,
                                     onset_start = NULL,
                                     onset_end = NULL,
@@ -40,9 +42,24 @@ event_timeseries_hourly <- function(var_in,
   #a.  Read in the variable input template, var_in
 
   input_Parameters <- xlsx::read.xlsx(var_in, sheetName = "timeseries_hourly")
+  input_Master <- xlsx::read.xlsx(var_in, sheetName = "MASTER")
 
 
   #b.  Read the following variables from template spreadsheet if not provided as optional arguments
+
+  if(is.null(reserve)) reserve <- input_Master[1,2]
+
+
+  stations <- sampling_stations %>%
+    filter(NERR.Site.ID == reserve) %>%
+    filter(Status == "Active")
+
+  wq_stations <- stations %>%
+    filter(Station.Type == 1)
+
+  met_stations <- stations %>%
+    filter(Station.Type == 0)
+
 
   if(is.null(storm_nm)) storm_nm <- input_Parameters[1,2]
   if(is.null(onset_start)) onset_start <- input_Parameters[2,2]
@@ -51,8 +68,10 @@ event_timeseries_hourly <- function(var_in,
   if(is.null(view_end)) view_end <- input_Parameters[5,2]
   if(is.null(recovery_start)) recovery_start <- input_Parameters[6,2]
   if(is.null(recovery_end)) recovery_end <- input_Parameters[7,2]
-  if(is.null(wq_sites)) wq_sites <- unlist(strsplit(input_Parameters[8,2],", "))
-  if(is.null(met_sites)) met_sites <- unlist(strsplit(input_Parameters[9,2],", "))
+  #if(is.null(wq_sites)) wq_sites <- unlist(strsplit(input_Parameters[8,2],", "))
+  if(is.null(wq_sites)) wq_sites <- if(is.na(input_Parameters[8,2])) {wq_stations$Station.Code} else {input_Parameters[8,2]}
+  #if(is.null(met_sites)) met_sites <- unlist(strsplit(input_Parameters[9,2],", "))
+  if(is.null(met_sites)) met_sites <- if(is.na(input_Parameters[9,2])) {met_stations$Station.Code} else {input_Parameters[9,2]}
   if(is.null(keep_flags)) keep_flags <- unlist(strsplit(input_Parameters[10,2],", "))
   if(is.null(data_path)) data_path <- 'data/cdmo'
 
@@ -89,7 +108,6 @@ event_timeseries_hourly <- function(var_in,
   parm <- unique(names(ls_par[[1]])) %>% subset(!(. %in% c('datetimestamp')))
   parm <- parm %>% subset(!(. %in% c('wdir', 'sdwdir', 'totpar', 'totsorad')))
 
-  names(ls_par) <- met_sites
 
   ## identify parameters
   parm <- unique(names(ls_par[[1]])) %>% subset(!(. %in% c('datetimestamp')))
@@ -142,7 +160,7 @@ event_timeseries_hourly <- function(var_in,
         x +
         ggplot2::scale_color_manual('', values = c('steelblue3')) +
         ggplot2::scale_fill_manual('', values = c('steelblue3', 'green')) +
-        ggplot2::scale_x_datetime(date_breaks = 'day', date_labels = '%b\n%d', guide = guide_axis(check.overlap = TRUE)) +
+        ggplot2::scale_x_datetime(date_breaks = 'day', date_labels = '%b\n%d', guide = guide_axis(check.overlap = TRUE))
 
 
       x <- x +

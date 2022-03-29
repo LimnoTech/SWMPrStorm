@@ -7,6 +7,7 @@
 event_ridgeline(
   var_in,
   data_path,
+  reserve = NULL,
   storm_nm = NULL,
   storm_start = NULL,
   storm_end = NULL,

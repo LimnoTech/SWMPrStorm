@@ -7,6 +7,7 @@
 compare_one_event_multi_reserve(
   var_in,
   data_path,
+  reserve = NULL,
   storm_nm = NULL,
   storm_start = NULL,
   storm_end = NULL,
@@ -17,7 +18,7 @@ compare_one_event_multi_reserve(
 )
 }
 \arguments{
-\item{...}{}
+\item{reserve}{}
 }
 \value{
 

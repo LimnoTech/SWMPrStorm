@@ -8,6 +8,7 @@
 #' @param keep_flags
 #' @param ...
 #' @param flip
+#' @param reserve
 #'
 #' @return
 #' @export
@@ -15,6 +16,7 @@
 #' @examples
 event_timeseries_precip <- function(var_in,
                                     data_path,
+                                    reserve = NULL,
                                     storm_start = NULL,
                                     storm_end = NULL,
                                     stn_met = NULL,
@@ -31,13 +33,25 @@ event_timeseries_precip <- function(var_in,
   #a.  Read in the variable input template, var_in
 
   input_Parameters <- xlsx::read.xlsx(var_in, sheetName = "precip_barplots")
+  input_Master <- xlsx::read.xlsx(var_in, sheetName = "MASTER")
 
   #b.  Read the following variables from template spreadsheet if not provided as optional arguments
 
+  # read in all available stations based on reserve (reserve is a required field)
+  if(is.null(reserve)) reserve <- input_Master[1,2]
+
+  stations <- sampling_stations %>%
+    filter(NERR.Site.ID == reserve) %>%
+    filter(Status == "Active")
+
+  met_stations <- stations %>%
+    filter(Station.Type == 0)
+
   if(is.null(storm_start)) storm_start <- input_Parameters[1,2]
   if(is.null(storm_end)) storm_end <- input_Parameters[2,2]
-  if(is.null(stn_met)) stn_met <- input_Parameters[3,2]
+  if(is.null(stn_met)) stn_met <- if(is.na(input_Parameters[3,2])) {met_stations$Station.Code} else {input_Parameters[3,2]}
   if(is.null(keep_flags)) keep_flags <- unlist(strsplit(input_Parameters[4,2],", "))
+  if(is.null(flip)) flip <- input_Parameters[5,2]
   if(is.null(data_path)) data_path <- 'data/cdmo'
 
 
@@ -65,235 +79,233 @@ event_timeseries_precip <- function(var_in,
   parm <- unique(names(ls_par[[1]])) %>% subset(!(. %in% c('datetimestamp')))
   parm <- parm %>%  subset(!(. %in% c('wdir', 'sdwdir', 'totpar', 'totsorad')))
 
-  names(ls_par) <- stn_met
-
-  ## identify parameters
-  parm <- unique(names(ls_par[[1]])) %>% subset(!(. %in% c('datetimestamp')))
 
   # ----------------------------------------------
   # Time series, precip                      -----
   # ----------------------------------------------
 
-  precip <- ls_par[[1]]
+  for(i in 1:length(ls_par)) {
 
-  precip_day <- precip %>%
-    dplyr::filter(dplyr::between(datetimestamp
-                   , as.POSIXct(storm_start)
-                   , as.POSIXct(storm_end))) %>%
-    dplyr::mutate(datetimestamp_day = lubridate::floor_date(datetimestamp, unit = 'day')) %>%
-    dplyr::group_by(datetimestamp_day) %>%
-    dplyr::summarize(value = sum(totprcp, na.rm = T))
+      precip <- ls_par[[i]]
 
-  precip_day$mo <- paste(month.abb[lubridate::month(precip_day$datetimestamp_day)]
-                         , lubridate::day(precip_day$datetimestamp_day)
-                         , sep = ' ') %>%
-    factor
+      precip_day <- precip %>%
+        dplyr::filter(dplyr::between(datetimestamp
+                       , as.POSIXct(storm_start)
+                       , as.POSIXct(storm_end))) %>%
+        dplyr::mutate(datetimestamp_day = lubridate::floor_date(datetimestamp, unit = 'day')) %>%
+        dplyr::group_by(datetimestamp_day) %>%
+        dplyr::summarize(value = sum(totprcp, na.rm = T))
 
-  precip_day <- precip_day %>%
-    dplyr::mutate(mo = factor(mo, levels = mo[order(datetimestamp_day)]))
+      precip_day$mo <- paste(month.abb[lubridate::month(precip_day$datetimestamp_day)]
+                             , lubridate::day(precip_day$datetimestamp_day)
+                             , sep = ' ') %>%
+        factor
 
-  if(flip == FALSE) {
-  # basic plot
-  x <- ggplot2::ggplot(precip_day, ggplot2::aes(x = mo, y = value)) +
-    ggplot2::geom_bar(stat = 'identity', fill = 'steelblue3') +
-    ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = stn_met)) +
-    ggplot2::labs(x = NULL, y = 'Daily Precipitation (in)') +
-    ggplot2::coord_flip() +
-    ggplot2::scale_x_discrete(limits = rev(levels(precip_day$mo)))
+      precip_day <- precip_day %>%
+        dplyr::mutate(mo = factor(mo, levels = mo[order(datetimestamp_day)]))
 
-  x <- x +
-    ggplot2::scale_y_continuous(limits = c(0, max(ceiling(precip_day$value))), expand = c(0,0))
+      if(flip == FALSE) {
+      # basic plot
+      x <- ggplot2::ggplot(precip_day, ggplot2::aes(x = mo, y = value)) +
+        ggplot2::geom_bar(stat = 'identity', fill = 'steelblue3') +
+        ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = stn_met)) +
+        ggplot2::labs(x = NULL, y = 'Daily Precipitation (in)') +
+        ggplot2::coord_flip() +
+        ggplot2::scale_x_discrete(limits = rev(levels(precip_day$mo)))
 
-  x <-
-    x +
-    ggplot2::theme_bw() +
-    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
-                   strip.background = ggplot2::element_blank(),
-                   panel.grid = ggplot2::element_blank(),
-                   panel.border = ggplot2::element_rect(color = 'black', fill = NA),
-                   axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 8, 0, 0), 'pt'), angle = 90),
-                   text = ggplot2::element_text(size = 16),
-                   plot.margin = ggplot2::unit(c(0, 16, 0, 0), 'pt'),
-                   legend.position = 'top')
+      x <- x +
+        ggplot2::scale_y_continuous(limits = c(0, max(ceiling(precip_day$value))), expand = c(0,0))
+
+      x <-
+        x +
+        ggplot2::theme_bw() +
+        ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
+                       strip.background = ggplot2::element_blank(),
+                       panel.grid = ggplot2::element_blank(),
+                       panel.border = ggplot2::element_rect(color = 'black', fill = NA),
+                       axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 8, 0, 0), 'pt'), angle = 90),
+                       text = ggplot2::element_text(size = 16),
+                       plot.margin = ggplot2::unit(c(0, 16, 0, 0), 'pt'),
+                       legend.position = 'top')
 
 
-  x_ttl <- paste('output/met/barplot/barplot_daily_', stn_met, '_', 'totprcp', '.png', sep = '')
+      x_ttl <- paste('output/met/barplot/barplot_daily_', stn_met[i], '_', 'totprcp', '.png', sep = '')
 
-  ggplot2::ggsave(filename = x_ttl, plot = x, height = 6, width = 4, units = 'in', dpi = 300)
+      ggplot2::ggsave(filename = x_ttl, plot = x, height = 6, width = 4, units = 'in', dpi = 300)
 
-  } else if(flip == TRUE) {
-    x <- ggplot2::ggplot(precip_day, ggplot2::aes(x = mo, y = value)) +
-      ggplot2::geom_bar(stat = 'identity', fill = 'steelblue3') +
-      ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = stn_met)) +
-      ggplot2::labs(x = NULL, y = 'Daily Precipitation (in)')
+      } else if(flip == TRUE) {
+        x <- ggplot2::ggplot(precip_day, ggplot2::aes(x = mo, y = value)) +
+          ggplot2::geom_bar(stat = 'identity', fill = 'steelblue3') +
+          ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = stn_met)) +
+          ggplot2::labs(x = NULL, y = 'Daily Precipitation (in)')
 
-    # colors
-    x <- x +
-      ggplot2::scale_y_continuous(limits = c(0, max(ceiling(precip_day$value))), expand = c(0,0))
+        # colors
+        x <- x +
+          ggplot2::scale_y_continuous(limits = c(0, max(ceiling(precip_day$value))), expand = c(0,0))
 
-    x <-
-      x +
-      ggplot2::theme_bw() +
-      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
-                     strip.background = ggplot2::element_blank(),
-                     panel.grid = ggplot2::element_blank(),
-                     panel.border = ggplot2::element_rect(color = 'black', fill = NA),
-                     axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 8, 0, 0), 'pt'), angle = 90),
-                     text = ggplot2::element_text(size = 16),
-                     plot.margin = ggplot2::unit(c(0, 16, 0, 0), 'pt'),
-                     legend.position = 'top')
+        x <-
+          x +
+          ggplot2::theme_bw() +
+          ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
+                         strip.background = ggplot2::element_blank(),
+                         panel.grid = ggplot2::element_blank(),
+                         panel.border = ggplot2::element_rect(color = 'black', fill = NA),
+                         axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 8, 0, 0), 'pt'), angle = 90),
+                         text = ggplot2::element_text(size = 16),
+                         plot.margin = ggplot2::unit(c(0, 16, 0, 0), 'pt'),
+                         legend.position = 'top')
 
-    x_ttl <- paste('output/met/barplot/barplot_daily_', stn_met, '_', 'totprcp', '.png', sep = '')
+        x_ttl <- paste('output/met/barplot/barplot_daily_', stn_met[i], '_', 'totprcp', '.png', sep = '')
 
-    ggplot2::ggsave(filename = x_ttl, plot = x, height = 6, width = 4, units = 'in', dpi = 300)
+        ggplot2::ggsave(filename = x_ttl, plot = x, height = 6, width = 4, units = 'in', dpi = 300)
+      }
+
+
+
+      # ----------------------------------------------
+      # Cumulative Precip                        -----
+      # ----------------------------------------------
+
+      precip_all <- precip_day %>%
+        dplyr::summarize(total_precip_in = sum(value)) %>%
+        dplyr::mutate(Date = paste0(precip_day$mo[1], " - ", tail(precip_day$mo,n=1))) %>%
+        dplyr::mutate(label = round(total_precip_in, 2))
+
+
+      if(flip == TRUE) {
+      x <- ggplot2::ggplot(precip_all, ggplot2::aes(x=Date, y = total_precip_in)) +
+        ggplot2::geom_col(fill = "steelblue3", width = 0.5) +
+        ggplot2::geom_text(ggplot2::aes(x=Date, y = (total_precip_in + + ceiling(max(precip_all$total_precip_in)*1.25)*.05), label = label), color = "steelblue3", fontface="bold") +
+        ggplot2::scale_y_continuous(expand = c(0,0), limits = c(0, ceiling(max(precip_all$total_precip_in)*1.25))) +
+        ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = stn_met)) +
+        ggplot2::xlab("") +
+        ggplot2::ylab("Total Precipitation (in)") +
+        ggplot2::theme_bw() +
+        ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
+                       strip.background = ggplot2::element_blank(),
+                       panel.grid = ggplot2::element_blank(),
+                       panel.border = ggplot2::element_rect(color = 'black', fill = NA),
+                       axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 8, 0, 0), 'pt'), angle = 90),
+                       text = ggplot2::element_text(size = 16),
+                       axis.text = ggplot2::element_blank(),
+                       axis.ticks = ggplot2::element_blank(),
+                       plot.margin = ggplot2::unit(c(0, 16, 0, 0), 'pt'),
+                       legend.position = 'top')
+
+
+      } else if(flip == FALSE) {
+        x <- ggplot2::ggplot(precip_all, ggplot2::aes(x=Date, y = total_precip_in)) +
+          ggplot2::geom_col(fill = "steelblue3", width = 0.5) +
+          ggplot2::geom_text(ggplot2::aes(x=Date, y = (total_precip_in + ceiling(max(precip_all$total_precip_in)*1.25)*.05), label = label), color = "steelblue3", fontface="bold",hjust=0) +
+          ggplot2::coord_flip() +
+          ggplot2::scale_y_continuous(expand = c(0,0), limits = c(0, ceiling(max(precip_all$total_precip_in)*1.25))) +
+          ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = stn_met)) +
+          ggplot2::xlab("") +
+          ggplot2::ylab("Total Precipitation (in)") +
+          ggplot2::theme_bw() +
+          ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
+                         strip.background = ggplot2::element_blank(),
+                         panel.grid = ggplot2::element_blank(),
+                         panel.border = ggplot2::element_rect(color = 'black', fill = NA),
+                         axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 8, 0, 0), 'pt'), angle = 90),
+                         text = ggplot2::element_text(size = 16),
+                         axis.text = ggplot2::element_blank(),
+                         axis.ticks = ggplot2::element_blank(),
+                         plot.margin = ggplot2::unit(c(0, 16, 0, 0), 'pt'),
+                         legend.position = 'top')
+
+
+      }
+
+
+      x_ttl <- paste('output/met/barplot/barplot_cumulative_', stn_met[i], '_', 'totprcp', '.png', sep = '')
+
+      ggplot2::ggsave(filename = x_ttl, plot = x, height = 4, width = 6, units = 'in', dpi = 300)
+
+
+
+      # ----------------------------------------------
+      # Daily Max Intensity Precip               -----
+      # ----------------------------------------------
+
+
+      precip <- ls_par[[i]]
+
+      precip_int <- precip %>%
+        dplyr::filter(dplyr::between(datetimestamp
+                                     , as.POSIXct(storm_start)
+                                     , as.POSIXct(storm_end))) %>%
+        dplyr::mutate(datetimestamp_day = lubridate::floor_date(datetimestamp, unit = 'day')) %>%
+        dplyr::group_by(datetimestamp_day) %>%
+        dplyr::summarize(value = max(intensprcp, na.rm = T))
+
+      precip_int$mo <- paste(month.abb[lubridate::month(precip_day$datetimestamp_day)]
+                             , lubridate::day(precip_day$datetimestamp_day)
+                             , sep = ' ') %>%
+        factor
+
+      precip_int <- precip_int %>%
+        dplyr::mutate(mo = factor(mo, levels = mo[order(datetimestamp_day)]))
+
+      if(flip == FALSE) {
+        # basic plot
+        x <- ggplot2::ggplot(precip_int, ggplot2::aes(x = mo, y = value)) +
+          ggplot2::geom_bar(stat = 'identity', fill = 'steelblue3') +
+          ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = stn_met)) +
+          ggplot2::coord_flip() +
+          ggplot2::scale_x_discrete(limits = rev(levels(precip_int$mo))) +
+          ggplot2::labs(x = NULL, y = 'Max Precipitation Intensity (in/hour)')
+
+        # colors
+        x <- x +
+          ggplot2::scale_y_continuous(limits = c(0, max(ceiling(precip_day$value))), expand = c(0,0))
+
+
+        x <-
+          x +
+          ggplot2::theme_bw() +
+          ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
+                         strip.background = ggplot2::element_blank(),
+                         panel.grid = ggplot2::element_blank(),
+                         panel.border = ggplot2::element_rect(color = 'black', fill = NA),
+                         axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 8, 0, 0), 'pt'), angle = 90),
+                         text = ggplot2::element_text(size = 16),
+                         plot.margin = ggplot2::unit(c(0, 16, 0, 0), 'pt'),
+                         legend.position = 'top')
+
+
+        x_ttl <- paste('output/met/barplot/barplot_daily_', stn_met[i], '_', 'intensprcp ', '.png', sep = '')
+
+        ggplot2::ggsave(filename = x_ttl, plot = x, height = 6, width = 4, units = 'in', dpi = 300)
+
+      } else if(flip == TRUE) {
+        x <- ggplot2::ggplot(precip_int, ggplot2::aes(x = mo, y = value)) +
+          ggplot2::geom_bar(stat = 'identity', fill = 'steelblue3') +
+          ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = stn_met)) +
+          ggplot2::labs(x = NULL, y = 'Max Precipitation Intensity (in/hour)')
+
+        # colors
+        x <- x +
+          ggplot2::scale_y_continuous(limits = c(0, max(ceiling(precip_day$value))), expand = c(0,0))
+
+
+        x <-
+          x +
+          ggplot2::theme_bw() +
+          ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
+                         strip.background = ggplot2::element_blank(),
+                         panel.grid = ggplot2::element_blank(),
+                         panel.border = ggplot2::element_rect(color = 'black', fill = NA),
+                         axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 8, 0, 0), 'pt'), angle = 90),
+                         text = ggplot2::element_text(size = 16),
+                         plot.margin = ggplot2::unit(c(0, 16, 0, 0), 'pt'),
+                         legend.position = 'top')
+
+        x_ttl <- paste('output/met/barplot/barplot_daily_', stn_met[i], '_', 'intensprcp ', '.png', sep = '')
+
+        ggplot2::ggsave(filename = x_ttl, plot = x, height = 6, width = 4, units = 'in', dpi = 300)
+      }
+
   }
-
-
-
-  # ----------------------------------------------
-  # Cumulative Precip                        -----
-  # ----------------------------------------------
-
-  precip_all <- precip_day %>%
-    dplyr::summarize(total_precip_in = sum(value)) %>%
-    dplyr::mutate(Date = paste0(precip_day$mo[1], " - ", tail(precip_day$mo,n=1))) %>%
-    dplyr::mutate(label = round(total_precip_in, 2))
-
-
-  if(flip == TRUE) {
-  x <- ggplot2::ggplot(precip_all, ggplot2::aes(x=Date, y = total_precip_in)) +
-    ggplot2::geom_col(fill = "steelblue3", width = 0.5) +
-    ggplot2::geom_text(ggplot2::aes(x=Date, y = (total_precip_in + + ceiling(max(precip_all$total_precip_in)*1.25)*.05), label = label), color = "steelblue3", fontface="bold") +
-    ggplot2::scale_y_continuous(expand = c(0,0), limits = c(0, ceiling(max(precip_all$total_precip_in)*1.25))) +
-    ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = stn_met)) +
-    ggplot2::xlab("") +
-    ggplot2::ylab("Total Precipitation (in)") +
-    ggplot2::theme_bw() +
-    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
-                   strip.background = ggplot2::element_blank(),
-                   panel.grid = ggplot2::element_blank(),
-                   panel.border = ggplot2::element_rect(color = 'black', fill = NA),
-                   axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 8, 0, 0), 'pt'), angle = 90),
-                   text = ggplot2::element_text(size = 16),
-                   axis.text = ggplot2::element_blank(),
-                   axis.ticks = ggplot2::element_blank(),
-                   plot.margin = ggplot2::unit(c(0, 16, 0, 0), 'pt'),
-                   legend.position = 'top')
-
-
-  } else if(flip == FALSE) {
-    x <- ggplot2::ggplot(precip_all, ggplot2::aes(x=Date, y = total_precip_in)) +
-      ggplot2::geom_col(fill = "steelblue3", width = 0.5) +
-      ggplot2::geom_text(ggplot2::aes(x=Date, y = (total_precip_in + ceiling(max(precip_all$total_precip_in)*1.25)*.05), label = label), color = "steelblue3", fontface="bold",hjust=0) +
-      ggplot2::coord_flip() +
-      ggplot2::scale_y_continuous(expand = c(0,0), limits = c(0, ceiling(max(precip_all$total_precip_in)*1.25))) +
-      ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = stn_met)) +
-      ggplot2::xlab("") +
-      ggplot2::ylab("Total Precipitation (in)") +
-      ggplot2::theme_bw() +
-      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
-                     strip.background = ggplot2::element_blank(),
-                     panel.grid = ggplot2::element_blank(),
-                     panel.border = ggplot2::element_rect(color = 'black', fill = NA),
-                     axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 8, 0, 0), 'pt'), angle = 90),
-                     text = ggplot2::element_text(size = 16),
-                     axis.text = ggplot2::element_blank(),
-                     axis.ticks = ggplot2::element_blank(),
-                     plot.margin = ggplot2::unit(c(0, 16, 0, 0), 'pt'),
-                     legend.position = 'top')
-
-
-  }
-
-
-  x_ttl <- paste('output/met/barplot/barplot_cumulative_', stn_met, '_', 'totprcp', '.png', sep = '')
-
-  ggplot2::ggsave(filename = x_ttl, plot = x, height = 4, width = 6, units = 'in', dpi = 300)
-
-
-
-  # ----------------------------------------------
-  # Daily Max Intensity Precip               -----
-  # ----------------------------------------------
-
-
-  precip <- ls_par[[1]]
-
-  precip_int <- precip %>%
-    dplyr::filter(dplyr::between(datetimestamp
-                                 , as.POSIXct(storm_start)
-                                 , as.POSIXct(storm_end))) %>%
-    dplyr::mutate(datetimestamp_day = lubridate::floor_date(datetimestamp, unit = 'day')) %>%
-    dplyr::group_by(datetimestamp_day) %>%
-    dplyr::summarize(value = max(intensprcp, na.rm = T))
-
-  precip_int$mo <- paste(month.abb[lubridate::month(precip_day$datetimestamp_day)]
-                         , lubridate::day(precip_day$datetimestamp_day)
-                         , sep = ' ') %>%
-    factor
-
-  precip_int <- precip_int %>%
-    dplyr::mutate(mo = factor(mo, levels = mo[order(datetimestamp_day)]))
-
-  if(flip == FALSE) {
-    # basic plot
-    x <- ggplot2::ggplot(precip_int, ggplot2::aes(x = mo, y = value)) +
-      ggplot2::geom_bar(stat = 'identity', fill = 'steelblue3') +
-      ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = stn_met)) +
-      ggplot2::coord_flip() +
-      ggplot2::scale_x_discrete(limits = rev(levels(precip_int$mo))) +
-      ggplot2::labs(x = NULL, y = 'Max Precipitation Intensity (in/hour)')
-
-    # colors
-    x <- x +
-      ggplot2::scale_y_continuous(limits = c(0, max(ceiling(precip_day$value))), expand = c(0,0))
-
-
-    x <-
-      x +
-      ggplot2::theme_bw() +
-      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
-                     strip.background = ggplot2::element_blank(),
-                     panel.grid = ggplot2::element_blank(),
-                     panel.border = ggplot2::element_rect(color = 'black', fill = NA),
-                     axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 8, 0, 0), 'pt'), angle = 90),
-                     text = ggplot2::element_text(size = 16),
-                     plot.margin = ggplot2::unit(c(0, 16, 0, 0), 'pt'),
-                     legend.position = 'top')
-
-
-    x_ttl <- paste('output/met/barplot/barplot_daily_', stn_met, '_', 'intensprcp ', '.png', sep = '')
-
-    ggplot2::ggsave(filename = x_ttl, plot = x, height = 6, width = 4, units = 'in', dpi = 300)
-
-  } else if(flip == TRUE) {
-    x <- ggplot2::ggplot(precip_int, ggplot2::aes(x = mo, y = value)) +
-      ggplot2::geom_bar(stat = 'identity', fill = 'steelblue3') +
-      ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = stn_met)) +
-      ggplot2::labs(x = NULL, y = 'Max Precipitation Intensity (in/hour)')
-
-    # colors
-    x <- x +
-      ggplot2::scale_y_continuous(limits = c(0, max(ceiling(precip_day$value))), expand = c(0,0))
-
-
-    x <-
-      x +
-      ggplot2::theme_bw() +
-      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
-                     strip.background = ggplot2::element_blank(),
-                     panel.grid = ggplot2::element_blank(),
-                     panel.border = ggplot2::element_rect(color = 'black', fill = NA),
-                     axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 8, 0, 0), 'pt'), angle = 90),
-                     text = ggplot2::element_text(size = 16),
-                     plot.margin = ggplot2::unit(c(0, 16, 0, 0), 'pt'),
-                     legend.position = 'top')
-
-    x_ttl <- paste('output/met/barplot/barplot_daily_', stn_met, '_', 'intensprcp ', '.png', sep = '')
-
-    ggplot2::ggsave(filename = x_ttl, plot = x, height = 6, width = 4, units = 'in', dpi = 300)
-  }
-
-
 
 }

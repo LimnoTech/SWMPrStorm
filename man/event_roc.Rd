@@ -7,6 +7,7 @@
 event_roc(
   var_in,
   data_path = NULL,
+  reserve = NULL,
   storm_nm = NULL,
   storm_start = NULL,
   storm_end = NULL,
@@ -17,7 +18,7 @@ event_roc(
 )
 }
 \arguments{
-\item{...}{}
+\item{reserve}{}
 }
 \value{
 

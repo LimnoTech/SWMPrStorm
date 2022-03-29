@@ -7,6 +7,7 @@
 event_timeseries_hourly(
   var_in,
   data_path = NULL,
+  reserve = NULL,
   storm_nm = NULL,
   onset_start = NULL,
   onset_end = NULL,
@@ -21,7 +22,7 @@ event_timeseries_hourly(
 )
 }
 \arguments{
-\item{...}{}
+\item{reserve}{}
 }
 \value{
 

@@ -37,14 +37,30 @@ compare_one_reserve_one_event <- function(var_in,
   #a.  Read in the variable input template, var_in
 
   input_Parameters <- xlsx::read.xlsx(var_in, sheetName = "stats_daily")
+  input_Master <- xlsx::read.xlsx(var_in, sheetName = "MASTER")
+
+  if(is.null(reserve)) reserve <- input_Master[1,2]
+
+
+  stations <- sampling_stations %>%
+    filter(NERR.Site.ID == reserve) %>%
+    filter(Status == "Active")
+
+  wq_stations <- stations %>%
+    filter(Station.Type == 1)
+
+  met_stations <- stations %>%
+    filter(Station.Type == 0)
+
 
   if(is.null(storm_nm)) storm_nm <- unlist(strsplit(input_Parameters[1,2],", "))
   if(is.null(storm_start)) storm_start <- unlist(strsplit(input_Parameters[2,2],", "))
   if(is.null(storm_end)) storm_end <- unlist(strsplit(input_Parameters[3,2],", "))
-  if(is.null(reserve)) reserve <- unlist(strsplit(input_Parameters[4,2],", "))
-  if(is.null(wq_sites)) wq_sites <- unlist(strsplit(input_Parameters[5,2],", "))
-  if(is.null(met_sites)) met_sites <- unlist(strsplit(input_Parameters[6,2],", "))
-  if(is.null(keep_flags)) keep_flags <- unlist(strsplit(input_Parameters[7,2],", "))
+  #if(is.null(wq_sites)) wq_sites <- unlist(strsplit(input_Parameters[5,2],", "))
+  if(is.null(wq_sites)) wq_sites <- if(is.na(input_Parameters[4,2])) {wq_stations$Station.Code} else {input_Parameters[4,2]}
+  #if(is.null(met_sites)) met_sites <- unlist(strsplit(input_Parameters[6,2],", "))
+  if(is.null(met_sites)) met_sites <- if(is.na(input_Parameters[5,2])) {met_stations$Station.Code} else {input_Parameters[5,2]}
+  if(is.null(keep_flags)) keep_flags <- unlist(strsplit(input_Parameters[6,2],", "))
   if(is.null(data_path)) data_path <- 'data/cdmo'
 
 
@@ -105,7 +121,7 @@ compare_one_reserve_one_event <- function(var_in,
   # summary <- summary %>% arrange(., parameter, station_fac)
 
   # write table
-  tbl_ttl <- paste('output/wq/compare_one_reserve_one_event/comparison_wq_', storm_nm, '_', reserve, '.csv', sep = '')
+  tbl_ttl <- paste('output/wq/comparison_one_reserve_one_event/comparison_wq_', storm_nm, '_', reserve, '.csv', sep = '')
   write.csv(summary, file = tbl_ttl, quote = F, row.names = F)
 
 
@@ -176,7 +192,7 @@ compare_one_reserve_one_event <- function(var_in,
 
 
   # write table
-  tbl_ttl <- paste('output/met/compare_one_reserve_one_event/comparison_met_', storm_nm, '_', reserve, '.csv', sep = '')
+  tbl_ttl <- paste('output/met/comparison_one_reserve_one_event/comparison_met_', storm_nm, '_', reserve, '.csv', sep = '')
   write.csv(summary, file = tbl_ttl, quote = F, row.names = F)
 
 

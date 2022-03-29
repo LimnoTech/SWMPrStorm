@@ -7,6 +7,7 @@
 #' @param met_sites
 #' @param keep_flags
 #' @param ...
+#' @param reserve
 #'
 #' @return
 #' @export
@@ -14,6 +15,7 @@
 #' @examples
 event_windrose <- function(var_in,
                            data_path = NULL,
+                           reserve = NULL,
                            storm_start = NULL,
                            storm_end = NULL,
                            met_sites = NULL,
@@ -29,12 +31,25 @@ event_windrose <- function(var_in,
   #a.  Read in the variable input template, var_in
 
   input_Parameters <- xlsx::read.xlsx(var_in, sheetName = "windrose")
+  input_Master <- xlsx::read.xlsx(var_in, sheetName = "MASTER")
+
 
   #b.  Read the following variables from template spreadsheet if not provided as optional arguments
 
+  if(is.null(reserve)) reserve <- input_Master[1,2]
+
+
+  stations <- sampling_stations %>%
+    filter(NERR.Site.ID == reserve) %>%
+    filter(Status == "Active")
+
+  met_stations <- stations %>%
+    filter(Station.Type == 0)
+
   if(is.null(storm_start)) storm_start <- input_Parameters[1,2]
   if(is.null(storm_end)) storm_end <- input_Parameters[2,2]
-  if(is.null(met_sites)) met_sites <- unlist(strsplit(input_Parameters[3,2],", "))
+  #if(is.null(met_sites)) met_sites <- unlist(strsplit(input_Parameters[3,2],", "))
+  if(is.null(met_sites)) met_sites <- if(is.na(input_Parameters[3,2])) {met_stations$Station.Code} else {input_Parameters[3,2]}
   if(is.null(keep_flags)) keep_flags <- unlist(strsplit(input_Parameters[4,2],", "))
   if(is.null(data_path)) data_path <- 'data/cdmo'
 
@@ -82,46 +97,46 @@ event_windrose <- function(var_in,
 
 
   for (i in 1:length(names(ls_par))) {
-  tmp <- ls_par[[i]]
-  tmp$date_char <- as.character(as.Date(tmp$datetimestamp))
+    tmp <- ls_par[[i]]
+    tmp$date_char <- as.character(as.Date(tmp$datetimestamp))
 
 
-  plt_ttl <- paste0("output/met/windrose/",attributes(tmp)$station, "_wspd.png")
-  png(plt_ttl, width = 1000, height = 1000)
-  openair::windRose(tmp, ws = 'wspd', wd = 'wdir', #type = 'date_char',
-                    angle = angle,
-                    width = width,
-                    breaks = breaks,
-                    paddle = paddle,
-                    grid.line = grid.line,
-                    max.freq = 60, #max.freq,
-                    cols = cols,
-                    annotate = annotate,
-                    main = main,
-                    # type = type,
-                    between = between,
-                    par.settings = par.settings,
-                    strip = strip)
-  dev.off()
+    plt_ttl <- paste0("output/met/windrose/",attributes(tmp)$station, "_wspd.png")
+    png(plt_ttl, width = 1000, height = 1000)
+    openair::windRose(tmp, ws = 'wspd', wd = 'wdir', #type = 'date_char',
+                      angle = angle,
+                      width = width,
+                      breaks = breaks,
+                      paddle = paddle,
+                      grid.line = grid.line,
+                      max.freq = 60, #max.freq,
+                      cols = cols,
+                      annotate = annotate,
+                      main = main,
+                      # type = type,
+                      between = between,
+                      par.settings = par.settings,
+                      strip = strip)
+    dev.off()
 
 
-  plt_ttl <- paste0("output/met/windrose/",attributes(tmp)$station, "_wspd_bydate.png")
-  png(plt_ttl, width = 1000, height = 1000)
-  openair::windRose(tmp, ws = 'wspd', wd = 'wdir', type = 'date_char',
-                    angle = angle,
-                    width = width,
-                    breaks = breaks,
-                    paddle = paddle,
-                    grid.line = grid.line,
-                    max.freq = max.freq,
-                    cols = cols,
-                    annotate = annotate,
-                    main = main,
-                    # type = type,
-                    between = between,
-                    par.settings = par.settings,
-                    strip = strip)
-  dev.off()
+    plt_ttl <- paste0("output/met/windrose/",attributes(tmp)$station, "_wspd_bydate.png")
+    png(plt_ttl, width = 1000, height = 1000)
+    openair::windRose(tmp, ws = 'wspd', wd = 'wdir', type = 'date_char',
+                      angle = angle,
+                      width = width,
+                      breaks = breaks,
+                      paddle = paddle,
+                      grid.line = grid.line,
+                      max.freq = max.freq,
+                      cols = cols,
+                      annotate = annotate,
+                      main = main,
+                      # type = type,
+                      between = between,
+                      par.settings = par.settings,
+                      strip = strip)
+    dev.off()
 
   }
 

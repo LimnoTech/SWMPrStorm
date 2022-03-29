@@ -11,6 +11,7 @@
 #' @param keep_flags
 #' @param data_path
 #' @param ...
+#' @param reserve
 #'
 #' @return
 #' @export
@@ -18,6 +19,7 @@
 #' @examples
 event_timeseries <- function(var_in,
                              data_path = NULL,
+                             reserve = NULL,
                              storm_start = NULL,
                              storm_end = NULL,
                              view_start = NULL,
@@ -33,8 +35,20 @@ event_timeseries <- function(var_in,
   #a.  Read in the variable input template, var_in
 
   input_Parameters <- xlsx::read.xlsx(var_in, sheetName = "timeseries_recovery")
+  input_Master <- xlsx::read.xlsx(var_in, sheetName = "MASTER")
 
   #b.  Read the following variables from template spreadsheet if not provided as optional arguments
+
+  # read in all available stations based on reserve (reserve is a required field)
+  if(is.null(reserve)) reserve <- input_Master[1,2]
+
+
+  stations <- sampling_stations %>%
+    filter(NERR.Site.ID == reserve) %>%
+    filter(Status == "Active")
+
+  wq_stations <- stations %>%
+    filter(Station.Type == 1)
 
   if(is.null(storm_start)) storm_start <- input_Parameters[1,2]
   if(is.null(storm_end)) storm_end <- input_Parameters[2,2]
@@ -42,138 +56,155 @@ event_timeseries <- function(var_in,
   if(is.null(view_end)) view_end <- input_Parameters[4,2]
   if(is.null(recovery_start)) recovery_start <- input_Parameters[5,2]
   if(is.null(recovery_end)) recovery_end <- input_Parameters[6,2]
-  if(is.null(stn_wq)) stn_wq <- input_Parameters[7,2]
+  #if(is.null(stn_wq)) stn_wq <- input_Parameters[7,2]
+  if(is.null(stn_wq)) stn_wq <- if(is.na(input_Parameters[7,2])) {wq_stations$Station.Code} else {input_Parameters[7,2]}
   if(is.null(keep_flags)) keep_flags <- unlist(strsplit(input_Parameters[8,2],", "))
   if(is.null(data_path)) data_path <- 'data/cdmo'
 
 
+
   ### 1. Read in data and wrangle ##############################################
   #data will be placed in the data folder within the Event Level Template
-  dat_wq <- SWMPr::import_local(path = data_path, stn_wq)
-  dat_wq <- SWMPr::qaqc(dat_wq, qaqc_keep = keep_flags)
+  #dat_wq <- SWMPr::import_local(path = data_path, stn_wq)
+  #dat_wq <- SWMPr::qaqc(dat_wq, qaqc_keep = keep_flags)
+  #dat_wq <- SWMPr::import_local(path = data_path, stn_wq)
+  #dat_wq <- SWMPr::qaqc(dat_wq, qaqc_keep = keep_flags)
+  ls_par <- lapply(stn_wq, SWMPr::import_local, path = data_path)
+  ls_par <- lapply(ls_par, SWMPr::qaqc, qaqc_keep = keep_flags)
+  names(ls_par) <- stn_wq
+
 
   # tidy the data ------------------------------------
-  dat_wq <- tidyr::pivot_longer(dat_wq, cols = 2:13
-                         , names_to = 'parameter'
-                         ,values_to = 'value')
+  #dat_wq2 <- tidyr::pivot_longer(dat_wq, cols = 2:13
+  #                    , names_to = 'parameter'
+  #                    ,values_to = 'value')
 
-  parms <- unique(dat_wq$parameter)
+
+  ls_wq <- lapply(ls_par, tidyr::pivot_longer,cols = 2:13, names_to = 'parameter',values_to = 'value')
+
+  parms <- unique(ls_wq[[1]]$parameter)
+
 
 
   ### Plot Data ################################################################
 
-  df <- dat_wq %>%
-    dplyr::filter(dplyr::between(datetimestamp, as.POSIXct(view_start), as.POSIXct(view_end)))
-
-  parm_wq <- unique(dat_wq$parameter)
-
-  # one station, daily smooth -------------------------------------------------
-
-  #df_day <- dat_wq %>%
-  #  dplyr::filter(between(datetimestamp
-  #                 , as.POSIXct(view_start)
-  #                 , as.POSIXct(view_end))) %>%
-  #  dplyr::mutate(datetimestamp_day = floor_date(datetimestamp, unit = 'day')) %>%
-  #  dplyr::group_by(datetimestamp_day, parameter) %>%
-  #  dplyr::summarize(value = mean(value, na.rm = T))
-  #
-  #for(i in 1:length(parms)){
-  #  parm = parms[i]
-  #
-  #  # Create a dummy data.frame for events and recovery
-  #  df<-data.frame(xmin=as.POSIXct(storm_start),
-  #                 xmax=as.POSIXct(storm_end),
-  #                 ymin=c(-Inf),
-  #                 ymax=c(Inf),
-  #                 years=c('Event Duration'))
-  #
-  #  x <-
-  #    df_day %>%
-  #    dplyr::filter(parameter == parm) %>%
-  #    ggplot2::ggplot(., aes(x = datetimestamp_day, y = value)) +
-  #    ggplot2::geom_line(aes(color = 'Daily Avg')) +# 'steelblue3') +
-  #    ggplot2::geom_rect(data=df,aes(xmin=xmin,ymin=ymin,xmax=xmax,ymax=ymax,fill=years),
-  #              alpha=0.2,inherit.aes=FALSE) +
-  #    ggplot2::scale_x_datetime(date_breaks = '2 weeks', date_labels = '%b %d') +
-  #    ggplot2::labs(x = '', y = SWMPrStorm::y_labeler(parm))
-  #
-  #  x <-
-  #    x +
-  #    ggplot2::scale_color_manual('', values = c('steelblue3')) +
-  #    ggplot2::scale_fill_manual('', values = 'steelblue3')
-  #
-  #  x <- x +
-  #    ggplot2::theme_bw() +
-  #    ggplot2::theme(strip.background = element_blank(),
-  #          panel.grid = element_blank(),
-  #          panel.border = element_rect(color = 'black', fill = NA)) +
-  #    ggplot2::theme(axis.title.y = element_text(margin = unit(c(0, 8, 0, 0), 'pt'), angle = 90)) +
-  #    ggplot2::theme(text = element_text(size = 16)) +
-  #    ggplot2::theme(legend.position = 'top')
-  #
-  #  print(x)
-  #
-  #}
-
-  # one station, daily smooth, with recovery -----------------------------------
-
-  plot_start <- as.POSIXct(view_start, format = "%Y-%m-%d %H:%M:%S")
-  plot_end <- as.POSIXct(view_end, format = "%Y-%m-%d %H:%M:%S")
-
-  df_day <- dat_wq %>%
-    dplyr::filter(dplyr::between(datetimestamp
-                   , as.POSIXct(view_start)
-                   , as.POSIXct(view_end))) %>%
-    dplyr::mutate(datetimestamp_day = lubridate::floor_date(datetimestamp, unit = 'day')) %>%
-    dplyr::group_by(datetimestamp_day, parameter) %>%
-    dplyr::summarize(value = mean(value, na.rm = T))
-
-  for(i in 1:length(parms)){
-    parm = parms[i]
-
-    # Create a dummy data.frame for events and recovery
-    df<-data.frame(xmin=as.POSIXct(c(storm_start, recovery_start)),
-                   xmax=as.POSIXct(c(storm_end, recovery_end)),
-                   ymin=c(-Inf, -Inf),
-                   ymax=c(Inf, Inf),
-                   years=c('Event Duration', 'Event Recovery'))
-
-    x <-
-      df_day %>%
-      dplyr::filter(parameter == parm) %>%
-      ggplot2::ggplot(., ggplot2::aes(x = datetimestamp_day, y = value)) +
-      ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = stn_wq)) +
-      ggplot2::geom_line(ggplot2::aes(color = 'Daily Avg'), lwd = 1) +
-      ggplot2::geom_rect(data=df,ggplot2::aes(xmin=xmin,ymin=ymin,xmax=xmax,ymax=ymax,fill=years),
-                alpha=0.1,inherit.aes=FALSE) +
-      ggplot2::labs(x = '', y = SWMPrStorm::y_labeler(parm))
+  for(i in 1:length(ls_wq)) {
 
 
-    x <-
-      x +
-      ggplot2::scale_color_manual('', values = c('steelblue3')) +
-      ggplot2::scale_fill_manual('', values = c('steelblue3', 'green')) +
-      ggplot2::scale_x_datetime(date_breaks = '1 day',
-                                date_labels = '%b\n%d',
-                                guide = guide_axis(check.overlap = TRUE))
+    dat <- ls_wq[[i]]
+    stn <- names(ls_wq)[i]
 
-    x <- x +
-      ggplot2::theme_bw() +
-      ggplot2::theme(plot.title = element_text(hjust = 0.5),
-                     strip.background = element_blank(),
-                     panel.grid = element_blank(),
-                     panel.border = element_rect(color = 'black', fill = NA),
-                     plot.margin = ggplot2::margin(5.5, 24, 5.5, 5.5, unit = 'pt'),
-                     axis.title.y = element_text(margin = unit(c(0, 8, 0, 8), 'pt'), angle = 90),
-                     text = element_text(size = 16),
-                     legend.position = 'top')
+    df <- dat %>%
+      dplyr::filter(dplyr::between(datetimestamp, as.POSIXct(view_start), as.POSIXct(view_end)))
+
+    parm_wq <- parms
+
+    # one station, daily smooth -------------------------------------------------
+
+    #df_day <- dat_wq %>%
+    #  dplyr::filter(between(datetimestamp
+    #                 , as.POSIXct(view_start)
+    #                 , as.POSIXct(view_end))) %>%
+    #  dplyr::mutate(datetimestamp_day = floor_date(datetimestamp, unit = 'day')) %>%
+    #  dplyr::group_by(datetimestamp_day, parameter) %>%
+    #  dplyr::summarize(value = mean(value, na.rm = T))
+    #
+    #for(i in 1:length(parms)){
+    #  parm = parms[i]
+    #
+    #  # Create a dummy data.frame for events and recovery
+    #  df<-data.frame(xmin=as.POSIXct(storm_start),
+    #                 xmax=as.POSIXct(storm_end),
+    #                 ymin=c(-Inf),
+    #                 ymax=c(Inf),
+    #                 years=c('Event Duration'))
+    #
+    #  x <-
+    #    df_day %>%
+    #    dplyr::filter(parameter == parm) %>%
+    #    ggplot2::ggplot(., aes(x = datetimestamp_day, y = value)) +
+    #    ggplot2::geom_line(aes(color = 'Daily Avg')) +# 'steelblue3') +
+    #    ggplot2::geom_rect(data=df,aes(xmin=xmin,ymin=ymin,xmax=xmax,ymax=ymax,fill=years),
+    #              alpha=0.2,inherit.aes=FALSE) +
+    #    ggplot2::scale_x_datetime(date_breaks = '2 weeks', date_labels = '%b %d') +
+    #    ggplot2::labs(x = '', y = SWMPrStorm::y_labeler(parm))
+    #
+    #  x <-
+    #    x +
+    #    ggplot2::scale_color_manual('', values = c('steelblue3')) +
+    #    ggplot2::scale_fill_manual('', values = 'steelblue3')
+    #
+    #  x <- x +
+    #    ggplot2::theme_bw() +
+    #    ggplot2::theme(strip.background = element_blank(),
+    #          panel.grid = element_blank(),
+    #          panel.border = element_rect(color = 'black', fill = NA)) +
+    #    ggplot2::theme(axis.title.y = element_text(margin = unit(c(0, 8, 0, 0), 'pt'), angle = 90)) +
+    #    ggplot2::theme(text = element_text(size = 16)) +
+    #    ggplot2::theme(legend.position = 'top')
+    #
+    #  print(x)
+    #
+    #}
+
+    # one station, daily smooth, with recovery -----------------------------------
+
+    plot_start <- as.POSIXct(view_start, format = "%Y-%m-%d %H:%M:%S")
+    plot_end <- as.POSIXct(view_end, format = "%Y-%m-%d %H:%M:%S")
+
+    df_day <- df %>%
+      dplyr::filter(dplyr::between(datetimestamp
+                     , as.POSIXct(view_start)
+                     , as.POSIXct(view_end))) %>%
+      dplyr::mutate(datetimestamp_day = lubridate::floor_date(datetimestamp, unit = 'day')) %>%
+      dplyr::group_by(datetimestamp_day, parameter) %>%
+      dplyr::summarize(value = mean(value, na.rm = T))
+
+    for(i in 1:length(parms)){
+      parm = parms[i]
+
+      # Create a dummy data.frame for events and recovery
+      df<-data.frame(xmin=as.POSIXct(c(storm_start, recovery_start)),
+                     xmax=as.POSIXct(c(storm_end, recovery_end)),
+                     ymin=c(-Inf, -Inf),
+                     ymax=c(Inf, Inf),
+                     years=c('Event Duration', 'Event Recovery'))
+
+      x <-
+        df_day %>%
+        dplyr::filter(parameter == parm) %>%
+        ggplot2::ggplot(., ggplot2::aes(x = datetimestamp_day, y = value)) +
+        ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = stn_wq)) +
+        ggplot2::geom_line(ggplot2::aes(color = 'Daily Avg'), lwd = 1) +
+        ggplot2::geom_rect(data=df,ggplot2::aes(xmin=xmin,ymin=ymin,xmax=xmax,ymax=ymax,fill=years),
+                  alpha=0.1,inherit.aes=FALSE) +
+        ggplot2::labs(x = '', y = SWMPrStorm::y_labeler(parm))
 
 
-    x_ttl <- paste('output/wq/timeseries_event_recovery/timeseries_event_recovery_', stn_wq, '_', parm, '.png', sep = '')
+      x <-
+        x +
+        ggplot2::scale_color_manual('', values = c('steelblue3')) +
+        ggplot2::scale_fill_manual('', values = c('steelblue3', 'green')) +
+        ggplot2::scale_x_datetime(date_breaks = '1 day',
+                                  date_labels = '%b\n%d',
+                                  guide = guide_axis(check.overlap = TRUE))
 
-    ggplot2::ggsave(filename = x_ttl, plot = x, height = 4, width = 6, units = 'in', dpi = 300)
+      x <- x +
+        ggplot2::theme_bw() +
+        ggplot2::theme(plot.title = element_text(hjust = 0.5),
+                       strip.background = element_blank(),
+                       panel.grid = element_blank(),
+                       panel.border = element_rect(color = 'black', fill = NA),
+                       plot.margin = ggplot2::margin(5.5, 24, 5.5, 5.5, unit = 'pt'),
+                       axis.title.y = element_text(margin = unit(c(0, 8, 0, 8), 'pt'), angle = 90),
+                       text = element_text(size = 16),
+                       legend.position = 'top')
 
+
+      x_ttl <- paste('output/wq/timeseries_event_recovery/timeseries_event_recovery_', stn, '_', parm, '.png', sep = '')
+
+      ggplot2::ggsave(filename = x_ttl, plot = x, height = 4, width = 6, units = 'in', dpi = 300)
+
+    }
   }
-
-
 }
