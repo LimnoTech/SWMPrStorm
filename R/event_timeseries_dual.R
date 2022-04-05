@@ -10,6 +10,8 @@
 #' @param param_secondary
 #' @param keep_flags
 #' @param ...
+#' @param storm_nm
+#' @param skip
 #'
 #' @return
 #' @export
@@ -25,6 +27,7 @@ event_timeseries_dual <- function(var_in,
                                   param_primary = NULL,
                                   param_secondary = NULL,
                                   keep_flags = NULL,
+                                  skip = NULL,
                                   ...) {
 
   ### 0. Read variables ########################################################
@@ -44,7 +47,13 @@ event_timeseries_dual <- function(var_in,
   if(is.null(param_primary)) param_primary <- input_Parameters[5,2]
   if(is.null(param_secondary)) param_secondary <- input_Parameters[6,2]
   if(is.null(keep_flags)) keep_flags <- unlist(strsplit(input_Parameters[7,2],", "))
+  if(is.null(skip)) skip <- input_Parameters[8,2]
   if(is.null(data_path)) data_path <- 'data/cdmo'
+
+
+  ############## Tests #########################################################
+  if(skip == "TRUE") {return(warning("skip set to 'TRUE', skipping event_timeseries_dual"))}
+
 
 
   ### 1. Load and Aggregate Datasets ###########################################

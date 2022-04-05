@@ -9,6 +9,8 @@
 #' @param path_to_shp
 #' @param lab_loc
 #' @param scale_pos
+#' @param path_to_base
+#' @param skip
 #'
 #' @return
 #' @export
@@ -23,7 +25,8 @@ single_storm_track <- function(map_in
                                   , path_to_shp = NULL
                                   , path_to_base = NULL
                                   , lab_loc = NULL
-                                  , scale_pos = 'bottomleft') {
+                                  , scale_pos = 'bottomleft'
+                                  , skip = NULL) {
 
   ### 0. Read variables ########################################################
 
@@ -38,7 +41,16 @@ single_storm_track <- function(map_in
   if(is.null(storm_nm)) storm_nm <- input_Shp$storm_nm[!is.na(input_Shp$storm_nm)]
   if(is.null(path_to_shp)) path_to_shp <- input_Shp$path[!is.na(input_Shp$path)]
   if(is.null(path_to_base)) path_to_base <- input_Parameters[5,2]
+  if(is.null(skip)) skip <- input_Parameters[6,2]
   if(is.null(storm_rank)) storm_rank <- input_Shp$storm_rank[!is.na(input_Shp$storm_rank)]
+
+
+  ############## Tests #########################################################
+  if(skip == "TRUE") {return(warning("skip set to 'TRUE', skipping single_storm_track"))}
+
+
+
+
 
   #b. Generate reserve labels
 

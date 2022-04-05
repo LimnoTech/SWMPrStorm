@@ -1,4 +1,4 @@
-#' Title
+#' event_roc
 #'
 #' @param var_in
 #' @param data_path
@@ -10,6 +10,7 @@
 #' @param keep_flags
 #' @param ...
 #' @param reserve
+#' @param skip
 #'
 #' @return
 #' @export
@@ -24,6 +25,7 @@ event_roc <- function(var_in,
                       wq_sites = NULL,
                       met_sites = NULL,
                       keep_flags = NULL,
+                      skip = NULL,
                       ...) {
 
 
@@ -60,7 +62,14 @@ event_roc <- function(var_in,
   #if(is.null(met_sites)) met_sites <- unlist(strsplit(input_Parameters[5,2],", "))
   if(is.null(met_sites)) met_sites <- if(is.na(input_Parameters[5,2])) {met_stations$Station.Code} else {input_Parameters[5,2]}
   if(is.null(keep_flags)) keep_flags <- unlist(strsplit(input_Parameters[6,2],", "))
+  if(is.null(skip)) skip <- input_Parameters[7,2]
   if(is.null(data_path)) data_path <- 'data/cdmo'
+
+
+
+  ############## Tests #########################################################
+  if(skip == "TRUE") {return(warning("skip set to 'TRUE', skipping event_roc"))}
+
 
 
   # ----------------------------------------------
@@ -282,13 +291,15 @@ event_roc <- function(var_in,
 
       roc <- dat_tidy %>%
         dplyr::filter(station == s, parameter == p) %>%
-        dplyr::mutate(diff_result = result - dplyr::lag(result))
+        dplyr::mutate(diff_result = result - dplyr::lag(result),
+                      legend = "Raw Data")
 
       roc_smooth <- dat_tidy %>%
         dplyr::filter(station == s, parameter == p) %>%
         dplyr::group_by(time_hr = lubridate::floor_date(datetimestamp, "hour")) %>%
         dplyr::summarise(result = mean(result, na.rm = T)) %>%
-        dplyr::mutate(diff_result = result - dplyr::lag(result))
+        dplyr::mutate(diff_result = result - dplyr::lag(result),
+                      legend = "Hourly Avg")
 
       roc_raw <- dat_tidy %>%
         dplyr::filter(station == s, parameter == p) %>%
@@ -342,7 +353,6 @@ event_roc <- function(var_in,
 
 
       p3 <-  ggplot2::ggplot(roc_raw, ggplot2::aes(x = datetimestamp, y = result)) +
-        ggplot2::ggplot(., aes(x = datetimestamp, y = result)) +
         ggplot2::geom_line(aes(color = legend), lwd = 1) +
         ggplot2::scale_x_datetime(limits = c(as.POSIXct(storm_start), as.POSIXct(storm_end))
                                   , date_breaks = '1 day'

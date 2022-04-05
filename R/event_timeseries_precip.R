@@ -9,6 +9,7 @@
 #' @param ...
 #' @param flip
 #' @param reserve
+#' @param skip
 #'
 #' @return
 #' @export
@@ -22,6 +23,7 @@ event_timeseries_precip <- function(var_in,
                                     stn_met = NULL,
                                     keep_flags = NULL,
                                     flip = FALSE,
+                                    skip = NULL,
                                     ...) {
 
 
@@ -52,7 +54,12 @@ event_timeseries_precip <- function(var_in,
   if(is.null(stn_met)) stn_met <- if(is.na(input_Parameters[3,2])) {met_stations$Station.Code} else {input_Parameters[3,2]}
   if(is.null(keep_flags)) keep_flags <- unlist(strsplit(input_Parameters[4,2],", "))
   if(is.null(flip)) flip <- input_Parameters[5,2]
+  if(is.null(skip)) skip <- input_Parameters[6,2]
   if(is.null(data_path)) data_path <- 'data/cdmo'
+
+  ############## Tests #########################################################
+  if(skip == "TRUE") {return(warning("skip set to 'TRUE', skipping event_timeseries_precip"))}
+
 
 
   # ----------------------------------------------

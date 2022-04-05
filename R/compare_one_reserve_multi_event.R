@@ -10,6 +10,7 @@
 #' @param met_sites
 #' @param keep_flags
 #' @param ...
+#' @param skip
 #'
 #' @return
 #' @export
@@ -24,6 +25,7 @@ compare_one_reserve_multi_event <- function(var_in,
                                             wq_sites = NULL,
                                             met_sites = NULL,
                                             keep_flags = NULL,
+                                            skip = NULL,
                                             ...) {
 
 
@@ -60,7 +62,13 @@ compare_one_reserve_multi_event <- function(var_in,
   #if(is.null(met_sites)) met_sites <- unlist(strsplit(input_Parameters[6,2],", "))
   if(is.null(met_sites)) met_sites <- if(is.na(input_Parameters[5,2])) {met_stations$Station.Code} else {input_Parameters[5,2]}
   if(is.null(keep_flags)) keep_flags <- unlist(strsplit(input_Parameters[6,2],", "))
+  if(is.null(skip)) skip <- input_Parameters[7,2]
   if(is.null(data_path)) data_path <- 'data/cdmo'
+
+
+
+  ############## Tests #########################################################
+  if(skip == "TRUE") {return(warning("skip set to 'TRUE', skipping compare_one_reserve_multi_event"))}
 
 
   ########## WATER QUALITY #####################################################

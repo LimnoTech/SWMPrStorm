@@ -12,6 +12,7 @@
 #' @param data_path
 #' @param ...
 #' @param reserve
+#' @param skip
 #'
 #' @return
 #' @export
@@ -28,6 +29,7 @@ event_timeseries <- function(var_in,
                              recovery_end = NULL,
                              stn_wq = NULL,
                              keep_flags = NULL,
+                             skip = NULL,
                              ...) {
 
   ### 0. Read variables ########################################################
@@ -59,7 +61,13 @@ event_timeseries <- function(var_in,
   #if(is.null(stn_wq)) stn_wq <- input_Parameters[7,2]
   if(is.null(stn_wq)) stn_wq <- if(is.na(input_Parameters[7,2])) {wq_stations$Station.Code} else {input_Parameters[7,2]}
   if(is.null(keep_flags)) keep_flags <- unlist(strsplit(input_Parameters[8,2],", "))
+  if(is.null(skip)) skip <- input_Parameters[9,2]
   if(is.null(data_path)) data_path <- 'data/cdmo'
+
+
+
+  ############## Tests #########################################################
+  if(skip == "TRUE") {return(warning("skip set to 'TRUE', skipping event_timeseries"))}
 
 
 

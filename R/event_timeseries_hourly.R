@@ -14,6 +14,7 @@
 #' @param keep_flags
 #' @param ...
 #' @param reserve
+#' @param skip
 #'
 #' @return
 #' @export
@@ -32,6 +33,7 @@ event_timeseries_hourly <- function(var_in,
                                     wq_sites = NULL,
                                     met_sites = NULL,
                                     keep_flags = NULL,
+                                    skip = NULL,
                                     ...){
 
 
@@ -73,8 +75,11 @@ event_timeseries_hourly <- function(var_in,
   #if(is.null(met_sites)) met_sites <- unlist(strsplit(input_Parameters[9,2],", "))
   if(is.null(met_sites)) met_sites <- if(is.na(input_Parameters[9,2])) {met_stations$Station.Code} else {input_Parameters[9,2]}
   if(is.null(keep_flags)) keep_flags <- unlist(strsplit(input_Parameters[10,2],", "))
+  if(is.null(skip)) skip <- input_Parameters[11,2]
   if(is.null(data_path)) data_path <- 'data/cdmo'
 
+  ############## Tests #########################################################
+  if(skip == "TRUE") {return(warning("skip set to 'TRUE', skipping event_timeseries_hourly"))}
 
 
   # ----------------------------------------------------------------------------
