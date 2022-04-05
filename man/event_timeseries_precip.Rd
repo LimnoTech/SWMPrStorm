@@ -2,7 +2,7 @@
 % Please edit documentation in R/event_timeseries_precip.R
 \name{event_timeseries_precip}
 \alias{event_timeseries_precip}
-\title{Title}
+\title{event_timeseries_precip}
 \usage{
 event_timeseries_precip(
   var_in,
@@ -13,15 +13,16 @@ event_timeseries_precip(
   stn_met = NULL,
   keep_flags = NULL,
   flip = FALSE,
+  skip = NULL,
   ...
 )
 }
 \arguments{
-\item{reserve}{}
+\item{skip}{}
 }
 \value{
 
 }
 \description{
-Title
+event_timeseries_precip
 }

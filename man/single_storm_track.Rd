@@ -14,11 +14,12 @@ single_storm_track(
   path_to_shp = NULL,
   path_to_base = NULL,
   lab_loc = NULL,
-  scale_pos = "bottomleft"
+  scale_pos = "bottomleft",
+  skip = NULL
 )
 }
 \arguments{
-\item{scale_pos}{}
+\item{skip}{}
 }
 \value{
 

@@ -2,7 +2,7 @@
 % Please edit documentation in R/event_roc.R
 \name{event_roc}
 \alias{event_roc}
-\title{Title}
+\title{event_roc}
 \usage{
 event_roc(
   var_in,
@@ -14,15 +14,16 @@ event_roc(
   wq_sites = NULL,
   met_sites = NULL,
   keep_flags = NULL,
+  skip = NULL,
   ...
 )
 }
 \arguments{
-\item{reserve}{}
+\item{skip}{}
 }
 \value{
 
 }
 \description{
-Title
+event_roc
 }

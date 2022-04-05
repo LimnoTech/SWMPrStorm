@@ -2,7 +2,7 @@
 % Please edit documentation in R/compare_one_event_multi_reserve.R
 \name{compare_one_event_multi_reserve}
 \alias{compare_one_event_multi_reserve}
-\title{Title}
+\title{compare_one_event_multi_reserve}
 \usage{
 compare_one_event_multi_reserve(
   var_in,
@@ -14,15 +14,16 @@ compare_one_event_multi_reserve(
   wq_sites = NULL,
   met_sites = NULL,
   keep_flags = NULL,
+  skip = NULL,
   ...
 )
 }
 \arguments{
-\item{reserve}{}
+\item{skip}{}
 }
 \value{
 
 }
 \description{
-Title
+compare_one_event_multi_reserve
 }

@@ -12,11 +12,12 @@ event_windrose(
   storm_end = NULL,
   met_sites = NULL,
   keep_flags = NULL,
+  skip = NULL,
   ...
 )
 }
 \arguments{
-\item{reserve}{}
+\item{skip}{}
 }
 \value{
 

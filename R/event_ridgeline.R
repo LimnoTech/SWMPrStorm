@@ -1,4 +1,4 @@
-#' Title
+#' event_ridgeline
 #'
 #' @param var_in
 #' @param data_path

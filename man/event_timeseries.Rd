@@ -16,11 +16,12 @@ event_timeseries(
   recovery_end = NULL,
   stn_wq = NULL,
   keep_flags = NULL,
+  skip = NULL,
   ...
 )
 }
 \arguments{
-\item{reserve}{}
+\item{skip}{}
 }
 \value{
 

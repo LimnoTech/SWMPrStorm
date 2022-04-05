@@ -1,4 +1,4 @@
-#' Title
+#' event_timeseries_dual
 #'
 #' @param var_in
 #' @param data_path

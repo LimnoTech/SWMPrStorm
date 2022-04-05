@@ -2,7 +2,7 @@
 % Please edit documentation in R/event_ridgeline.R
 \name{event_ridgeline}
 \alias{event_ridgeline}
-\title{Title}
+\title{event_ridgeline}
 \usage{
 event_ridgeline(
   var_in,
@@ -14,15 +14,16 @@ event_ridgeline(
   wq_sites = NULL,
   met_sites = NULL,
   keep_flags = NULL,
+  skip = NULL,
   ...
 )
 }
 \arguments{
-\item{...}{}
+\item{skip}{}
 }
 \value{
 
 }
 \description{
-Title
+event_ridgeline
 }

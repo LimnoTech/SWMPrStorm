@@ -2,7 +2,7 @@
 % Please edit documentation in R/event_timeseries_dual.R
 \name{event_timeseries_dual}
 \alias{event_timeseries_dual}
-\title{Title}
+\title{event_timeseries_dual}
 \usage{
 event_timeseries_dual(
   var_in,
@@ -15,15 +15,16 @@ event_timeseries_dual(
   param_primary = NULL,
   param_secondary = NULL,
   keep_flags = NULL,
+  skip = NULL,
   ...
 )
 }
 \arguments{
-\item{...}{}
+\item{skip}{}
 }
 \value{
 
 }
 \description{
-Title
+event_timeseries_dual
 }
