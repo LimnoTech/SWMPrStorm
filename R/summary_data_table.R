@@ -1,30 +1,27 @@
-#' compare_one_event_multi_reserve
+#' summary_data_table
 #'
 #' @param var_in
 #' @param data_path
 #' @param storm_nm
 #' @param storm_start
 #' @param storm_end
-#' @param wq_sites
-#' @param met_sites
-#' @param keep_flags
-#' @param ...
 #' @param reserve
+#' @param keep_flags
 #' @param skip
 #'
 #' @return
 #' @export
 #'
 #' @examples
-compare_one_event_multi_reserve <- function(var_in,
-                                            data_path,
-                                            reserve = NULL,
-                                            storm_nm = NULL,
-                                            storm_start = NULL,
-                                            storm_end = NULL,
-                                            keep_flags = NULL,
-                                            skip = NULL,
-                                            ...) {
+summary_data_table <- function(var_in,
+                               data_path,
+                               storm_nm = NULL,
+                               storm_start = NULL,
+                               storm_end = NULL,
+                               reserve = NULL,
+                               keep_flags = NULL,
+                               skip = NULL) {
+
 
 
 
@@ -34,24 +31,18 @@ compare_one_event_multi_reserve <- function(var_in,
 
   #a.  Read in the variable input template, var_in
 
-  input_Parameters <- xlsx::read.xlsx(var_in, sheetName = "stats_one_event")
+  input_Parameters <- xlsx::read.xlsx(var_in, sheetName = "table_summary")
   input_Master <- xlsx::read.xlsx(var_in, sheetName = "MASTER")
 
 
-  #b.  Read the following variables from template spreadsheet if not provided as optional arguments
 
   if(is.null(storm_nm)) storm_nm <- unlist(strsplit(input_Parameters[1,2],", "))
   if(is.null(storm_start)) storm_start <- unlist(strsplit(input_Parameters[2,2],", "))
   if(is.null(storm_end)) storm_end <- unlist(strsplit(input_Parameters[3,2],", "))
-  #if(is.null(wq_sites)) wq_sites <- unlist(strsplit(input_Parameters[4,2],", "))
-  #if(is.null(wq_sites)) wq_sites <- if(is.na(input_Parameters[4,2])) {wq_stations$Station.Code} else {input_Parameters[4,2]}
-  #if(is.null(met_sites)) met_sites <- unlist(strsplit(input_Parameters[5,2],", "))
-  #if(is.null(met_sites)) met_sites <- if(is.na(input_Parameters[5,2])) {met_stations$Station.Code} else {input_Parameters[5,2]}
   if(is.null(reserve)) reserve <- if(is.na(input_Parameters[4,2])) {input_Master[1,2]} else { unlist(strsplit(input_Parameters[4,2],", "))}
   if(is.null(keep_flags)) keep_flags <- unlist(strsplit(input_Parameters[5,2],", "))
   if(is.null(skip)) skip <- input_Parameters[6,2]
   if(is.null(data_path)) data_path <- 'data/cdmo'
-
 
   stations <- sampling_stations %>%
     filter(NERR.Site.ID == reserve) %>%
@@ -66,9 +57,9 @@ compare_one_event_multi_reserve <- function(var_in,
   met_sites <- met_sites$Station.Code
 
 
+
   ############## Tests #########################################################
   if(skip == "TRUE") {return(warning("skip set to 'TRUE', skipping compare_one_event_multi_reserve"))}
-
 
 
   ########## WATER QUALITY #####################################################
@@ -104,17 +95,18 @@ compare_one_event_multi_reserve <- function(var_in,
   dat_tidy$evt_start <- storm_start
   dat_tidy$evt_end <- storm_end
 
-  # ----------------------------------------------
-  # Single Event Comparison, Multiple Reserves ---
-  # ----------------------------------------------
+
+  # -------------------------------------------------------------------
+  #  Event Comparison, All Active Stations within Selected Reserves ---
+  # -------------------------------------------------------------------
 
   summary <- dat_tidy %>%
     dplyr::group_by(event, evt_start, evt_end, parameter, station) %>%
     tidyr::drop_na(result) %>%
     dplyr::summarise(min = min(result, na.rm = T)
-              , max = max(result, na.rm = T)
-              , mean = mean(result, na.rm = T)
-              , median = median(result, na.rm = T))
+                     , max = max(result, na.rm = T)
+                     , mean = mean(result, na.rm = T)
+                     , median = median(result, na.rm = T))
 
   # add readable station names
   summary$station_name <- sapply(summary$station, SWMPrExtension::title_labeler)
@@ -126,8 +118,9 @@ compare_one_event_multi_reserve <- function(var_in,
   summary <- summary %>% dplyr::arrange(., parameter, station_fac)
 
   # write table
-  tbl_ttl <- paste('output/wq/data_one_event_multi_reserve_table/data_table_wq_', storm_nm, '_multireserve.csv', sep = '')
+  tbl_ttl <- paste('output/wq/data_table/summary_data_table_wq_', paste(reserve, collapse = "_"), ".csv", sep = '')
   write.csv(summary, file = tbl_ttl, quote = F, row.names = F)
+
 
   ########## Meteorological #####################################################
 
@@ -164,9 +157,9 @@ compare_one_event_multi_reserve <- function(var_in,
 
   dat_tidy <- dat_tidy %>% dplyr::filter(parameter %in% parm)
 
-  # ----------------------------------------------
-  # Single Event Comparison, Multiple Reserves ---
-  # ----------------------------------------------
+  # ---------------------------------------------------------------
+  #  Event Comparison, All Active Stations at Selected Reserves ---
+  # ---------------------------------------------------------------
 
   total_nalist <- c("atemp", "bp", "intensprcp", "maxwspd", "rh", "sdwdir", "wdir", "wspd")
 
@@ -174,10 +167,10 @@ compare_one_event_multi_reserve <- function(var_in,
     dplyr::group_by(event, evt_start, evt_end, parameter, station) %>%
     tidyr::drop_na(result) %>%
     dplyr::summarise(min = min(result, na.rm = T)
-              , max = max(result, na.rm = T)
-              , mean = mean(result, na.rm = T)
-              , median = median(result, na.rm = T)
-              , total = sum(result, na.rm = T)) %>%
+                     , max = max(result, na.rm = T)
+                     , mean = mean(result, na.rm = T)
+                     , median = median(result, na.rm = T)
+                     , total = sum(result, na.rm = T)) %>%
     dplyr::mutate(total = dplyr::case_when(parameter %in% total_nalist == FALSE ~ total))
 
 
@@ -191,10 +184,12 @@ compare_one_event_multi_reserve <- function(var_in,
   summary <- summary %>% dplyr::arrange(., parameter, station_fac)
 
   # write table
-  tbl_ttl <- paste('output/met/data_one_event_multi_reserve_table/data_table_met_', storm_nm, '_multireserve.csv', sep = '')
+  tbl_ttl <- paste('output/met/data_table/summary_data_table_met_', paste(reserve, collapse = "_"), ".csv", sep = '')
   write.csv(summary, file = tbl_ttl, quote = F, row.names = F)
 
 
+
+
+
+
 }
-
-

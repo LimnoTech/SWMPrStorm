@@ -1,4 +1,4 @@
-#' produce daily stat time series for single event at one reserve
+#' daily_data_table
 #'
 #' @param var_in
 #' @param data_path
@@ -16,17 +16,17 @@
 #' @export
 #'
 #' @examples
-compare_one_reserve_one_event <- function(var_in,
-                                  data_path,
-                                  storm_nm = NULL,
-                                  storm_start = NULL,
-                                  storm_end = NULL,
-                                  reserve = NULL,
-                                  wq_sites = NULL,
-                                  met_sites = NULL,
-                                  keep_flags = NULL,
-                                  skip = NULL,
-                                  ...) {
+daily_data_table <- function(var_in,
+                            data_path,
+                            storm_nm = NULL,
+                            storm_start = NULL,
+                            storm_end = NULL,
+                            reserve = NULL,
+                            wq_sites = NULL,
+                            met_sites = NULL,
+                            keep_flags = NULL,
+                            skip = NULL,
+                            ...) {
 
 
 
@@ -38,7 +38,7 @@ compare_one_reserve_one_event <- function(var_in,
 
   #a.  Read in the variable input template, var_in
 
-  input_Parameters <- xlsx::read.xlsx(var_in, sheetName = "stats_daily")
+  input_Parameters <- xlsx::read.xlsx(var_in, sheetName = "table_daily")
   input_Master <- xlsx::read.xlsx(var_in, sheetName = "MASTER")
 
 

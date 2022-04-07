@@ -6,8 +6,6 @@
 #' @param storm_start
 #' @param storm_end
 #' @param reserve
-#' @param wq_sites
-#' @param met_sites
 #' @param keep_flags
 #' @param ...
 #' @param skip
@@ -22,8 +20,6 @@ compare_one_reserve_multi_event <- function(var_in,
                                             storm_start = NULL,
                                             storm_end = NULL,
                                             reserve = NULL,
-                                            wq_sites = NULL,
-                                            met_sites = NULL,
                                             keep_flags = NULL,
                                             skip = NULL,
                                             ...) {
@@ -41,31 +37,31 @@ compare_one_reserve_multi_event <- function(var_in,
   input_Parameters <- xlsx::read.xlsx(var_in, sheetName = "stats_one_reserve")
   input_Master <- xlsx::read.xlsx(var_in, sheetName = "MASTER")
 
-  if(is.null(reserve)) reserve <- input_Master[1,2]
 
-
-  stations <- sampling_stations %>%
-    filter(NERR.Site.ID == reserve) %>%
-    filter(Status == "Active")
-
-  wq_stations <- stations %>%
-    filter(Station.Type == 1)
-
-  met_stations <- stations %>%
-    filter(Station.Type == 0)
 
   if(is.null(storm_nm)) storm_nm <- unlist(strsplit(input_Parameters[1,2],", "))
   if(is.null(storm_start)) storm_start <- unlist(strsplit(input_Parameters[2,2],", "))
   if(is.null(storm_end)) storm_end <- unlist(strsplit(input_Parameters[3,2],", "))
   #if(is.null(wq_sites)) wq_sites <- unlist(strsplit(input_Parameters[5,2],", "))
-  if(is.null(wq_sites)) wq_sites <- if(is.na(input_Parameters[4,2])) {wq_stations$Station.Code} else {input_Parameters[4,2]}
+  #if(is.null(wq_sites)) wq_sites <- if(is.na(input_Parameters[4,2])) {wq_stations$Station.Code} else {input_Parameters[4,2]}
   #if(is.null(met_sites)) met_sites <- unlist(strsplit(input_Parameters[6,2],", "))
-  if(is.null(met_sites)) met_sites <- if(is.na(input_Parameters[5,2])) {met_stations$Station.Code} else {input_Parameters[5,2]}
-  if(is.null(keep_flags)) keep_flags <- unlist(strsplit(input_Parameters[6,2],", "))
-  if(is.null(skip)) skip <- input_Parameters[7,2]
+  #if(is.null(met_sites)) met_sites <- if(is.na(input_Parameters[5,2])) {met_stations$Station.Code} else {input_Parameters[5,2]}
+  if(is.null(reserve)) reserve <- if(is.na(input_Parameters[4,2])) {input_Master[1,2]} else {input_Parameters[4,2]}
+  if(is.null(keep_flags)) keep_flags <- unlist(strsplit(input_Parameters[5,2],", "))
+  if(is.null(skip)) skip <- input_Parameters[6,2]
   if(is.null(data_path)) data_path <- 'data/cdmo'
 
+  stations <- sampling_stations %>%
+    filter(NERR.Site.ID == reserve) %>%
+    filter(Status == "Active")
 
+  wq_sites <- stations %>%
+    filter(Station.Type == 1)
+  wq_sites <- wq_sites$Station.Code
+
+  met_sites <- stations %>%
+    filter(Station.Type == 0)
+  met_sites <- met_sites$Station.Code
 
   ############## Tests #########################################################
   if(skip == "TRUE") {return(warning("skip set to 'TRUE', skipping compare_one_reserve_multi_event"))}
