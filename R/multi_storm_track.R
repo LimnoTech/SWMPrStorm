@@ -50,6 +50,7 @@ multi_storm_track <- function(map_in
   if(skip == "TRUE") {return(warning("skip set to 'TRUE', skipping multi_storm_track"))}
 
 
+  bbox <- c(-88, 48,-55, 21)
 
   #b. Generate reserve labels
 
@@ -70,7 +71,7 @@ multi_storm_track <- function(map_in
 
     temp <- sf::st_read(path_to_shp[i]) %>%
       sf::st_set_crs(4326) %>%
-      sf::st_crop(., xmin=bbox[1], xmax=bbox[3], ymin=bbox[4], ymax=bbox[2]) %>%
+      #sf::st_crop(., xmin=bbox[1], xmax=bbox[3], ymin=bbox[4], ymax=bbox[2]) %>%
       dplyr::mutate(NAME = storm_nm[i]) %>%
       dplyr::mutate(RANK = storm_rank[i]) %>%
       dplyr::mutate(LABEL = c(storm_nm[i], rep("",nrow(.)-1)))
@@ -78,6 +79,20 @@ multi_storm_track <- function(map_in
     ifelse(i == 1, shps <- temp, shps <- rbind(shps,temp))
 
   }
+
+  for(i in 1:length(path_to_shp)) {
+
+    temp <- sf::st_read(path_to_shp[i]) %>%
+      sf::st_set_crs(4326) %>%
+      sf::st_crop(., xmin=bbox[1], xmax=bbox[3], ymin=bbox[4], ymax=bbox[2]) %>%
+      dplyr::mutate(NAME = storm_nm[i]) %>%
+      dplyr::mutate(RANK = storm_rank[i]) %>%
+      dplyr::mutate(LABEL = c(storm_nm[i], rep("",nrow(.)-1)))
+
+    ifelse(i == 1, shps_crop <- temp, shps_crop <- rbind(shps,temp))
+
+  }
+
 
 
   # helper function
@@ -99,6 +114,10 @@ multi_storm_track <- function(map_in
         sf::st_coordinates() %>%
         as.data.frame() %>%
         #filter(X == nth(X,which(abs(X-target_x)==min(abs(X-target_x))))) %>%
+        filter(X > bbox[1]) %>%
+        filter(X < bbox[3]) %>%
+        filter(Y > bbox[4]) %>%
+        filter(Y < bbox[2]) %>%
         slice_head(n=1) %>%
         mutate(NAME = n)
 
@@ -130,7 +149,13 @@ multi_storm_track <- function(map_in
       df <- dat %>%
         filter(NAME == n)
 
-      markers <- data.frame(sf::st_coordinates(df))
+      markers <- data.frame(sf::st_coordinates(df)) %>%
+        select(-L1) %>%
+        distinct() %>%
+        filter(X > bbox[1]) %>%
+        filter(X < bbox[3]) %>%
+        filter(Y > bbox[4]) %>%
+        filter(Y < bbox[2])
 
       markers$X.after <- c(markers$X[-1], NA)
       markers$Y.after <- c(markers$Y[-1], NA)
@@ -157,16 +182,18 @@ multi_storm_track <- function(map_in
   }
 
   arr <- linestring_points(shps)
+  shps_smooth <- smoothr::smooth(shps, method = "chaikin")
 
 
   #f. load base boundaries
   base <- sf::st_read(path_to_base)
 
+  bbox <- c(-88, 48,-55, 21)
 
   m <- ggplot2::ggplot() +
     #ggspatial::annotation_map_tile(zoom=3) +
     #basemaps::basemap_gglayer(shps, map_service = "osm", map_type = "no_labels") +
-    ggplot2::geom_sf(data = base, fill = "grey95", color = "grey45", lwd = .2) +
+    ggplot2::geom_sf(data = base, fill = "#efefef", color = "#cfcfd1", lwd = .5) +
     ggplot2::geom_sf(data=shps, aes(color = NAME, size = as.factor(RANK)), inherit.aes = FALSE) +
     ggplot2::geom_segment(data=arr, aes(x = X, xend = X.after, y = Y, yend = Y.after, color = NAME),
                           arrow = arrow(
@@ -186,17 +213,19 @@ multi_storm_track <- function(map_in
     #ggspatial::annotation_scale(location = "br", width_hint = 0.4) +
     #ggspatial::annotation_north_arrow(location = "br", which_north = "true",
     #                       pad_x = unit(0.75, "in"), pad_y = unit(0.5, "in")) +
-    ggplot2::theme_minimal() +
-    ggplot2::theme(panel.grid.major = ggplot2::element_line(color = gray(0.9), linetype = "dashed",
-                                          size = 0.25),
-          panel.background = ggplot2::element_rect(color = NA, fill = "aliceblue"),
-          axis.title.x = ggplot2::element_text(color = "grey30"),
-          axis.title.y = ggplot2::element_text(color = "grey30"))
+    ggplot2::theme_void() +
+    ggplot2::theme(panel.grid.major = ggplot2::element_blank(),
+                   panel.background = ggplot2::element_rect(color = NA, fill = "#cfcfd1"),
+                   axis.title.x = ggplot2::element_blank(),
+                   axis.title.y = ggplot2::element_blank(),
+                   axis.text = element_blank(),
+                   plot.margin = margin(0,0,0,0))
 
 
 
 
-  ggsave("output/maps/multi_storm_track.png", m, width = 6, height = 6)
+
+  ggsave("output/maps/multi_storm_track.png", m, width = 3.4722, height = 3.4722, units = "in", dpi=200)
 
 
 }

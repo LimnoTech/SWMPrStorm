@@ -71,7 +71,7 @@ single_storm_track <- function(map_in
 
     temp <- sf::st_read(path_to_shp[i]) %>%
       sf::st_set_crs(4326) %>%
-      sf::st_crop(., xmin=bbox[1], xmax=bbox[3], ymin=bbox[4], ymax=bbox[2]) %>%
+      #sf::st_crop(., xmin=bbox[1], xmax=bbox[3], ymin=bbox[4], ymax=bbox[2]) %>%
       dplyr::mutate(NAME = storm_nm[i]) %>%
       dplyr::mutate(RANK = storm_rank[i]) %>%
       dplyr::mutate(LABEL = c(storm_nm[i], rep("",nrow(.)-1)))
@@ -120,6 +120,7 @@ single_storm_track <- function(map_in
   labs <- linestring_labels(shps)
 
 
+
   linestring_points <- function(linestrings) {
 
     dat <- linestrings
@@ -131,7 +132,9 @@ single_storm_track <- function(map_in
       df <- dat %>%
         filter(NAME == n)
 
-      markers <- data.frame(sf::st_coordinates(df))
+      markers <- data.frame(sf::st_coordinates(df)) %>%
+        select(-L1) %>%
+        distinct()
 
       markers$X.after <- c(markers$X[-1], NA)
       markers$Y.after <- c(markers$Y[-1], NA)
@@ -156,6 +159,7 @@ single_storm_track <- function(map_in
 
     return(markerset)
   }
+
 
   arr <- linestring_points(shps)
   shps_combined <- sf::st_union(shps, by_feature = TRUE)
