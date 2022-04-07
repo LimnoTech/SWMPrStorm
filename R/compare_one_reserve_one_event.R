@@ -130,7 +130,7 @@ compare_one_reserve_one_event <- function(var_in,
   # summary <- summary %>% arrange(., parameter, station_fac)
 
   # write table
-  tbl_ttl <- paste('output/wq/comparison_one_reserve_one_event/comparison_wq_', storm_nm, '_', reserve, '.csv', sep = '')
+  tbl_ttl <- paste('output/wq/data_one_reserve_one_event_table/data_table_wq_', storm_nm, '_', reserve, '.csv', sep = '')
   write.csv(summary, file = tbl_ttl, quote = F, row.names = F)
 
 
@@ -201,7 +201,7 @@ compare_one_reserve_one_event <- function(var_in,
 
 
   # write table
-  tbl_ttl <- paste('output/met/comparison_one_reserve_one_event/comparison_met_', storm_nm, '_', reserve, '.csv', sep = '')
+  tbl_ttl <- paste('output/met/data_one_reserve_one_event_table/data_table_met_', storm_nm, '_', reserve, '.csv', sep = '')
   write.csv(summary, file = tbl_ttl, quote = F, row.names = F)
 
 

@@ -128,7 +128,7 @@ compare_one_event_multi_reserve <- function(var_in,
   summary <- summary %>% dplyr::arrange(., parameter, station_fac)
 
   # write table
-  tbl_ttl <- paste('output/wq/comparison_one_evt_multi_reserve/comparison_', storm_nm, '_multireserve.csv', sep = '')
+  tbl_ttl <- paste('output/wq/data_one_event_multi_reserve_table/data_table_wq_', storm_nm, '_multireserve.csv', sep = '')
   write.csv(summary, file = tbl_ttl, quote = F, row.names = F)
 
   ########## Meteorological #####################################################
@@ -193,7 +193,7 @@ compare_one_event_multi_reserve <- function(var_in,
   summary <- summary %>% dplyr::arrange(., parameter, station_fac)
 
   # write table
-  tbl_ttl <- paste('output/met/comparison_one_evt_multi_reserve/comparison_', storm_nm, '_multireserve.csv', sep = '')
+  tbl_ttl <- paste('output/met/data_one_event_multi_reserve_table/data_table_met_', storm_nm, '_multireserve.csv', sep = '')
   write.csv(summary, file = tbl_ttl, quote = F, row.names = F)
 
 

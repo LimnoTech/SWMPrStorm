@@ -169,7 +169,6 @@ single_storm_track <- function(map_in
   #f. load base boundaries
   base <- sf::st_read(path_to_base)
 
-  bbox <- c(-88, 48,-55, 21)
 
   m <- ggplot2::ggplot() +
     #ggspatial::annotation_map_tile(zoom=3) +

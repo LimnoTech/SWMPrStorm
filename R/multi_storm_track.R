@@ -50,8 +50,6 @@ multi_storm_track <- function(map_in
   if(skip == "TRUE") {return(warning("skip set to 'TRUE', skipping multi_storm_track"))}
 
 
-  bbox <- c(-88, 48,-55, 21)
-
   #b. Generate reserve labels
 
   loc <- get('sampling_stations')
@@ -188,7 +186,6 @@ multi_storm_track <- function(map_in
   #f. load base boundaries
   base <- sf::st_read(path_to_base)
 
-  bbox <- c(-88, 48,-55, 21)
 
   m <- ggplot2::ggplot() +
     #ggspatial::annotation_map_tile(zoom=3) +
