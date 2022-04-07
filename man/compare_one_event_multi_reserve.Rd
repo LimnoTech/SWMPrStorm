@@ -11,8 +11,6 @@ compare_one_event_multi_reserve(
   storm_nm = NULL,
   storm_start = NULL,
   storm_end = NULL,
-  wq_sites = NULL,
-  met_sites = NULL,
   keep_flags = NULL,
   skip = NULL,
   ...
