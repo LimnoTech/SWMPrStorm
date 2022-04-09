@@ -1,15 +1,14 @@
 #' event_timeseries_precip
 #'
-#' @param var_in
-#' @param data_path
-#' @param storm_start
-#' @param storm_end
-#' @param stn_met
-#' @param keep_flags
-#' @param ...
-#' @param flip
-#' @param reserve
-#' @param skip
+#' @param var_in .xlsx with all required input variables defined (string).
+#' @param data_path pathway to cdmo data folder (string).
+#' @param storm_start YYYY-MM-DD HH:MM:SS start of storm event (string).
+#' @param storm_end YYYY-MM-DD HH:MM:SS end of storm event (string).
+#' @param stn_met comma separated list of data quality flags that should be kept (string).
+#' @param keep_flags comma separated list of data quality flags that should be kept (string).
+#' @param flip TRUE/FALSE. If TRUE, the plot axes will flip.
+#' @param reserve 3 digit reserve code (string).
+#' @param skip TRUE/FALSE. If TRUE, function will be skipped (string).
 #'
 #' @return
 #' @export
@@ -23,8 +22,7 @@ event_timeseries_precip <- function(var_in,
                                     stn_met = NULL,
                                     keep_flags = NULL,
                                     flip = FALSE,
-                                    skip = NULL,
-                                    ...) {
+                                    skip = NULL) {
 
 
 

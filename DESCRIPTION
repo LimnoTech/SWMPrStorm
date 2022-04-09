@@ -40,8 +40,10 @@ Imports:
     ggridges,
     mapview,
     ggrepel,
-    smoothr
-Depends: 
-    R (>= 2.10),
+    smoothr,
+    viridis,
     SWMPr,
     SWMPrExtension
+Depends: 
+    R (>= 2.10)
+

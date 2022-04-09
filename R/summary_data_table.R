@@ -1,13 +1,13 @@
 #' summary_data_table
 #'
-#' @param var_in
-#' @param data_path
-#' @param storm_nm
-#' @param storm_start
-#' @param storm_end
-#' @param reserve
-#' @param keep_flags
-#' @param skip
+#' @param var_in .xlsx with all required input variables defined (string).
+#' @param data_path pathway to cdmo data folder (string).
+#' @param storm_nm name of storm event (string).
+#' @param storm_start YYYY-MM-DD HH:MM:SS (string).
+#' @param storm_end YYYY-MM-DD HH:MM:SS (string).
+#' @param reserve 3 digit reserve code (string).
+#' @param keep_flags comma separated list of data quality flags that should be kept (string).
+#' @param skip TRUE/FALSE. If TRUE, function will be skipped (string).
 #'
 #' @return
 #' @export

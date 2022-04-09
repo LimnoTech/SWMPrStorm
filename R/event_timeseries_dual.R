@@ -1,17 +1,16 @@
 #' event_timeseries_dual
 #'
-#' @param var_in
-#' @param data_path
-#' @param view_start
-#' @param view_end
-#' @param stn_wq
-#' @param stn_met
-#' @param param_primary
-#' @param param_secondary
-#' @param keep_flags
-#' @param ...
-#' @param storm_nm
-#' @param skip
+#' @param var_in .xlsx with all required input variables defined (string).
+#' @param data_path pathway to cdmo data folder (string).
+#' @param view_start YYYY-MM-DD HH:MM:SS first datetime of data to plot (string).
+#' @param view_end YYYY-MM-DD HH:MM:SS last datetime of data to plot (string).
+#' @param stn_wq station code to analyze. if blank all active stations within reserve will be analyzed (string)
+#' @param stn_met station code to analyze. if blank all active stations within reserve will be analyzed (string)
+#' @param param_primary parameter code for data to be plotted on the primary (left) axis (string).
+#' @param param_secondary parameter code for data to be plotted on the secondary (right) axis (string).
+#' @param keep_flags comma separated list of data quality flags that should be kept (string).
+#' @param storm_nm name of storm event (string).
+#' @param skip TRUE/FALSE. If TRUE, function will be skipped (string).
 #'
 #' @return
 #' @export
@@ -27,8 +26,7 @@ event_timeseries_dual <- function(var_in,
                                   param_primary = NULL,
                                   param_secondary = NULL,
                                   keep_flags = NULL,
-                                  skip = NULL,
-                                  ...) {
+                                  skip = NULL) {
 
   ### 0. Read variables ########################################################
 

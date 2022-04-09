@@ -16,7 +16,21 @@ res_storm_track(
 )
 }
 \arguments{
-\item{scale_pos}{}
+\item{map_in}{.xlsx with all required input variables defined (string).}
+
+\item{nerr_site_id}{3 digit reserve code (string).}
+
+\item{storm_nm}{name of storm event (string).}
+
+\item{stations}{comma separated list of stations to locate on map (string).}
+
+\item{bbox}{comma separated bounding box for map extents (string vector )}
+
+\item{path_to_shp}{pathway to shapefile for the reserve boundary (string)}
+
+\item{lab_loc}{location of labels on the map. optional (string).}
+
+\item{scale_pos}{location of the scale on th map optional (string)}
 }
 \value{
 

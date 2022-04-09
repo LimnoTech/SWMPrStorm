@@ -18,12 +18,37 @@ event_timeseries_hourly(
   wq_sites = NULL,
   met_sites = NULL,
   keep_flags = NULL,
-  skip = NULL,
-  ...
+  skip = NULL
 )
 }
 \arguments{
-\item{skip}{}
+\item{var_in}{.xlsx with all required input variables defined (string).}
+
+\item{data_path}{pathway to cdmo data folder (string).}
+
+\item{reserve}{3 digit reserve code (string).}
+
+\item{storm_nm}{name of storm event (string).}
+
+\item{onset_start}{YYYY-MM-DD HH:MM:SS start of storm event onset period (string).}
+
+\item{onset_end}{YYYY-MM-DD HH:MM:SS end of storm event onset period (string).}
+
+\item{view_start}{YYYY-MM-DD HH:MM:SS first datetime of data to plot (string).}
+
+\item{view_end}{YYYY-MM-DD HH:MM:SS last datetime of data to plot (string).}
+
+\item{recovery_start}{YYYY-MM-DD HH:MM:SS start of storm recovery period (string).}
+
+\item{recovery_end}{YYYY-MM-DD HH:MM:SS end of storm recovery period (string).}
+
+\item{wq_sites}{comma separated list of wq stations to plot. if left blank, all active stations from reserve will be plotted. (string).}
+
+\item{met_sites}{comma separated list of met stations to plot. if left blank, all active stations from reserve will be plotted. (string).}
+
+\item{keep_flags}{comma separated list of data quality flags that should be kept (string).}
+
+\item{skip}{TRUE/FALSE. If TRUE, function will be skipped (string).}
 }
 \value{
 

@@ -1,6 +1,6 @@
 #' initialize_project()
 #'
-#' @param path_to_project
+#' @param path_to_project pathway to project location. If blank, the current working directory will be called. (string).
 #'
 #' @return
 #' @export

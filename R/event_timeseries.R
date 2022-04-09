@@ -1,18 +1,17 @@
 #' event_timeseries
 #'
-#' @param var_in
-#' @param storm_start
-#' @param storm_end
-#' @param view_start
-#' @param view_end
-#' @param recovery_start
-#' @param recovery_end
-#' @param stn_wq
-#' @param keep_flags
-#' @param data_path
-#' @param ...
-#' @param reserve
-#' @param skip
+#' @param var_in .xlsx with all required input variables defined (string).
+#' @param data_path pathway to cdmo data folder (string).
+#' @param storm_start YYYY-MM-DD HH:MM:SS start of storm event (string).
+#' @param storm_end YYYY-MM-DD HH:MM:SS end of storm event (string).
+#' @param view_start YYYY-MM-DD HH:MM:SS first datetime of data to plot (string).
+#' @param view_end YYYY-MM-DD HH:MM:SS last datetime of data to plot (string).
+#' @param recovery_start YYYY-MM-DD HH:MM:SS start of storm recovery period (string).
+#' @param recovery_end YYYY-MM-DD HH:MM:SS end of storm recovery period (string).
+#' @param stn_wq station code to analyze. if blank all active stations within reserve will be analyzed (string)
+#' @param keep_flags comma separated list of data quality flags that should be kept (string).
+#' @param reserve 3 digit reserve code (string).
+#' @param skip TRUE/FALSE. If TRUE, function will be skipped (string).
 #'
 #' @return
 #' @export
@@ -29,8 +28,7 @@ event_timeseries <- function(var_in,
                              recovery_end = NULL,
                              stn_wq = NULL,
                              keep_flags = NULL,
-                             skip = NULL,
-                             ...) {
+                             skip = NULL) {
 
   ### 0. Read variables ########################################################
 

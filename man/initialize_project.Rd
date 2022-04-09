@@ -7,7 +7,7 @@
 initialize_project(path_to_project = NULL)
 }
 \arguments{
-\item{path_to_project}{}
+\item{path_to_project}{pathway to project location. If blank, the current working directory will be called. (string).}
 }
 \value{
 

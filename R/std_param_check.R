@@ -1,6 +1,6 @@
 #' Check user parameter against standard parameter list
 #'
-#' @param param
+#' @param param user provided parameter code
 #'
 #' @return
 #' @export

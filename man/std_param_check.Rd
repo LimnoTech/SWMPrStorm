@@ -7,7 +7,7 @@
 std_param_check(param)
 }
 \arguments{
-\item{param}{}
+\item{param}{user provided parameter code}
 }
 \value{
 

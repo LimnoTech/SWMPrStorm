@@ -1,11 +1,13 @@
 #' res_storm_track
 #'
-#' @param nerr_site_id
-#' @param stations
-#' @param bbox
-#' @param path_to_shp
-#' @param lab_loc
-#' @param scale_pos
+#' @param nerr_site_id 3 digit reserve code (string).
+#' @param stations comma separated list of stations to locate on map (string).
+#' @param bbox comma separated bounding box for map extents (string vector )
+#' @param path_to_shp pathway to shapefile for the reserve boundary (string)
+#' @param lab_loc location of labels on the map. optional (string).
+#' @param scale_pos location of the scale on th map optional (string)
+#' @param map_in .xlsx with all required input variables defined (string).
+#' @param storm_nm name of storm event (string).
 #'
 #' @return
 #' @export

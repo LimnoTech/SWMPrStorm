@@ -15,12 +15,31 @@ event_timeseries_dual(
   param_primary = NULL,
   param_secondary = NULL,
   keep_flags = NULL,
-  skip = NULL,
-  ...
+  skip = NULL
 )
 }
 \arguments{
-\item{skip}{}
+\item{var_in}{.xlsx with all required input variables defined (string).}
+
+\item{data_path}{pathway to cdmo data folder (string).}
+
+\item{storm_nm}{name of storm event (string).}
+
+\item{view_start}{YYYY-MM-DD HH:MM:SS first datetime of data to plot (string).}
+
+\item{view_end}{YYYY-MM-DD HH:MM:SS last datetime of data to plot (string).}
+
+\item{stn_wq}{station code to analyze. if blank all active stations within reserve will be analyzed (string)}
+
+\item{stn_met}{station code to analyze. if blank all active stations within reserve will be analyzed (string)}
+
+\item{param_primary}{parameter code for data to be plotted on the primary (left) axis (string).}
+
+\item{param_secondary}{parameter code for data to be plotted on the secondary (right) axis (string).}
+
+\item{keep_flags}{comma separated list of data quality flags that should be kept (string).}
+
+\item{skip}{TRUE/FALSE. If TRUE, function will be skipped (string).}
 }
 \value{
 

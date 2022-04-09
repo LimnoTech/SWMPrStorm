@@ -1,20 +1,19 @@
 #' event_timeseries_hourly
 #'
-#' @param var_in
-#' @param data_path
-#' @param storm_nm
-#' @param onset_start
-#' @param onset_end
-#' @param view_start
-#' @param view_end
-#' @param recovery_start
-#' @param recovery_end
-#' @param wq_sites
-#' @param met_sites
-#' @param keep_flags
-#' @param ...
-#' @param reserve
-#' @param skip
+#' @param var_in .xlsx with all required input variables defined (string).
+#' @param data_path pathway to cdmo data folder (string).
+#' @param storm_nm name of storm event (string).
+#' @param onset_start YYYY-MM-DD HH:MM:SS start of storm event onset period (string).
+#' @param onset_end YYYY-MM-DD HH:MM:SS end of storm event onset period (string).
+#' @param view_start YYYY-MM-DD HH:MM:SS first datetime of data to plot (string).
+#' @param view_end YYYY-MM-DD HH:MM:SS last datetime of data to plot (string).
+#' @param recovery_start YYYY-MM-DD HH:MM:SS start of storm recovery period (string).
+#' @param recovery_end YYYY-MM-DD HH:MM:SS end of storm recovery period (string).
+#' @param wq_sites comma separated list of wq stations to plot. if left blank, all active stations from reserve will be plotted. (string).
+#' @param met_sites comma separated list of met stations to plot. if left blank, all active stations from reserve will be plotted. (string).
+#' @param keep_flags comma separated list of data quality flags that should be kept (string).
+#' @param reserve 3 digit reserve code (string).
+#' @param skip TRUE/FALSE. If TRUE, function will be skipped (string).
 #'
 #' @return
 #' @export
@@ -33,8 +32,7 @@ event_timeseries_hourly <- function(var_in,
                                     wq_sites = NULL,
                                     met_sites = NULL,
                                     keep_flags = NULL,
-                                    skip = NULL,
-                                    ...){
+                                    skip = NULL){
 
 
   # ----------------------------------------------------------------------------
@@ -71,9 +69,9 @@ event_timeseries_hourly <- function(var_in,
   if(is.null(recovery_start)) recovery_start <- input_Parameters[6,2]
   if(is.null(recovery_end)) recovery_end <- input_Parameters[7,2]
   #if(is.null(wq_sites)) wq_sites <- unlist(strsplit(input_Parameters[8,2],", "))
-  if(is.null(wq_sites)) wq_sites <- if(is.na(input_Parameters[8,2])) {wq_stations$Station.Code} else {input_Parameters[8,2]}
+  if(is.null(wq_sites)) wq_sites <- if(is.na(input_Parameters[8,2])) {wq_stations$Station.Code} else {unlist(strsplit(input_Parameters[8,2],", "))}
   #if(is.null(met_sites)) met_sites <- unlist(strsplit(input_Parameters[9,2],", "))
-  if(is.null(met_sites)) met_sites <- if(is.na(input_Parameters[9,2])) {met_stations$Station.Code} else {input_Parameters[9,2]}
+  if(is.null(met_sites)) met_sites <- if(is.na(input_Parameters[9,2])) {met_stations$Station.Code} else {unlist(strsplit(input_Parameters[9,2],", "))}
   if(is.null(keep_flags)) keep_flags <- unlist(strsplit(input_Parameters[10,2],", "))
   if(is.null(skip)) skip <- input_Parameters[11,2]
   if(is.null(data_path)) data_path <- 'data/cdmo'

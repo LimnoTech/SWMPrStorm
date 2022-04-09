@@ -14,12 +14,29 @@ event_ridgeline(
   wq_sites = NULL,
   met_sites = NULL,
   keep_flags = NULL,
-  skip = NULL,
-  ...
+  skip = NULL
 )
 }
 \arguments{
-\item{skip}{}
+\item{var_in}{.xlsx with all required input variables defined (string).}
+
+\item{data_path}{pathway to cdmo data folder (string).}
+
+\item{reserve}{3 digit reserve code (string).}
+
+\item{storm_nm}{name of storm event (string).}
+
+\item{storm_start}{YYYY-MM-DD HH:MM:SS start of storm event (string).}
+
+\item{storm_end}{YYYY-MM-DD HH:MM:SS end of storm event (string).}
+
+\item{wq_sites}{comma separated list of wq stations to plot. if left blank, all active stations from reserve will be plotted. (string).}
+
+\item{met_sites}{comma separated list of met stations to plot. if left blank, all active stations from reserve will be plotted. (string).}
+
+\item{keep_flags}{comma separated list of data quality flags that should be kept (string).}
+
+\item{skip}{TRUE/FALSE. If TRUE, function will be skipped (string).}
 }
 \value{
 

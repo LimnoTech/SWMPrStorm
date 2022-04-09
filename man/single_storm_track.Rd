@@ -19,7 +19,27 @@ single_storm_track(
 )
 }
 \arguments{
-\item{skip}{}
+\item{map_in}{.xlsx with all required input variables defined (string).}
+
+\item{nerr_site_id}{3 digit reserve code (string)}
+
+\item{storm_nm}{name of storm event (string).}
+
+\item{storm_rank}{numeric rank of storm for plotting aesthetics. a single storm with rank = 1 will be emphasized. (numeric integer)}
+
+\item{stations}{comma separated list of stations to plot on map (string)}
+
+\item{bbox}{comma separated bounding box for map extents (string vector )}
+
+\item{path_to_shp}{pathway to shapefile for each storm track (string)}
+
+\item{path_to_base}{pathway to shapefile for the basemap world boundaries (string)}
+
+\item{lab_loc}{location of labels on the map. optional (string).}
+
+\item{scale_pos}{location of the scale on th map optional (string)}
+
+\item{skip}{TRUE/FALSE. If TRUE, function will be skipped (string).}
 }
 \value{
 

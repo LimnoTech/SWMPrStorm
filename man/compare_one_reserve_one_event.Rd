@@ -2,7 +2,7 @@
 % Please edit documentation in R/compare_one_reserve_one_event.R
 \name{compare_one_reserve_one_event}
 \alias{compare_one_reserve_one_event}
-\title{produce daily stat time series for single event at one reserve}
+\title{compare_one_reserve_one_event() produce daily stat time series for single event at one reserve}
 \usage{
 compare_one_reserve_one_event(
   var_in,
@@ -14,16 +14,33 @@ compare_one_reserve_one_event(
   wq_sites = NULL,
   met_sites = NULL,
   keep_flags = NULL,
-  skip = NULL,
-  ...
+  skip = NULL
 )
 }
 \arguments{
-\item{skip}{}
+\item{var_in}{.xlsx with all required input variables defined (string).}
+
+\item{data_path}{pathway to cdmo data folder (string).}
+
+\item{storm_nm}{name of storm event (string).}
+
+\item{storm_start}{YYYY-MM-DD HH:MM:SS start of storm event (string).}
+
+\item{storm_end}{YYYY-MM-DD HH:MM:SS end of storm event (string).}
+
+\item{reserve}{3 digit reserve code (string).}
+
+\item{wq_sites}{comma separated list of wq stations to plot. if left blank, all active stations from reserve will be plotted. (string).}
+
+\item{met_sites}{comma separated list of met stations to plot. if left blank, all active stations from reserve will be plotted. (string).}
+
+\item{keep_flags}{comma separated list of data quality flags that should be kept (string).}
+
+\item{skip}{TRUE/FALSE. If TRUE, function will be skipped (string).}
 }
 \value{
 
 }
 \description{
-produce daily stat time series for single event at one reserve
+compare_one_reserve_one_event() produce daily stat time series for single event at one reserve
 }

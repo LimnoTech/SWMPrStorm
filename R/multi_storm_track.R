@@ -1,16 +1,16 @@
 #' multi_storm_track
 #'
-#' @param map_in
-#' @param nerr_site_id
-#' @param storm_nm
-#' @param storm_rank
-#' @param stations
-#' @param bbox
-#' @param path_to_shp
-#' @param lab_loc
-#' @param scale_pos
-#' @param path_to_base
-#' @param skip
+#' @param map_in .xlsx with all required input variables defined (string).
+#' @param nerr_site_id 3 digit reserve code (string)
+#' @param storm_nm name of storm event (string).
+#' @param storm_rank numeric rank of storm for plotting aesthetics. a single storm with rank = 1 will be emphasized. (numeric integer)
+#' @param stations comma separated list of stations to plot on map (string)
+#' @param bbox comma separated bounding box for map extents (string vector )
+#' @param path_to_shp pathway to shapefile for each storm track (string)
+#' @param lab_loc location of labels on the map. optional (string).
+#' @param scale_pos location of the scale on th map optional (string)
+#' @param path_to_base pathway to shapefile for the basemap world boundaries (string)
+#' @param skip TRUE/FALSE. If TRUE, function will be skipped (string).
 #'
 #' @return
 #' @export

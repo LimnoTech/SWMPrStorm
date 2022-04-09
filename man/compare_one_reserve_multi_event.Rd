@@ -2,7 +2,7 @@
 % Please edit documentation in R/compare_one_reserve_multi_event.R
 \name{compare_one_reserve_multi_event}
 \alias{compare_one_reserve_multi_event}
-\title{Title}
+\title{compare_one_reserve_multi_event}
 \usage{
 compare_one_reserve_multi_event(
   var_in,
@@ -12,16 +12,29 @@ compare_one_reserve_multi_event(
   storm_end = NULL,
   reserve = NULL,
   keep_flags = NULL,
-  skip = NULL,
-  ...
+  skip = NULL
 )
 }
 \arguments{
-\item{skip}{}
+\item{var_in}{.xlsx with all required input variables defined (string).}
+
+\item{data_path}{pathway to cdmo data folder (string).}
+
+\item{storm_nm}{name of storm event (string).}
+
+\item{storm_start}{YYYY-MM-DD HH:MM:SS (string).}
+
+\item{storm_end}{YYYY-MM-DD HH:MM:SS (string).}
+
+\item{reserve}{3 digit reserve code (string).}
+
+\item{keep_flags}{comma separated list of data quality flags that should be kept (string).}
+
+\item{skip}{TRUE/FALSE. If TRUE, function will be skipped (string).}
 }
 \value{
 
 }
 \description{
-Title
+compare_one_reserve_multi_event
 }
