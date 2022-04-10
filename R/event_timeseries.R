@@ -43,12 +43,12 @@ event_timeseries <- function(var_in,
   if(is.null(reserve)) reserve <- input_Master[1,2]
 
 
-  stations <- sampling_stations %>%
-    filter(NERR.Site.ID == reserve) %>%
-    filter(Status == "Active")
+  stations <- get('sampling_stations') %>%
+    dplyr::filter(NERR.Site.ID == reserve) %>%
+    dplyr::filter(Status == "Active")
 
   wq_stations <- stations %>%
-    filter(Station.Type == 1)
+    dplyr::filter(Station.Type == 1)
 
   if(is.null(storm_start)) storm_start <- input_Parameters[1,2]
   if(is.null(storm_end)) storm_end <- input_Parameters[2,2]
@@ -193,17 +193,17 @@ event_timeseries <- function(var_in,
         ggplot2::scale_fill_manual('', values = c('steelblue3', 'green')) +
         ggplot2::scale_x_datetime(date_breaks = '1 day',
                                   date_labels = '%b\n%d',
-                                  guide = guide_axis(check.overlap = TRUE))
+                                  guide = ggplot2::guide_axis(check.overlap = TRUE))
 
       x <- x +
         ggplot2::theme_bw() +
-        ggplot2::theme(plot.title = element_text(hjust = 0.5),
-                       strip.background = element_blank(),
-                       panel.grid = element_blank(),
-                       panel.border = element_rect(color = 'black', fill = NA),
+        ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
+                       strip.background = ggplot2::element_blank(),
+                       panel.grid = ggplot2::element_blank(),
+                       panel.border = ggplot2::element_rect(color = 'black', fill = NA),
                        plot.margin = ggplot2::margin(5.5, 24, 5.5, 5.5, unit = 'pt'),
-                       axis.title.y = element_text(margin = unit(c(0, 8, 0, 8), 'pt'), angle = 90),
-                       text = element_text(size = 16),
+                       axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 8, 0, 8), 'pt'), angle = 90),
+                       text = ggplot2::element_text(size = 16),
                        legend.position = 'top')
 
 

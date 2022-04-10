@@ -48,16 +48,16 @@ compare_one_reserve_one_event <- function(var_in,
   if(is.null(skip)) skip <- input_Parameters[6,2]
   if(is.null(data_path)) data_path <- 'data/cdmo'
 
-  stations <- sampling_stations %>%
-    filter(NERR.Site.ID == reserve) %>%
-    filter(Status == "Active")
+  stations <- get('sampling_stations') %>%
+    dplyr::filter(NERR.Site.ID == reserve) %>%
+    dplyr::filter(Status == "Active")
 
   wq_sites <- stations %>%
-    filter(Station.Type == 1)
+    dplyr::filter(Station.Type == 1)
   wq_sites <- wq_sites$Station.Code
 
   met_sites <- stations %>%
-    filter(Station.Type == 0)
+    dplyr::filter(Station.Type == 0)
   met_sites <- met_sites$Station.Code
 
 
@@ -111,7 +111,7 @@ compare_one_reserve_one_event <- function(var_in,
     dplyr::summarise(min = min(result, na.rm = T)
                      , max = max(result, na.rm = T)
                      , mean = mean(result, na.rm = T)
-                     , median = median(result, na.rm = T))
+                     , median = stats::median(result, na.rm = T))
 
   # add readable station names
   summary$station_name <- sapply(summary$station, SWMPrExtension::title_labeler)
@@ -124,7 +124,7 @@ compare_one_reserve_one_event <- function(var_in,
 
   # write table
   tbl_ttl <- paste('output/wq/data_table/daily_data_table_wq_', storm_nm, '_', reserve, '.csv', sep = '')
-  write.csv(summary, file = tbl_ttl, quote = F, row.names = F)
+  utils::write.csv(summary, file = tbl_ttl, quote = F, row.names = F)
 
 
   ########## Meteorological #####################################################
@@ -182,7 +182,7 @@ compare_one_reserve_one_event <- function(var_in,
     dplyr::summarise(min = min(result, na.rm = T)
                      , max = max(result, na.rm = T)
                      , mean = mean(result, na.rm = T)
-                     , median = median(result, na.rm = T)
+                     , median = stats::median(result, na.rm = T)
                      , total = sum(result, na.rm = T)) %>%
     dplyr::mutate(total = dplyr::case_when(parameter %in% total_nalist == FALSE ~ total))
 
@@ -195,7 +195,7 @@ compare_one_reserve_one_event <- function(var_in,
 
   # write table
   tbl_ttl <- paste('output/met/data_table/daily_data_table_met_', storm_nm, '_', reserve, '.csv', sep = '')
-  write.csv(summary, file = tbl_ttl, quote = F, row.names = F)
+  utils::write.csv(summary, file = tbl_ttl, quote = F, row.names = F)
 
 
 }

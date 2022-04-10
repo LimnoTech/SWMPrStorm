@@ -39,12 +39,12 @@ event_windrose <- function(var_in,
   if(is.null(reserve)) reserve <- input_Master[1,2]
 
 
-  stations <- sampling_stations %>%
-    filter(NERR.Site.ID == reserve) %>%
-    filter(Status == "Active")
+  stations <- get('sampling_stations') %>%
+    dplyr::filter(NERR.Site.ID == reserve) %>%
+    dplyr::filter(Status == "Active")
 
   met_stations <- stations %>%
-    filter(Station.Type == 0)
+    dplyr::filter(Station.Type == 0)
 
   if(is.null(storm_start)) storm_start <- input_Parameters[1,2]
   if(is.null(storm_end)) storm_end <- input_Parameters[2,2]
@@ -107,7 +107,7 @@ event_windrose <- function(var_in,
 
 
     plt_ttl <- paste0("output/met/windrose/",attributes(tmp)$station, "_wspd.png")
-    png(plt_ttl, width = 1000, height = 1000)
+    grDevices::png(plt_ttl, width = 1000, height = 1000)
     openair::windRose(tmp, ws = 'wspd', wd = 'wdir', #type = 'date_char',
                       angle = angle,
                       width = width,
@@ -122,11 +122,11 @@ event_windrose <- function(var_in,
                       between = between,
                       par.settings = par.settings,
                       strip = strip)
-    dev.off()
+    grDevices::dev.off()
 
 
     plt_ttl <- paste0("output/met/windrose/",attributes(tmp)$station, "_wspd_bydate.png")
-    png(plt_ttl, width = 1000, height = 1000)
+    grDevices::png(plt_ttl, width = 1000, height = 1000)
     openair::windRose(tmp, ws = 'wspd', wd = 'wdir', type = 'date_char',
                       angle = angle,
                       width = width,
@@ -141,7 +141,7 @@ event_windrose <- function(var_in,
                       between = between,
                       par.settings = par.settings,
                       strip = strip)
-    dev.off()
+    grDevices::dev.off()
 
   }
 

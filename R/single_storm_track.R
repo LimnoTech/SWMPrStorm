@@ -59,10 +59,10 @@ single_storm_track <- function(map_in
   loc$abbrev <- toupper(loc$NERR.Site.ID)
 
   reserve <- loc %>%
-    distinct(abbrev, Latitude, Longitude) %>%
-    mutate(Longitude = Longitude*-1) %>%
-    group_by(abbrev) %>%
-    summarize(avgx = mean(Longitude),
+    dplyr::distinct(abbrev, Latitude, Longitude) %>%
+    dplyr::mutate(Longitude = Longitude*-1) %>%
+    dplyr::group_by(abbrev) %>%
+    dplyr::summarize(avgx = mean(Longitude),
               avgy = mean(Latitude))
 
   #c. Read data as shapefiles
@@ -81,7 +81,7 @@ single_storm_track <- function(map_in
   }
 
 
-  # helper function
+  # helper function - find placement for storm labels.
 
   linestring_labels <- function(linestrings) {
 
@@ -100,16 +100,14 @@ single_storm_track <- function(map_in
         sf::st_coordinates() %>%
         as.data.frame() %>%
         #filter(X == nth(X,which(abs(X-target_x)==min(abs(X-target_x))))) %>%
-        slice_head(n=1) %>%
-        mutate(NAME = n)
+        dplyr::slice_head(n=1) %>%
+        dplyr::mutate(NAME = n)
 
       label_coords <- if (n == names[1]) {
         coords
       } else {
         rbind(label_coords, coords)
       }
-
-      ## add color, transform into sf, plot as geom_sf or geom_text?
 
     }
 
@@ -119,7 +117,7 @@ single_storm_track <- function(map_in
 
   labs <- linestring_labels(shps)
 
-
+  # helper function - find placement for track arrows.
 
   linestring_points <- function(linestrings) {
 
@@ -130,11 +128,11 @@ single_storm_track <- function(map_in
     for(n in names) {
 
       df <- dat %>%
-        filter(NAME == n)
+        dplyr::filter(NAME == n)
 
       markers <- data.frame(sf::st_coordinates(df)) %>%
-        select(-L1) %>%
-        distinct()
+        dplyr::select(-L1) %>%
+        dplyr::distinct()
 
       markers$X.after <- c(markers$X[-1], NA)
       markers$Y.after <- c(markers$Y[-1], NA)
@@ -161,7 +159,10 @@ single_storm_track <- function(map_in
   }
 
 
+  # assign arrow locations
   arr <- linestring_points(shps)
+
+  #smooth out tracks
   shps_combined <- sf::st_union(shps, by_feature = TRUE)
   shps_smooth <- smoothr::smooth(shps, method = "chaikin")
 
@@ -169,19 +170,20 @@ single_storm_track <- function(map_in
   #f. load base boundaries
   base <- sf::st_read(path_to_base)
 
+  #g. plot map
 
   m <- ggplot2::ggplot() +
     #ggspatial::annotation_map_tile(zoom=3) +
     #basemaps::basemap_gglayer(shps, map_service = "osm", map_type = "no_labels") +
     ggplot2::geom_sf(data = base, fill = "#efefef", color = "#cfcfd1", lwd = .5) +
-    ggplot2::geom_sf(data=shps_smooth, aes(color = NAME, size = as.factor(RANK)), inherit.aes = FALSE) +
-    ggplot2::geom_point(data=reserve, aes(x = avgx, y = avgy), size = 3, color = "white") +
-    ggplot2::geom_point(data=reserve, aes(x = avgx, y = avgy), size = 2, color = "grey10") +
-    ggplot2::geom_segment(data=arr, aes(x = X, xend = X.after, y = Y, yend = Y.after, color = NAME),
-                          arrow = arrow(
-                            length=unit(0.15, "cm"),
+    ggplot2::geom_sf(data=shps_smooth, ggplot2::aes(color = NAME, size = as.factor(RANK)), inherit.aes = FALSE) +
+    ggplot2::geom_point(data=reserve, ggplot2::aes(x = avgx, y = avgy), size = 3, color = "white") +
+    ggplot2::geom_point(data=reserve, ggplot2::aes(x = avgx, y = avgy), size = 2, color = "grey10") +
+    ggplot2::geom_segment(data=arr, ggplot2::aes(x = X, xend = X.after, y = Y, yend = Y.after, color = NAME),
+                          arrow = ggplot2::arrow(
+                            length=ggplot2::unit(0.15, "cm"),
                             type = "closed")) +
-    ggrepel::geom_label_repel(data=reserve, aes(x = avgx, y = avgy, label = abbrev),
+    ggrepel::geom_label_repel(data=reserve, ggplot2::aes(x = avgx, y = avgy, label = abbrev),
                               fill = "grey90",
                               fontface = "bold",
                               color = "grey10",
@@ -191,7 +193,7 @@ single_storm_track <- function(map_in
                               segment.curvature =.1,
                               segment.size = 1,
                               segment.color = "grey30") +
-    ggrepel::geom_label_repel(data=labs, aes(x = X , y = Y , label = NAME, fill = NAME),
+    ggrepel::geom_label_repel(data=labs, ggplot2::aes(x = X , y = Y , label = NAME, fill = NAME),
                               color = "white",
                               alpha = 0.5,
                               size = 4,
@@ -206,13 +208,11 @@ single_storm_track <- function(map_in
                    panel.background = ggplot2::element_rect(color = NA, fill = "#cfcfd1"),
                    axis.title.x = ggplot2::element_blank(),
                    axis.title.y = ggplot2::element_blank(),
-                   axis.text = element_blank(),
-                   plot.margin = margin(0,0,0,0))
+                   axis.text = ggplot2::element_blank(),
+                   plot.margin = ggplot2::margin(0,0,0,0))
 
 
-m
-
-  ggsave("output/maps/single_storm_track2.png", m, width = 3.4722, height = 3.4722, units = "in", dpi=200)
+  ggplot2::ggsave("output/maps/single_storm_track2.png", m, width = 3.4722, height = 3.4722, units = "in", dpi=200)
 
 
 }

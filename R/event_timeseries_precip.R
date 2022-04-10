@@ -40,12 +40,12 @@ event_timeseries_precip <- function(var_in,
   # read in all available stations based on reserve (reserve is a required field)
   if(is.null(reserve)) reserve <- input_Master[1,2]
 
-  stations <- sampling_stations %>%
-    filter(NERR.Site.ID == reserve) %>%
-    filter(Status == "Active")
+  stations <- get('sampling_stations') %>%
+    dplyr::filter(NERR.Site.ID == reserve) %>%
+    dplyr::filter(Status == "Active")
 
   met_stations <- stations %>%
-    filter(Station.Type == 0)
+    dplyr::filter(Station.Type == 0)
 
   if(is.null(storm_start)) storm_start <- input_Parameters[1,2]
   if(is.null(storm_end)) storm_end <- input_Parameters[2,2]
@@ -173,7 +173,7 @@ event_timeseries_precip <- function(var_in,
 
       precip_all <- precip_day %>%
         dplyr::summarize(total_precip_in = sum(value)) %>%
-        dplyr::mutate(Date = paste0(precip_day$mo[1], " - ", tail(precip_day$mo,n=1))) %>%
+        dplyr::mutate(Date = paste0(precip_day$mo[1], " - ", utils::tail(precip_day$mo,n=1))) %>%
         dplyr::mutate(label = round(total_precip_in, 2))
 
 

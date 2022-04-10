@@ -4,7 +4,7 @@ Version: 0.0.0.9000
 Authors@R: c(
     person("Ben", "Crary", , "bcrary@limno.com", c("aut", "cre")),
     person("Julie", "Padilla", , "padilla410@gmail.com", "aut"),
-    person("Shanna", "Rucker", , "srucker@limno.com", "aut")
+    person("Shanna", "Rucker", , "srucker@limno.com", "ctb")
     )
 Description: Tools for performing routine analysis and plotting tasks with
     environmental data from the System Wide Monitoring Program of the
@@ -32,10 +32,7 @@ Imports:
     magrittr,
     leaflet,
     sf,
-    sp,
-    ggthemes,
     maptools,
-    rgdal,
     rlang,
     ggridges,
     mapview,

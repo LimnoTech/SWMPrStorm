@@ -43,15 +43,15 @@ event_ridgeline <- function(var_in,
   if(is.null(reserve)) reserve <- input_Master[1,2]
 
 
-  stations <- sampling_stations %>%
-    filter(NERR.Site.ID == reserve) %>%
-    filter(Status == "Active")
+  stations <- get('sampling_stations') %>%
+    dplyr::filter(NERR.Site.ID == reserve) %>%
+    dplyr::filter(Status == "Active")
 
   wq_stations <- stations %>%
-    filter(Station.Type == 1)
+    dplyr::filter(Station.Type == 1)
 
   met_stations <- stations %>%
-    filter(Station.Type == 0)
+    dplyr::filter(Station.Type == 0)
 
 
 
@@ -109,7 +109,7 @@ event_ridgeline <- function(var_in,
     dplyr::filter(Station.Code %in% unique(dat_tidy$station)) %>%
     dplyr::select(Reserve.Name, Latitude) %>%
     dplyr::distinct() %>%
-    dplyr::arrange(desc(Latitude)) %>%
+    dplyr::arrange(dplyr::desc(Latitude)) %>%
     dplyr::mutate(factorid = rank(Latitude))
 
   # use those factor levels to turn Reserve.Name in the main data frame into a factor, ordered thusly
@@ -237,7 +237,7 @@ event_ridgeline <- function(var_in,
     dplyr::filter(Station.Code %in% unique(dat_tidy$station)) %>%
     dplyr::select(Reserve.Name, Latitude) %>%
     dplyr::distinct() %>%
-    dplyr::arrange(desc(Latitude)) %>%
+    dplyr::arrange(dplyr::desc(Latitude)) %>%
     dplyr::mutate(factorid = rank(Latitude))
 
   # use those factor levels to turn Reserve.Name in the main data frame into a factor, ordered thusly

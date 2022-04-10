@@ -58,7 +58,7 @@ res_storm_track <- function(map_in
 
   #d. Set leaflet colors
   colors <- seq(1, length(path_to_shp))
-  colors <- colorRampPalette(c("#df4d4d", "#f2d17e","#426144"))(length(colors))
+  colors <- grDevices::colorRampPalette(c("#df4d4d", "#f2d17e","#426144"))(length(colors))
   colordf <- data.frame(colors = colors, NAME = storm_nm)
   shps <- shps %>%
     dplyr::left_join(colordf, by="NAME")

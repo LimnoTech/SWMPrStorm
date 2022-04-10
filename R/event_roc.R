@@ -42,15 +42,15 @@ event_roc <- function(var_in,
   if(is.null(reserve)) reserve <- input_Master[1,2]
 
 
-  stations <- sampling_stations %>%
-    filter(NERR.Site.ID == reserve) %>%
-    filter(Status == "Active")
+  stations <- get('sampling_stations') %>%
+    dplyr::filter(NERR.Site.ID == reserve) %>%
+    dplyr::filter(Status == "Active")
 
   wq_stations <- stations %>%
-    filter(Station.Type == 1)
+    dplyr::filter(Station.Type == 1)
 
   met_stations <- stations %>%
-    filter(Station.Type == 0)
+    dplyr::filter(Station.Type == 0)
 
   if(is.null(storm_nm)) storm_nm <- input_Parameters[1,2]
   if(is.null(storm_start)) storm_start <- input_Parameters[2,2]
@@ -108,7 +108,7 @@ event_roc <- function(var_in,
     dplyr::filter(Station.Code %in% unique(dat_tidy$station)) %>%
     dplyr::select(Reserve.Name, Latitude) %>%
     dplyr::distinct() %>%
-    dplyr::arrange(desc(Latitude)) %>%
+    dplyr::arrange(dplyr::desc(Latitude)) %>%
     dplyr::mutate(factorid = rank(Latitude))
 
   # use those factor levels to turn Reserve.Name in the main data frame into a factor, ordered thusly
@@ -144,10 +144,10 @@ event_roc <- function(var_in,
 
 
       p1 <- ggplot2::ggplot(roc, ggplot2::aes(x = datetimestamp, y = diff_result)) +
-        ggplot2::geom_line(aes(color = legend), lwd = 1) +
+        ggplot2::geom_line(ggplot2::aes(color = legend), lwd = 1) +
         ggplot2::scale_x_datetime(date_breaks = '1 day'
                                   , labels = scales::date_format('%b %d')
-                                  , guide = guide_axis(check.overlap = TRUE)) +
+                                  , guide = ggplot2::guide_axis(check.overlap = TRUE)) +
         ggplot2::scale_color_manual(values = c("steelblue3"), name = "") +
         ggplot2::ggtitle(p) +
         ggplot2::ylab(SWMPrStorm::y_labeler_delta(p)) +
@@ -158,7 +158,7 @@ event_roc <- function(var_in,
                        panel.grid = ggplot2::element_blank(),
                        panel.border = ggplot2::element_rect(color = 'black', fill = NA),
                        plot.margin = ggplot2::margin(5.5, 10, 5.5, 15, unit = 'pt'),
-                       axis.title.y = ggplot2::element_text(margin = unit(c(0, 8, 0, 0), 'pt'), angle = 90),
+                       axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 8, 0, 0), 'pt'), angle = 90),
                        text = ggplot2::element_text(size = 16),
                        legend.position = 'top')
 
@@ -168,11 +168,11 @@ event_roc <- function(var_in,
 
 
       p2 <- ggplot2::ggplot(roc_smooth, ggplot2::aes(x = time_hr, y = diff_result)) +
-        ggplot2::geom_line(aes(color = legend), lwd = 1) +
+        ggplot2::geom_line(ggplot2::aes(color = legend), lwd = 1) +
         ggplot2::scale_x_datetime(limits = c(as.POSIXct(storm_start), as.POSIXct(storm_end))
                                   , date_breaks = '1 day'
                                   , labels = scales::date_format('%b %d')
-                                  , guide = guide_axis(check.overlap = TRUE)) +
+                                  , guide = ggplot2::guide_axis(check.overlap = TRUE)) +
         ggplot2::scale_color_manual(values = c("steelblue3"), name = "") +
         ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = s)) +
         ggplot2::ylab(SWMPrStorm::y_labeler_delta(p)) +
@@ -183,18 +183,18 @@ event_roc <- function(var_in,
                        panel.grid = ggplot2::element_blank(),
                        panel.border = ggplot2::element_rect(color = 'black', fill = NA),
                        plot.margin = ggplot2::margin(5.5, 10, 5.5, 15, unit = 'pt'),
-                       axis.title.y = ggplot2::element_text(margin = unit(c(0, 8, 0, 0), 'pt'), angle = 90),
+                       axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 8, 0, 0), 'pt'), angle = 90),
                        text = ggplot2::element_text(size = 16),
                        legend.position = 'top')
 
         ggplot2::ggsave(filename = paste0("output/wq/event_roc/roc_", s, "_", p, "_hourly.png"), plot = p2, height=4, width=6, dpi=300)
 
       p3 <- ggplot2::ggplot(roc_raw, ggplot2::aes(x = datetimestamp, y = result)) +
-        ggplot2::geom_line(aes(color = legend), lwd = 1) +
+        ggplot2::geom_line(ggplot2::aes(color = legend), lwd = 1) +
         ggplot2::scale_x_datetime(limits = c(as.POSIXct(storm_start), as.POSIXct(storm_end))
                                   , date_breaks = '1 day'
                                   , labels = scales::date_format('%b %d')
-                                  , guide = guide_axis(check.overlap = TRUE)) +
+                                  , guide = ggplot2::guide_axis(check.overlap = TRUE)) +
         ggplot2::scale_color_manual(values = c("steelblue3"), name = "") +
         ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = s)) +
         ggplot2::ylab(SWMPrStorm::y_labeler(p)) +
@@ -205,7 +205,7 @@ event_roc <- function(var_in,
                        panel.grid = ggplot2::element_blank(),
                        panel.border = ggplot2::element_rect(color = 'black', fill = NA),
                        plot.margin = ggplot2::margin(5.5, 10, 5.5, 15, unit = 'pt'),
-                       axis.title.y = ggplot2::element_text(margin = unit(c(0, 8, 0, 0), 'pt'), angle = 90),
+                       axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 8, 0, 0), 'pt'), angle = 90),
                        text = ggplot2::element_text(size = 16),
                        legend.position = 'top')
 
@@ -270,7 +270,7 @@ event_roc <- function(var_in,
     dplyr::filter(Station.Code %in% unique(dat_tidy$station)) %>%
     dplyr::select(Reserve.Name, Latitude) %>%
     dplyr::distinct() %>%
-    dplyr::arrange(desc(Latitude)) %>%
+    dplyr::arrange(dplyr::desc(Latitude)) %>%
     dplyr::mutate(factorid = rank(Latitude))
 
   # use those factor levels to turn Reserve.Name in the main data frame into a factor, ordered thusly
@@ -305,10 +305,10 @@ event_roc <- function(var_in,
 
 
       p1 <- ggplot2::ggplot(roc, ggplot2::aes(x = datetimestamp, y = diff_result)) +
-        ggplot2::geom_line(aes(color = legend), lwd = 1) +
+        ggplot2::geom_line(ggplot2::aes(color = legend), lwd = 1) +
         ggplot2::scale_x_datetime(date_breaks = '1 day'
                                   , labels = scales::date_format('%b %d')
-                                  , guide = guide_axis(check.overlap = TRUE)) +
+                                  , guide = ggplot2::guide_axis(check.overlap = TRUE)) +
         ggplot2::scale_color_manual(values = c("steelblue3"), name = "") +
         ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = s)) +
         ggplot2::ylab(SWMPrStorm::y_labeler_delta(p)) +
@@ -319,7 +319,7 @@ event_roc <- function(var_in,
                        panel.grid = ggplot2::element_blank(),
                        panel.border = ggplot2::element_rect(color = 'black', fill = NA),
                        plot.margin = ggplot2::margin(5.5, 10, 5.5, 15, unit = 'pt'),
-                       axis.title.y = ggplot2::element_text(margin = unit(c(0, 8, 0, 0), 'pt'), angle = 90),
+                       axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 8, 0, 0), 'pt'), angle = 90),
                        text = ggplot2::element_text(size = 16),
                        legend.position = 'top')
 
@@ -328,11 +328,11 @@ event_roc <- function(var_in,
 
 
       p2 <- ggplot2::ggplot(roc_smooth, ggplot2::aes(x = time_hr, y = diff_result)) +
-        ggplot2::geom_line(aes(color = legend), lwd = 1) +
+        ggplot2::geom_line(ggplot2::aes(color = legend), lwd = 1) +
         ggplot2::scale_x_datetime(limits = c(as.POSIXct(storm_start), as.POSIXct(storm_end))
                                   , date_breaks = '1 day'
                                   , labels = scales::date_format('%b %d')
-                                  , guide = guide_axis(check.overlap = TRUE)) +
+                                  , guide = ggplot2::guide_axis(check.overlap = TRUE)) +
         ggplot2::scale_color_manual(values = c("steelblue3"), name = "") +
         ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = s)) +
         ggplot2::ylab(SWMPrStorm::y_labeler_delta(p)) +
@@ -343,7 +343,7 @@ event_roc <- function(var_in,
                        panel.grid = ggplot2::element_blank(),
                        panel.border = ggplot2::element_rect(color = 'black', fill = NA),
                        plot.margin = ggplot2::margin(5.5, 10, 5.5, 15, unit = 'pt'),
-                       axis.title.y = ggplot2::element_text(margin = unit(c(0, 8, 0, 0), 'pt'), angle = 90),
+                       axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 8, 0, 0), 'pt'), angle = 90),
                        text = ggplot2::element_text(size = 16),
                        legend.position = 'top')
 
@@ -351,11 +351,11 @@ event_roc <- function(var_in,
 
 
       p3 <-  ggplot2::ggplot(roc_raw, ggplot2::aes(x = datetimestamp, y = result)) +
-        ggplot2::geom_line(aes(color = legend), lwd = 1) +
+        ggplot2::geom_line(ggplot2::aes(color = legend), lwd = 1) +
         ggplot2::scale_x_datetime(limits = c(as.POSIXct(storm_start), as.POSIXct(storm_end))
                                   , date_breaks = '1 day'
                                   , labels = scales::date_format('%b %d')
-                                  , guide = guide_axis(check.overlap = TRUE)) +
+                                  , guide = ggplot2::guide_axis(check.overlap = TRUE)) +
         ggplot2::scale_color_manual(values = c("steelblue3"), name = "") +
         ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = s)) +
         ggplot2::ylab(SWMPrStorm::y_labeler(p)) +
@@ -366,7 +366,7 @@ event_roc <- function(var_in,
                        panel.grid = ggplot2::element_blank(),
                        panel.border = ggplot2::element_rect(color = 'black', fill = NA),
                        plot.margin = ggplot2::margin(5.5, 10, 5.5, 15, unit = 'pt'),
-                       axis.title.y = ggplot2::element_text(margin = unit(c(0, 8, 0, 0), 'pt'), angle = 90),
+                       axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 8, 0, 0), 'pt'), angle = 90),
                        text = ggplot2::element_text(size = 16),
                        legend.position = 'top')
 

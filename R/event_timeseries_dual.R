@@ -156,18 +156,18 @@ event_timeseries_dual <- function(var_in,
     ggplot2::geom_line(ggplot2::aes(color = parameter)) +
     ggplot2::scale_color_manual(name = "", values = c("steelblue1", "steelblue4")) +
     ggplot2::scale_y_continuous(name = SWMPrStorm::y_labeler(param_primary)
-                                , sec.axis = sec_axis(~./scaler, name = SWMPrStorm::y_labeler(param_secondary))) +
-    ggplot2::scale_x_datetime(date_breaks = '2 days', date_labels = '%b %d', guide = guide_axis(check.overlap = TRUE)) +
+                                , sec.axis = ggplot2::sec_axis(~./scaler, name = SWMPrStorm::y_labeler(param_secondary))) +
+    ggplot2::scale_x_datetime(date_breaks = '2 days', date_labels = '%b %d', guide = ggplot2::guide_axis(check.overlap = TRUE)) +
     ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = ttl)) +
     ggplot2::xlab("Datetime") +
     ggplot2::theme_bw() +
-    ggplot2::theme(plot.title = element_text(hjust = 0.5),
-                   strip.background = element_blank(),
-                   panel.grid = element_blank(),
-                   panel.border = element_rect(color = 'black', fill = NA),
-                   axis.title.y = element_text(margin = unit(c(0, 8, 0, 0), 'pt'), angle = 90),
-                   axis.title.y.right = element_text(margin = unit(c(0,0,0,8), 'pt')),
-                   text = element_text(size = 16),
+    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
+                   strip.background = ggplot2::element_blank(),
+                   panel.grid = ggplot2::element_blank(),
+                   panel.border = ggplot2::element_rect(color = 'black', fill = NA),
+                   axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 8, 0, 0), 'pt'), angle = 90),
+                   axis.title.y.right = ggplot2::element_text(margin = ggplot2::unit(c(0,0,0,8), 'pt')),
+                   text = ggplot2::element_text(size = 16),
                    legend.position = 'top')
 
 

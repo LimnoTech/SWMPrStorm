@@ -50,15 +50,15 @@ event_timeseries_hourly <- function(var_in,
   if(is.null(reserve)) reserve <- input_Master[1,2]
 
 
-  stations <- sampling_stations %>%
-    filter(NERR.Site.ID == reserve) %>%
-    filter(Status == "Active")
+  stations <- get('sampling_stations') %>%
+    dplyr::filter(NERR.Site.ID == reserve) %>%
+    dplyr::filter(Status == "Active")
 
   wq_stations <- stations %>%
-    filter(Station.Type == 1)
+    dplyr::filter(Station.Type == 1)
 
   met_stations <- stations %>%
-    filter(Station.Type == 0)
+    dplyr::filter(Station.Type == 0)
 
 
   if(is.null(storm_nm)) storm_nm <- input_Parameters[1,2]
@@ -146,7 +146,7 @@ event_timeseries_hourly <- function(var_in,
                        ymax=c(Inf),
                        years=c('Event Onset'))
 
-      converted <- df_day %>% filter(parameter == parm[j])
+      converted <- df_day %>% dplyr::filter(parameter == parm[j])
       converted <- converted$con[1]
 
 
@@ -154,7 +154,7 @@ event_timeseries_hourly <- function(var_in,
         df_day %>% dplyr::filter(parameter == parm[j]) %>%
         ggplot2::ggplot(., ggplot2::aes(x = datetimestamp_day, y = value)) +
         ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = sta)) +
-        ggplot2::geom_line(aes(color = 'Hourly Avg'), lwd = 1) +# 'steelblue3') +
+        ggplot2::geom_line(ggplot2::aes(color = 'Hourly Avg'), lwd = 1) +# 'steelblue3') +
         ggplot2::geom_rect(data=df,ggplot2::aes(xmin=xmin,ymin=ymin,xmax=xmax,ymax=ymax,fill=years),
                   alpha=0.1,inherit.aes=FALSE) +
         ggplot2::labs(x = '', y = SWMPrStorm::y_labeler(parm[j], converted=converted))
@@ -163,7 +163,7 @@ event_timeseries_hourly <- function(var_in,
         x +
         ggplot2::scale_color_manual('', values = c('steelblue3')) +
         ggplot2::scale_fill_manual('', values = c('steelblue3', 'green')) +
-        ggplot2::scale_x_datetime(date_breaks = 'day', date_labels = '%b\n%d', guide = guide_axis(check.overlap = TRUE))
+        ggplot2::scale_x_datetime(date_breaks = 'day', date_labels = '%b\n%d', guide = ggplot2::guide_axis(check.overlap = TRUE))
 
 
       x <- x +
@@ -246,7 +246,7 @@ event_timeseries_hourly <- function(var_in,
                        ymax=c(Inf),
                        years=c('Event Onset'))
 
-      converted <- df_day %>% filter(parameter == parm[j])
+      converted <- df_day %>% dplyr::filter(parameter == parm[j])
       converted <- converted$con[1]
 
 
@@ -277,7 +277,7 @@ event_timeseries_hourly <- function(var_in,
         x +
         ggplot2::scale_color_manual('', values = c('steelblue3')) +
         ggplot2::scale_fill_manual('', values = c('steelblue3', 'green')) +
-        ggplot2::scale_x_datetime(date_breaks = 'day', date_labels = '%b\n%d', guide = guide_axis(check.overlap = TRUE))
+        ggplot2::scale_x_datetime(date_breaks = 'day', date_labels = '%b\n%d', guide = ggplot2::guide_axis(check.overlap = TRUE))
         #ggplot2::scale_x_datetime(date_breaks = paste0(breaks$interval, " ", units(breaks$interval)), date_labels = '%b %d')
 
       x <- x +

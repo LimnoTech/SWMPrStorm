@@ -57,11 +57,11 @@ multi_storm_track <- function(map_in
   loc$abbrev <- toupper(loc$NERR.Site.ID)
 
   reserve <- loc %>%
-    distinct(abbrev, Latitude, Longitude) %>%
-    mutate(Longitude = Longitude*-1) %>%
-    group_by(abbrev) %>%
-    summarize(avgx = mean(Longitude),
-              avgy = mean(Latitude))
+    dplyr::distinct(abbrev, Latitude, Longitude) %>%
+    dplyr::mutate(Longitude = Longitude*-1) %>%
+    dplyr::group_by(abbrev) %>%
+    dplyr::summarize(avgx = mean(Longitude),
+                     avgy = mean(Latitude))
 
   #c. Read data as shapefiles
 
@@ -112,12 +112,12 @@ multi_storm_track <- function(map_in
         sf::st_coordinates() %>%
         as.data.frame() %>%
         #filter(X == nth(X,which(abs(X-target_x)==min(abs(X-target_x))))) %>%
-        filter(X > bbox[1]) %>%
-        filter(X < bbox[3]) %>%
-        filter(Y > bbox[4]) %>%
-        filter(Y < bbox[2]) %>%
-        slice_head(n=1) %>%
-        mutate(NAME = n)
+        dplyr::filter(X > bbox[1]) %>%
+        dplyr::filter(X < bbox[3]) %>%
+        dplyr::filter(Y > bbox[4]) %>%
+        dplyr::filter(Y < bbox[2]) %>%
+        dplyr::slice_head(n=1) %>%
+        dplyr::mutate(NAME = n)
 
       label_coords <- if (n == names[1]) {
         coords
@@ -145,15 +145,15 @@ multi_storm_track <- function(map_in
     for(n in names) {
 
       df <- dat %>%
-        filter(NAME == n)
+        dplyr::filter(NAME == n)
 
       markers <- data.frame(sf::st_coordinates(df)) %>%
-        select(-L1) %>%
-        distinct() %>%
-        filter(X > bbox[1]) %>%
-        filter(X < bbox[3]) %>%
-        filter(Y > bbox[4]) %>%
-        filter(Y < bbox[2])
+        dplyr::select(-L1) %>%
+        dplyr::distinct() %>%
+        dplyr::filter(X > bbox[1]) %>%
+        dplyr::filter(X < bbox[3]) %>%
+        dplyr::filter(Y > bbox[4]) %>%
+        dplyr::filter(Y < bbox[2])
 
       markers$X.after <- c(markers$X[-1], NA)
       markers$Y.after <- c(markers$Y[-1], NA)
@@ -191,14 +191,14 @@ multi_storm_track <- function(map_in
     #ggspatial::annotation_map_tile(zoom=3) +
     #basemaps::basemap_gglayer(shps, map_service = "osm", map_type = "no_labels") +
     ggplot2::geom_sf(data = base, fill = "#efefef", color = "#cfcfd1", lwd = .5) +
-    ggplot2::geom_sf(data=shps, aes(color = NAME, size = as.factor(RANK)), inherit.aes = FALSE) +
-    ggplot2::geom_segment(data=arr, aes(x = X, xend = X.after, y = Y, yend = Y.after, color = NAME),
-                          arrow = arrow(
-                            length=unit(0.15, "cm"),
+    ggplot2::geom_sf(data=shps, ggplot2::aes(color = NAME, size = as.factor(RANK)), inherit.aes = FALSE) +
+    ggplot2::geom_segment(data=arr, ggplot2::aes(x = X, xend = X.after, y = Y, yend = Y.after, color = NAME),
+                          arrow = ggplot2::arrow(
+                            length=ggplot2::unit(0.15, "cm"),
                                         type = "closed")) +
-    ggplot2::geom_point(data=reserve, aes(x = avgx, y = avgy), color = "grey30") +
-    ggrepel::geom_text_repel(data=reserve, aes(x = avgx, y = avgy, label = abbrev), fontface = "bold", color = "grey30") +
-    ggrepel::geom_label_repel(data=labs, aes(x = X , y = Y , label = NAME, fill = NAME),
+    ggplot2::geom_point(data=reserve, ggplot2::aes(x = avgx, y = avgy), color = "grey30") +
+    ggrepel::geom_text_repel(data=reserve, ggplot2::aes(x = avgx, y = avgy, label = abbrev), fontface = "bold", color = "grey30") +
+    ggrepel::geom_label_repel(data=labs, ggplot2::aes(x = X , y = Y , label = NAME, fill = NAME),
                               color = "white",
                               alpha = 0.5) +
     ggplot2::coord_sf(xlim = c(bbox[1], bbox[3]), ylim = c(bbox[4], bbox[2])) +
@@ -206,23 +206,19 @@ multi_storm_track <- function(map_in
     viridis::scale_color_viridis(discrete = TRUE, guide = "none") +
     ggplot2::scale_size_manual(values = c(1, rep(0.5, length(unique(shps$RANK))-1)), guide = "none") +
     ggplot2::xlab("Longitude") +
-    ggplot2::ylab("Latitude") +
-    #ggspatial::annotation_scale(location = "br", width_hint = 0.4) +
-    #ggspatial::annotation_north_arrow(location = "br", which_north = "true",
-    #                       pad_x = unit(0.75, "in"), pad_y = unit(0.5, "in")) +
     ggplot2::theme_void() +
     ggplot2::theme(panel.grid.major = ggplot2::element_blank(),
                    panel.background = ggplot2::element_rect(color = NA, fill = "#cfcfd1"),
                    axis.title.x = ggplot2::element_blank(),
                    axis.title.y = ggplot2::element_blank(),
-                   axis.text = element_blank(),
-                   plot.margin = margin(0,0,0,0))
+                   axis.text = ggplot2::element_blank(),
+                   plot.margin = ggplot2::margin(0,0,0,0))
 
 
 
 
 
-  ggsave("output/maps/multi_storm_track.png", m, width = 3.4722, height = 3.4722, units = "in", dpi=200)
+  ggplot2::ggsave("output/maps/multi_storm_track.png", m, width = 3.4722, height = 3.4722, units = "in", dpi=200)
 
 
 }
