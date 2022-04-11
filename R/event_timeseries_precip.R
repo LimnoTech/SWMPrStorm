@@ -24,6 +24,24 @@ event_timeseries_precip <- function(var_in,
                                     flip = FALSE,
                                     skip = NULL) {
 
+  # ----------------------------------------------------------------------------
+  # Define global variables
+  # ----------------------------------------------------------------------------
+  NERR.Site.ID_ <- rlang::sym('NERR.Site.ID')
+  Status_ <- rlang::sym('Status')
+  Station.Type_ <- rlang::sym('Station.Type')
+
+  parameter_ <- rlang::sym('parameter')
+  value_ <- rlang::sym('value')
+
+  datetimestamp_ <- rlang::sym('datetimestamp')
+  datetimestamp_day_ <- rlang::sym('datetimestamp_day')
+  totprcp_ <- rlang::sym('totprcp')
+  mo_ <- rlang::sym('mo')
+  total_precip_in_ <- rlang::sym('total_precip_in')
+  Date_ <- rlang::sym('Date')
+  label_ <- rlang::sym('label')
+  intensprcp_ <- rlang::sym('intensprcp')
 
 
   # ----------------------------------------------------------------------------
@@ -41,11 +59,11 @@ event_timeseries_precip <- function(var_in,
   if(is.null(reserve)) reserve <- input_Master[1,2]
 
   stations <- get('sampling_stations') %>%
-    dplyr::filter(NERR.Site.ID == reserve) %>%
-    dplyr::filter(Status == "Active")
+    dplyr::filter(!! NERR.Site.ID_ == reserve) %>%
+    dplyr::filter(!! Status_ == "Active")
 
   met_stations <- stations %>%
-    dplyr::filter(Station.Type == 0)
+    dplyr::filter(!! Station.Type_ == 0)
 
   if(is.null(storm_start)) storm_start <- input_Parameters[1,2]
   if(is.null(storm_end)) storm_end <- input_Parameters[2,2]
@@ -81,8 +99,8 @@ event_timeseries_precip <- function(var_in,
   names(ls_par) <- stn_met
 
   ## identify parameters, remove a few
-  parm <- unique(names(ls_par[[1]])) %>% subset(!(. %in% c('datetimestamp')))
-  parm <- parm %>%  subset(!(. %in% c('wdir', 'sdwdir', 'totpar', 'totsorad')))
+  parm <- unique(names(ls_par[[1]]))
+  parm <- subset(parm, !(parm %in% c('datetimestamp', 'wdir', 'sdwdir', 'totpar', 'totsorad')))
 
 
   # ----------------------------------------------
@@ -94,12 +112,12 @@ event_timeseries_precip <- function(var_in,
       precip <- ls_par[[i]]
 
       precip_day <- precip %>%
-        dplyr::filter(dplyr::between(datetimestamp
+        dplyr::filter(dplyr::between(!! datetimestamp_
                        , as.POSIXct(storm_start)
                        , as.POSIXct(storm_end))) %>%
-        dplyr::mutate(datetimestamp_day = lubridate::floor_date(datetimestamp, unit = 'day')) %>%
-        dplyr::group_by(datetimestamp_day) %>%
-        dplyr::summarize(value = sum(totprcp, na.rm = T))
+        dplyr::mutate("datetimestamp_day" = lubridate::floor_date(!! datetimestamp_, unit = 'day')) %>%
+        dplyr::group_by(!! datetimestamp_day_) %>%
+        dplyr::summarize(value = sum(!! totprcp_, na.rm = T))
 
       precip_day$mo <- paste(month.abb[lubridate::month(precip_day$datetimestamp_day)]
                              , lubridate::day(precip_day$datetimestamp_day)
@@ -107,11 +125,11 @@ event_timeseries_precip <- function(var_in,
         factor
 
       precip_day <- precip_day %>%
-        dplyr::mutate(mo = factor(mo, levels = mo[order(datetimestamp_day)]))
+        dplyr::mutate("mo" = factor(!! mo_, levels = (!! mo_)[order((!! datetimestamp_day_))]))
 
       if(flip == FALSE) {
       # basic plot
-      x <- ggplot2::ggplot(precip_day, ggplot2::aes(x = mo, y = value)) +
+      x <- ggplot2::ggplot(precip_day, ggplot2::aes(x = !! mo_, y = !! value_)) +
         ggplot2::geom_bar(stat = 'identity', fill = 'steelblue3') +
         ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = stn_met)) +
         ggplot2::labs(x = NULL, y = 'Daily Precipitation (in)') +
@@ -139,7 +157,7 @@ event_timeseries_precip <- function(var_in,
       ggplot2::ggsave(filename = x_ttl, plot = x, height = 6, width = 4, units = 'in', dpi = 300)
 
       } else if(flip == TRUE) {
-        x <- ggplot2::ggplot(precip_day, ggplot2::aes(x = mo, y = value)) +
+        x <- ggplot2::ggplot(precip_day, ggplot2::aes(x = !! mo_, y = !! value_)) +
           ggplot2::geom_bar(stat = 'identity', fill = 'steelblue3') +
           ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = stn_met)) +
           ggplot2::labs(x = NULL, y = 'Daily Precipitation (in)')
@@ -172,15 +190,15 @@ event_timeseries_precip <- function(var_in,
       # ----------------------------------------------
 
       precip_all <- precip_day %>%
-        dplyr::summarize(total_precip_in = sum(value)) %>%
-        dplyr::mutate(Date = paste0(precip_day$mo[1], " - ", utils::tail(precip_day$mo,n=1))) %>%
-        dplyr::mutate(label = round(total_precip_in, 2))
+        dplyr::summarize("total_precip_in" = sum(!! value_)) %>%
+        dplyr::mutate("Date" = paste0(precip_day$mo[1], " - ", utils::tail(precip_day$mo,n=1))) %>%
+        dplyr::mutate("label" = round(!! total_precip_in_, 2))
 
 
       if(flip == TRUE) {
-      x <- ggplot2::ggplot(precip_all, ggplot2::aes(x=Date, y = total_precip_in)) +
+      x <- ggplot2::ggplot(precip_all, ggplot2::aes(x=!! Date_, y = !! total_precip_in_)) +
         ggplot2::geom_col(fill = "steelblue3", width = 0.5) +
-        ggplot2::geom_text(ggplot2::aes(x=Date, y = (total_precip_in + + ceiling(max(precip_all$total_precip_in)*1.25)*.05), label = label), color = "steelblue3", fontface="bold") +
+        ggplot2::geom_text(ggplot2::aes(x=!! Date_, y = (!! total_precip_in_ + + ceiling(max(precip_all$total_precip_in)*1.25)*.05), label = !! label_), color = "steelblue3", fontface="bold") +
         ggplot2::scale_y_continuous(expand = c(0,0), limits = c(0, ceiling(max(precip_all$total_precip_in)*1.25))) +
         ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = stn_met)) +
         ggplot2::xlab("") +
@@ -199,9 +217,9 @@ event_timeseries_precip <- function(var_in,
 
 
       } else if(flip == FALSE) {
-        x <- ggplot2::ggplot(precip_all, ggplot2::aes(x=Date, y = total_precip_in)) +
+        x <- ggplot2::ggplot(precip_all, ggplot2::aes(x=!! Date_, y = !! total_precip_in_)) +
           ggplot2::geom_col(fill = "steelblue3", width = 0.5) +
-          ggplot2::geom_text(ggplot2::aes(x=Date, y = (total_precip_in + ceiling(max(precip_all$total_precip_in)*1.25)*.05), label = label), color = "steelblue3", fontface="bold",hjust=0) +
+          ggplot2::geom_text(ggplot2::aes(x=!! Date_, y = (!! total_precip_in_ + ceiling(max(precip_all$total_precip_in)*1.25)*.05), label = !! label_), color = "steelblue3", fontface="bold",hjust=0) +
           ggplot2::coord_flip() +
           ggplot2::scale_y_continuous(expand = c(0,0), limits = c(0, ceiling(max(precip_all$total_precip_in)*1.25))) +
           ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = stn_met)) +
@@ -237,12 +255,12 @@ event_timeseries_precip <- function(var_in,
       precip <- ls_par[[i]]
 
       precip_int <- precip %>%
-        dplyr::filter(dplyr::between(datetimestamp
+        dplyr::filter(dplyr::between(!! datetimestamp_
                                      , as.POSIXct(storm_start)
                                      , as.POSIXct(storm_end))) %>%
-        dplyr::mutate(datetimestamp_day = lubridate::floor_date(datetimestamp, unit = 'day')) %>%
-        dplyr::group_by(datetimestamp_day) %>%
-        dplyr::summarize(value = max(intensprcp, na.rm = T))
+        dplyr::mutate("datetimestamp_day" = lubridate::floor_date(!! datetimestamp_, unit = 'day')) %>%
+        dplyr::group_by(!! datetimestamp_day_) %>%
+        dplyr::summarize("value" = max(!! intensprcp_, na.rm = T))
 
       precip_int$mo <- paste(month.abb[lubridate::month(precip_day$datetimestamp_day)]
                              , lubridate::day(precip_day$datetimestamp_day)
@@ -250,11 +268,11 @@ event_timeseries_precip <- function(var_in,
         factor
 
       precip_int <- precip_int %>%
-        dplyr::mutate(mo = factor(mo, levels = mo[order(datetimestamp_day)]))
+        dplyr::mutate("mo" = factor(!! mo_, levels =(!! mo_)[order((!! datetimestamp_day_))]))
 
       if(flip == FALSE) {
         # basic plot
-        x <- ggplot2::ggplot(precip_int, ggplot2::aes(x = mo, y = value)) +
+        x <- ggplot2::ggplot(precip_int, ggplot2::aes(x = !! mo_, y = !! value_)) +
           ggplot2::geom_bar(stat = 'identity', fill = 'steelblue3') +
           ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = stn_met)) +
           ggplot2::coord_flip() +
@@ -284,7 +302,7 @@ event_timeseries_precip <- function(var_in,
         ggplot2::ggsave(filename = x_ttl, plot = x, height = 6, width = 4, units = 'in', dpi = 300)
 
       } else if(flip == TRUE) {
-        x <- ggplot2::ggplot(precip_int, ggplot2::aes(x = mo, y = value)) +
+        x <- ggplot2::ggplot(precip_int, ggplot2::aes(x = !! mo_, y = !! value_)) +
           ggplot2::geom_bar(stat = 'identity', fill = 'steelblue3') +
           ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = stn_met)) +
           ggplot2::labs(x = NULL, y = 'Max Precipitation Intensity (in/hour)')

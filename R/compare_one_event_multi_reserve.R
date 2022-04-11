@@ -112,7 +112,7 @@ compare_one_event_multi_reserve <- function(var_in,
 
   # combine data.frames into one and tidy
   dat <- dplyr::bind_rows(ls_par, .id = 'station')
-  dat_tidy <- dat %>% tidyr::pivot_longer(., 3:length(names(dat)), names_to = 'parameter', values_to = 'result')
+  dat_tidy <- tidyr::pivot_longer(dat, 3:length(names(dat)), names_to = 'parameter', values_to = 'result')
   dat_tidy$event <- storm_nm
   dat_tidy$evt_start <- storm_start
   dat_tidy$evt_end <- storm_end
@@ -136,7 +136,7 @@ compare_one_event_multi_reserve <- function(var_in,
   summary$station_fac <- factor(summary$station, levels = wq_sites)
 
   # re-sort the table using factors
-  summary <- summary %>% dplyr::arrange(., !! parameter_, !! station_fac_)
+  summary <- dplyr::arrange(summary, !! parameter_, !! station_fac_)
 
   # write table
   tbl_ttl <- paste('output/wq/data_one_event_multi_reserve_table/data_table_wq_', storm_nm, '_multireserve.csv', sep = '')
@@ -165,12 +165,12 @@ compare_one_event_multi_reserve <- function(var_in,
   names(ls_par) <- met_sites
 
   ## identify parameters, remove a few
-  parm <- unique(names(ls_par[[1]])) %>% subset(!(. %in% c('datetimestamp')))
-  parm <- parm %>%  subset(!(. %in% c('wdir', 'sdwdir', 'totpar', 'totsorad')))
+  parm <- unique(names(ls_par[[1]]))
+  parm <- subset(parm, !(parm %in%  c('datetimestamp', 'wdir', 'sdwdir', 'totpar', 'totsorad')))
 
   # combine data.frames into one and tidy
   dat <- dplyr::bind_rows(ls_par, .id = 'station')
-  dat_tidy <- dat %>% tidyr::pivot_longer(., 3:length(names(dat)), names_to = 'parameter', values_to = 'result')
+  dat_tidy <- tidyr::pivot_longer(dat, 3:length(names(dat)), names_to = 'parameter', values_to = 'result')
   dat_tidy$event <- storm_nm
   dat_tidy$evt_start <- storm_start
   dat_tidy$evt_end <- storm_end
@@ -201,7 +201,7 @@ compare_one_event_multi_reserve <- function(var_in,
   summary$station_fac <- factor(summary$station, levels = met_sites)
 
   # re-sort the table using factors
-  summary <- summary %>% dplyr::arrange(., !! parameter_, !! station_fac_)
+  summary <- dplyr::arrange(summary, !! parameter_, !! station_fac_)
 
   # write table
   tbl_ttl <- paste('output/met/data_one_event_multi_reserve_table/data_table_met_', storm_nm, '_multireserve.csv', sep = '')

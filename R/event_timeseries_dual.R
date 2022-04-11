@@ -28,9 +28,24 @@ event_timeseries_dual <- function(var_in,
                                   keep_flags = NULL,
                                   skip = NULL) {
 
-  ### 0. Read variables ########################################################
+  # ----------------------------------------------------------------------------
+  # Define global variables
+  # ----------------------------------------------------------------------------
 
-  #a.  Read in the variable input template, var_in
+
+  parameter_ <- rlang::sym('parameter')
+  value_ <- rlang::sym('value')
+
+  datetimestamp_ <- rlang::sym('datetimestamp')
+  axis_ <- rlang::sym('axis')
+  val_scaled_ <- rlang::sym('val_scaled')
+
+
+
+
+  # ----------------------------------------------------------------------------
+  # Read in Data
+  # ----------------------------------------------------------------------------
 
   input_Parameters <- xlsx::read.xlsx(var_in, sheetName = "timeseries_dual")
 
@@ -72,15 +87,15 @@ event_timeseries_dual <- function(var_in,
     # tidy the data ---------------------------------------------
 
     dat_wq <- tidyr::pivot_longer(dat_wq
-                                 , !datetimestamp
+                                 , !(!! datetimestamp_)
                                  , names_to = 'parameter'
                                  , values_to = 'value')
 
     # filter for params of interest, selected viewport ----------
 
     dat_wq_filtered <- dat_wq %>%
-      dplyr::filter(parameter %in% params_of_interest) %>%
-      dplyr::filter(dplyr::between(datetimestamp
+      dplyr::filter(!! parameter_ %in% params_of_interest) %>%
+      dplyr::filter(dplyr::between(!! datetimestamp_
                                    , as.POSIXct(view_start)
                                    , as.POSIXct(view_end)))
 
@@ -95,7 +110,7 @@ event_timeseries_dual <- function(var_in,
 
     # tidy the data --------------------------------------------
     dat_met <- tidyr::pivot_longer(dat_met
-                                  , !datetimestamp
+                                  , !(!!datetimestamp_)
                                   , names_to = 'parameter'
                                   , values_to = 'value')
 
@@ -103,8 +118,8 @@ event_timeseries_dual <- function(var_in,
     # filter for params of interes, selected viewport ----------
 
     dat_met_filtered <- dat_met %>%
-      dplyr::filter(parameter %in% params_of_interest) %>%
-      dplyr::filter(dplyr::between(datetimestamp
+      dplyr::filter(!! parameter_ %in% params_of_interest) %>%
+      dplyr::filter(dplyr::between(!! datetimestamp_
                                    , as.POSIXct(view_start)
                                    , as.POSIXct(view_end)))
 
@@ -121,7 +136,7 @@ event_timeseries_dual <- function(var_in,
     rbind(dat_wq_filtered, dat_met_filtered)
   }
 
-  dat_merged_wide <- dat_merged %>% tidyr::pivot_wider(names_from = parameter, values_from = value)
+  dat_merged_wide <- dat_merged %>% tidyr::pivot_wider(names_from = !! parameter_, values_from = !! value_)
 
   dat_merged_wide <- dat_merged_wide %>%
     dplyr::rename(param_primary = paste(param_primary),
@@ -131,20 +146,20 @@ event_timeseries_dual <- function(var_in,
   ### Define axis scaling
 
   scales <- dat_merged %>%
-    dplyr::mutate(axis = dplyr::case_when(parameter == param_primary ~ "primary",
+    dplyr::mutate(axis = dplyr::case_when(!! parameter_ == param_primary ~ "primary",
                                    TRUE ~ "secondary")) %>%
-    dplyr::group_by(axis) %>%
-    dplyr::summarize(min = min(value, na.rm = TRUE),
-              max = max(value, na.rm = TRUE),
-              mean = mean(value, na.rm = TRUE))
+    dplyr::group_by(!! axis_) %>%
+    dplyr::summarize(min = min(!! value_, na.rm = TRUE),
+              max = max(!! value_, na.rm = TRUE),
+              mean = mean(!! value_, na.rm = TRUE))
 
   scaler <- scales$max[1]/scales$max[2]
 
   dat_merged <- dat_merged %>%
-    dplyr::mutate(axis = dplyr::case_when(parameter == param_primary ~ "primary",
+    dplyr::mutate(axis = dplyr::case_when(!! parameter_ == param_primary ~ "primary",
                                           TRUE ~ "secondary")) %>%
-    dplyr::mutate(val_scaled = dplyr::case_when(axis == "primary" ~ value,
-                                  TRUE ~ value*scaler))
+    dplyr::mutate("val_scaled" = dplyr::case_when(!! axis_ == "primary" ~ value,
+                                  TRUE ~ !! value_*scaler))
 
   ### plot
 
@@ -152,8 +167,8 @@ event_timeseries_dual <- function(var_in,
 
 
 
-  p1 <- ggplot2::ggplot(dat_merged, ggplot2::aes(x=datetimestamp, y=val_scaled)) +
-    ggplot2::geom_line(ggplot2::aes(color = parameter)) +
+  p1 <- ggplot2::ggplot(dat_merged, ggplot2::aes(x=!! datetimestamp_, y=!! val_scaled_)) +
+    ggplot2::geom_line(ggplot2::aes(color = !! parameter_)) +
     ggplot2::scale_color_manual(name = "", values = c("steelblue1", "steelblue4")) +
     ggplot2::scale_y_continuous(name = SWMPrStorm::y_labeler(param_primary)
                                 , sec.axis = ggplot2::sec_axis(~./scaler, name = SWMPrStorm::y_labeler(param_secondary))) +

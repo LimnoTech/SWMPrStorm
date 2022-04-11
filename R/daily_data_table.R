@@ -27,7 +27,20 @@ daily_data_table <- function(var_in,
                             skip = NULL) {
 
 
+  # ----------------------------------------------------------------------------
+  # Define global variables
+  # ----------------------------------------------------------------------------
+  NERR.Site.ID_ <- rlang::sym('NERR.Site.ID')
+  Status_ <- rlang::sym('Status')
+  Station.Type_ <- rlang::sym('Station.Type')
 
+  station_ <- rlang::sym('station')
+  event_ <- rlang::sym('event')
+  parameter_ <- rlang::sym('parameter')
+  result_ <- rlang::sym('result')
+  datetimestamp_ <- rlang::sym('datetimestamp')
+
+  station_fac_ <- rlang::sym('station_fac')
 
 
   # ----------------------------------------------------------------------------
@@ -49,15 +62,15 @@ daily_data_table <- function(var_in,
   if(is.null(data_path)) data_path <- 'data/cdmo'
 
   stations <- get('sampling_stations') %>%
-    dplyr::filter(NERR.Site.ID == reserve) %>%
-    dplyr::filter(Status == "Active")
+    dplyr::filter(!! NERR.Site.ID_ == reserve) %>%
+    dplyr::filter(!! Status_ == "Active")
 
   wq_sites <- stations %>%
-    dplyr::filter(Station.Type == 1)
+    dplyr::filter(!! Station.Type_ == 1)
   wq_sites <- wq_sites$Station.Code
 
   met_sites <- stations %>%
-    dplyr::filter(Station.Type == 0)
+    dplyr::filter(!! Station.Type_ == 0)
   met_sites <- met_sites$Station.Code
 
 
@@ -76,7 +89,7 @@ daily_data_table <- function(var_in,
   data_type <- 'wq'
 
   ls_par <- lapply(wq_sites, SWMPr::import_local, path = data_path)
-  ls_par <- lapply(ls_par, qaqc, qaqc_keep = keep_flags)
+  ls_par <- lapply(ls_par, SWMPr::qaqc, qaqc_keep = keep_flags)
   names(ls_par) <- wq_sites
 
   # filter
@@ -93,25 +106,24 @@ daily_data_table <- function(var_in,
   }
 
 
-  dat <- evts %>% dplyr::relocate(event)
+  dat <- evts %>% dplyr::relocate(!! event_)
 
 
   # combine data.frames into one and tidy
-  dat_tidy <- dat %>%
-    tidyr::pivot_longer(., 4:length(names(dat)), names_to = 'parameter', values_to = 'result') %>%
-    dplyr::mutate(date = as.Date(datetimestamp))
+  dat_tidy <- tidyr::pivot_longer(dat, 4:length(names(dat)), names_to = 'parameter', values_to = 'result') %>%
+    dplyr::mutate(date = as.Date(!! datetimestamp_))
 
   # ----------------------------------------------
   # Single Event Comparison, Single Reserves ---
   # ----------------------------------------------
 
   summary <- dat_tidy %>%
-    dplyr::group_by(event, parameter, station, date) %>%
-    tidyr::drop_na(result) %>%
-    dplyr::summarise(min = min(result, na.rm = T)
-                     , max = max(result, na.rm = T)
-                     , mean = mean(result, na.rm = T)
-                     , median = stats::median(result, na.rm = T))
+    dplyr::group_by(!! event_, !! parameter_, !! station_, date) %>%
+    tidyr::drop_na(!! result_) %>%
+    dplyr::summarise(min = min(!! result_, na.rm = T)
+                     , max = max(!! result_, na.rm = T)
+                     , mean = mean(!! result_, na.rm = T)
+                     , median = stats::median(!! result_, na.rm = T))
 
   # add readable station names
   summary$station_name <- sapply(summary$station, SWMPrExtension::title_labeler)
@@ -138,7 +150,7 @@ daily_data_table <- function(var_in,
   data_type <- 'met'
 
   ls_par <- lapply(met_sites, SWMPr::import_local, path = data_path)
-  ls_par <- lapply(ls_par, qaqc, qaqc_keep = keep_flags)
+  ls_par <- lapply(ls_par, SWMPr::qaqc, qaqc_keep = keep_flags)
   names(ls_par) <- met_sites
 
   # filter
@@ -162,12 +174,11 @@ daily_data_table <- function(var_in,
   evts$totprcp <- evts$totprcp / 25.4
   evts$intensprcp <- evts$totprcp * 4
 
-  dat <- evts %>% dplyr::relocate(event)
+  dat <- evts %>% dplyr::relocate(!! event_)
 
   # combine data.frames into one and tidy
-  dat_tidy <- dat %>%
-    tidyr::pivot_longer(., 4:length(names(dat)), names_to = 'parameter', values_to = 'result') %>%
-    dplyr::mutate(date = as.Date(datetimestamp))
+  dat_tidy <- tidyr::pivot_longer(dat, 4:length(names(dat)), names_to = 'parameter', values_to = 'result') %>%
+    dplyr::mutate(date = as.Date(!! datetimestamp_))
 
   # ----------------------------------------------
   # Single Event Comparison, One Reserves ---
@@ -177,14 +188,14 @@ daily_data_table <- function(var_in,
   total_nalist <- c("atemp", "bp", "intensprcp", "maxwspd", "rh", "sdwdir", "wdir", "wspd")
 
   summary <- dat_tidy %>%
-    dplyr::group_by(event, parameter, station, date) %>%
-    tidyr::drop_na(result) %>%
-    dplyr::summarise(min = min(result, na.rm = T)
-                     , max = max(result, na.rm = T)
-                     , mean = mean(result, na.rm = T)
-                     , median = stats::median(result, na.rm = T)
-                     , total = sum(result, na.rm = T)) %>%
-    dplyr::mutate(total = dplyr::case_when(parameter %in% total_nalist == FALSE ~ total))
+    dplyr::group_by(!! event_,!! parameter_, !! station_, date) %>%
+    tidyr::drop_na(!! result_) %>%
+    dplyr::summarise(min = min(!! result_, na.rm = T)
+                     , max = max(!! result_, na.rm = T)
+                     , mean = mean(!! result_, na.rm = T)
+                     , median = stats::median(!! result_, na.rm = T)
+                     , total = sum(!! result_, na.rm = T)) %>%
+    dplyr::mutate(total = dplyr::case_when(!! parameter_ %in% total_nalist == FALSE ~ total))
 
 
 

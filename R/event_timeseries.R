@@ -30,7 +30,30 @@ event_timeseries <- function(var_in,
                              keep_flags = NULL,
                              skip = NULL) {
 
-  ### 0. Read variables ########################################################
+  # ----------------------------------------------------------------------------
+  # Define global variables
+  # ----------------------------------------------------------------------------
+  NERR.Site.ID_ <- rlang::sym('NERR.Site.ID')
+  Status_ <- rlang::sym('Status')
+  Station.Type_ <- rlang::sym('Station.Type')
+  Reserve.Name_ <- rlang::sym('Reserve.Name')
+
+  parameter_ <- rlang::sym('parameter')
+  value_ <- rlang::sym('value')
+
+  datetimestamp_ <- rlang::sym('datetimestamp')
+  datetimestamp_day_ <- rlang::sym('datetimestamp_day')
+  xmin_ <- rlang::sym('xmin')
+  ymin_ <- rlang::sym('ymin')
+  xmax_ <- rlang::sym('xmax')
+  ymax_ <- rlang::sym('ymax')
+  years_ <- rlang::sym('years')
+
+
+
+  # ----------------------------------------------------------------------------
+  # Read in Data
+  # ----------------------------------------------------------------------------
 
   #a.  Read in the variable input template, var_in
 
@@ -44,11 +67,11 @@ event_timeseries <- function(var_in,
 
 
   stations <- get('sampling_stations') %>%
-    dplyr::filter(NERR.Site.ID == reserve) %>%
-    dplyr::filter(Status == "Active")
+    dplyr::filter(!! NERR.Site.ID_ == reserve) %>%
+    dplyr::filter(!! Status_ == "Active")
 
   wq_stations <- stations %>%
-    dplyr::filter(Station.Type == 1)
+    dplyr::filter(!! Station.Type_ == 1)
 
   if(is.null(storm_start)) storm_start <- input_Parameters[1,2]
   if(is.null(storm_end)) storm_end <- input_Parameters[2,2]
@@ -101,7 +124,7 @@ event_timeseries <- function(var_in,
     stn <- names(ls_wq)[i]
 
     df <- dat %>%
-      dplyr::filter(dplyr::between(datetimestamp, as.POSIXct(view_start), as.POSIXct(view_end)))
+      dplyr::filter(dplyr::between(!! datetimestamp_, as.POSIXct(view_start), as.POSIXct(view_end)))
 
     parm_wq <- parms
 
@@ -159,30 +182,32 @@ event_timeseries <- function(var_in,
     plot_end <- as.POSIXct(view_end, format = "%Y-%m-%d %H:%M:%S")
 
     df_day <- df %>%
-      dplyr::filter(dplyr::between(datetimestamp
+      dplyr::filter(dplyr::between(!! datetimestamp_
                      , as.POSIXct(view_start)
                      , as.POSIXct(view_end))) %>%
-      dplyr::mutate(datetimestamp_day = lubridate::floor_date(datetimestamp, unit = 'day')) %>%
-      dplyr::group_by(datetimestamp_day, parameter) %>%
-      dplyr::summarize(value = mean(value, na.rm = T))
+      dplyr::mutate(datetimestamp_day = lubridate::floor_date(!! datetimestamp_, unit = 'day')) %>%
+      dplyr::group_by(!! datetimestamp_day_, !! parameter_) %>%
+      dplyr::summarize("value" = mean(!! value_, na.rm = T))
 
     for(i in 1:length(parms)){
       parm = parms[i]
 
       # Create a dummy data.frame for events and recovery
-      df<-data.frame(xmin=as.POSIXct(c(storm_start, recovery_start)),
-                     xmax=as.POSIXct(c(storm_end, recovery_end)),
-                     ymin=c(-Inf, -Inf),
-                     ymax=c(Inf, Inf),
-                     years=c('Event Duration', 'Event Recovery'))
+      df<-data.frame("xmin"=as.POSIXct(c(storm_start, recovery_start)),
+                     "xmax"=as.POSIXct(c(storm_end, recovery_end)),
+                     "ymin"=c(-Inf, -Inf),
+                     "ymax"=c(Inf, Inf),
+                     "years"=c('Event Duration', 'Event Recovery'))
 
       x <-
         df_day %>%
-        dplyr::filter(parameter == parm) %>%
-        ggplot2::ggplot(., ggplot2::aes(x = datetimestamp_day, y = value)) +
+        dplyr::filter(!! parameter_ == parm)
+
+      x <-
+        ggplot2::ggplot(x, ggplot2::aes(x = !! datetimestamp_day_, y = !! value_)) +
         ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = stn_wq)) +
         ggplot2::geom_line(ggplot2::aes(color = 'Daily Avg'), lwd = 1) +
-        ggplot2::geom_rect(data=df,ggplot2::aes(xmin=xmin,ymin=ymin,xmax=xmax,ymax=ymax,fill=years),
+        ggplot2::geom_rect(data=df,ggplot2::aes(xmin=!! xmin_,ymin=!! ymin_,xmax=!! xmax_,ymax=!! ymax_,fill=!! years_),
                   alpha=0.1,inherit.aes=FALSE) +
         ggplot2::labs(x = '', y = SWMPrStorm::y_labeler(parm))
 

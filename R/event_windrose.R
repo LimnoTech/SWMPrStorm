@@ -23,6 +23,13 @@ event_windrose <- function(var_in,
                            skip = NULL) {
 
 
+  # ----------------------------------------------------------------------------
+  # Define global variables
+  # ----------------------------------------------------------------------------
+  NERR.Site.ID_ <- rlang::sym('NERR.Site.ID')
+  Status_ <- rlang::sym('Status')
+  Station.Type_ <- rlang::sym('Station.Type')
+
 
   # ----------------------------------------------------------------------------
   # Read in Data
@@ -40,11 +47,11 @@ event_windrose <- function(var_in,
 
 
   stations <- get('sampling_stations') %>%
-    dplyr::filter(NERR.Site.ID == reserve) %>%
-    dplyr::filter(Status == "Active")
+    dplyr::filter(!! NERR.Site.ID_ == reserve) %>%
+    dplyr::filter(!! Status_ == "Active")
 
   met_stations <- stations %>%
-    dplyr::filter(Station.Type == 0)
+    dplyr::filter(!! Station.Type_ == 0)
 
   if(is.null(storm_start)) storm_start <- input_Parameters[1,2]
   if(is.null(storm_end)) storm_end <- input_Parameters[2,2]
@@ -69,7 +76,7 @@ event_windrose <- function(var_in,
   data_type <- 'met'
 
   ls_par <- lapply(met_sites, SWMPr::import_local, path = data_path)
-  ls_par <- lapply(ls_par, qaqc, qaqc_keep = keep_flags)
+  ls_par <- lapply(ls_par, SWMPr::qaqc, qaqc_keep = keep_flags)
   ls_par <- lapply(ls_par, subset, subset = c(storm_start, storm_end))
 
   ## convert select parameters, add precip intensity (in/hr)

@@ -22,8 +22,22 @@ summary_data_table <- function(var_in,
                                keep_flags = NULL,
                                skip = NULL) {
 
+  # ----------------------------------------------------------------------------
+  # Define global variables
+  # ----------------------------------------------------------------------------
+  NERR.Site.ID_ <- rlang::sym('NERR.Site.ID')
+  Status_ <- rlang::sym('Status')
+  Station.Type_ <- rlang::sym('Station.Type')
 
+  station_ <- rlang::sym('station')
+  event_ <- rlang::sym('event')
+  evt_start_ <- rlang::sym('evt_start')
+  evt_end_ <- rlang::sym('evt_end')
+  parameter_ <- rlang::sym('parameter')
+  result_ <- rlang::sym('result')
+  datetimestamp_ <- rlang::sym('datetimestamp')
 
+  station_fac_ <- rlang::sym('station_fac')
 
   # ----------------------------------------------------------------------------
   # Read in Data
@@ -45,15 +59,15 @@ summary_data_table <- function(var_in,
   if(is.null(data_path)) data_path <- 'data/cdmo'
 
   stations <- get('sampling_stations') %>%
-    dplyr::filter(NERR.Site.ID == reserve) %>%
-    dplyr::filter(Status == "Active")
+    dplyr::filter(!! NERR.Site.ID_ == reserve) %>%
+    dplyr::filter(!! Status_ == "Active")
 
   wq_sites <- stations %>%
-    dplyr::filter(Station.Type == 1)
+    dplyr::filter(!! Station.Type_ == 1)
   wq_sites <- wq_sites$Station.Code
 
   met_sites <- stations %>%
-    dplyr::filter(Station.Type == 0)
+    dplyr::filter(!! Station.Type_ == 0)
   met_sites <- met_sites$Station.Code
 
 
@@ -73,7 +87,7 @@ summary_data_table <- function(var_in,
   data_type <- 'wq'
 
   ls_par <- lapply(wq_sites, SWMPr::import_local, path = data_path)
-  ls_par <- lapply(ls_par, qaqc, qaqc_keep = keep_flags)
+  ls_par <- lapply(ls_par, SWMPr::qaqc, qaqc_keep = keep_flags)
   ls_par <- lapply(ls_par, subset, subset = c(storm_start, storm_end))
 
   ## convert select parameters
@@ -86,11 +100,12 @@ summary_data_table <- function(var_in,
   names(ls_par) <- wq_sites
 
   ## identify parameters
-  parm <- unique(names(ls_par[[1]])) %>% subset(!(. %in% c('datetimestamp')))
+  parm <- unique(names(ls_par[[1]]))
+  parm <- subset(parm, !(parm %in% c('datetimestamp')))
 
   # combine data.frames into one and tidy
   dat <- dplyr::bind_rows(ls_par, .id = 'station')
-  dat_tidy <- dat %>% tidyr::pivot_longer(., 3:length(names(dat)), names_to = 'parameter', values_to = 'result')
+  dat_tidy <- tidyr::pivot_longer(dat, 3:length(names(dat)), names_to = 'parameter', values_to = 'result')
   dat_tidy$event <- storm_nm
   dat_tidy$evt_start <- storm_start
   dat_tidy$evt_end <- storm_end
@@ -101,12 +116,12 @@ summary_data_table <- function(var_in,
   # -------------------------------------------------------------------
 
   summary <- dat_tidy %>%
-    dplyr::group_by(event, evt_start, evt_end, parameter, station) %>%
-    tidyr::drop_na(result) %>%
-    dplyr::summarise(min = min(result, na.rm = T)
-                     , max = max(result, na.rm = T)
-                     , mean = mean(result, na.rm = T)
-                     , median = stats::median(result, na.rm = T))
+    dplyr::group_by(!! event_, !! evt_start_, !! evt_end_, !! parameter_, !! station_) %>%
+    tidyr::drop_na(!! result_) %>%
+    dplyr::summarise(min = min(!! result_, na.rm = T)
+                     , max = max(!! result_, na.rm = T)
+                     , mean = mean(!! result_, na.rm = T)
+                     , median = stats::median(!! result_, na.rm = T))
 
   # add readable station names
   summary$station_name <- sapply(summary$station, SWMPrExtension::title_labeler)
@@ -115,7 +130,7 @@ summary_data_table <- function(var_in,
   summary$station_fac <- factor(summary$station, levels = wq_sites)
 
   # re-sort the table using factors
-  summary <- summary %>% dplyr::arrange(., parameter, station_fac)
+  summary <- dplyr::arrange(summary, !! parameter_, !! station_fac_)
 
   # write table
   tbl_ttl <- paste('output/wq/data_table/summary_data_table_wq_', paste(reserve, collapse = "_"), ".csv", sep = '')
@@ -132,7 +147,7 @@ summary_data_table <- function(var_in,
   data_type <- 'met'
 
   ls_par <- lapply(met_sites, SWMPr::import_local, path = data_path)
-  ls_par <- lapply(ls_par, qaqc, qaqc_keep = keep_flags)
+  ls_par <- lapply(ls_par, SWMPr::qaqc, qaqc_keep = keep_flags)
   ls_par <- lapply(ls_par, subset, subset = c(storm_start, storm_end))
 
   ## convert select parameters, add precip intensity (in/hr)
@@ -145,17 +160,17 @@ summary_data_table <- function(var_in,
   names(ls_par) <- met_sites
 
   ## identify parameters, remove a few
-  parm <- unique(names(ls_par[[1]])) %>% subset(!(. %in% c('datetimestamp')))
-  parm <- parm %>%  subset(!(. %in% c('wdir', 'sdwdir', 'totpar', 'totsorad')))
+  parm <- unique(names(ls_par[[1]]))
+  parm <- subset(parm, !(parm %in% c('datetimestamp', 'wdir', 'sdwdir', 'totpar', 'totsorad')))
 
   # combine data.frames into one and tidy
   dat <- dplyr::bind_rows(ls_par, .id = 'station')
-  dat_tidy <- dat %>% tidyr::pivot_longer(., 3:length(names(dat)), names_to = 'parameter', values_to = 'result')
+  dat_tidy <- tidyr::pivot_longer(dat, 3:length(names(dat)), names_to = 'parameter', values_to = 'result')
   dat_tidy$event <- storm_nm
   dat_tidy$evt_start <- storm_start
   dat_tidy$evt_end <- storm_end
 
-  dat_tidy <- dat_tidy %>% dplyr::filter(parameter %in% parm)
+  dat_tidy <- dat_tidy %>% dplyr::filter(!! parameter_ %in% parm)
 
   # ---------------------------------------------------------------
   #  Event Comparison, All Active Stations at Selected Reserves ---
@@ -164,14 +179,14 @@ summary_data_table <- function(var_in,
   total_nalist <- c("atemp", "bp", "intensprcp", "maxwspd", "rh", "sdwdir", "wdir", "wspd")
 
   summary <- dat_tidy %>%
-    dplyr::group_by(event, evt_start, evt_end, parameter, station) %>%
-    tidyr::drop_na(result) %>%
-    dplyr::summarise(min = min(result, na.rm = T)
-                     , max = max(result, na.rm = T)
-                     , mean = mean(result, na.rm = T)
-                     , median = stats::median(result, na.rm = T)
-                     , total = sum(result, na.rm = T)) %>%
-    dplyr::mutate(total = dplyr::case_when(parameter %in% total_nalist == FALSE ~ total))
+    dplyr::group_by(!! event_, !! evt_start_, !! evt_end_, !! parameter_, !! station_) %>%
+    tidyr::drop_na(!! result_) %>%
+    dplyr::summarise(min = min(!! result_, na.rm = T)
+                     , max = max(!! result_, na.rm = T)
+                     , mean = mean(!! result_, na.rm = T)
+                     , median = stats::median(!! result_, na.rm = T)
+                     , total = sum(!! result_, na.rm = T)) %>%
+    dplyr::mutate(total = dplyr::case_when(!! parameter_ %in% total_nalist == FALSE ~ total))
 
 
   # add readable station names
@@ -181,7 +196,7 @@ summary_data_table <- function(var_in,
   summary$station_fac <- factor(summary$station, levels = met_sites)
 
   # re-sort the table using factors
-  summary <- summary %>% dplyr::arrange(., parameter, station_fac)
+  summary <- dplyr::arrange(summary, !! parameter_, !! station_fac_)
 
   # write table
   tbl_ttl <- paste('output/met/data_table/summary_data_table_met_', paste(reserve, collapse = "_"), ".csv", sep = '')

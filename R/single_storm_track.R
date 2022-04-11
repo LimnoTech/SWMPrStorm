@@ -28,7 +28,27 @@ single_storm_track <- function(map_in
                                   , scale_pos = 'bottomleft'
                                   , skip = NULL) {
 
-  ### 0. Read variables ########################################################
+  # ----------------------------------------------------------------------------
+  # Define global variables
+  # ----------------------------------------------------------------------------
+  abbrev_ <- rlang::sym('abbrev')
+  Latitude_ <- rlang::sym('Latitude')
+  Longitude_ <- rlang::sym('Longitude')
+
+  NAME_ <- rlang::sym('NAME')
+  RANK_ <- rlang::sym('RANK')
+  X_ <- rlang::sym('X')
+  X.after_ <- rlang::sym('X.after')
+  avgx_ <- rlang::sym('avgx')
+  Y_ <- rlang::sym('Y')
+  Y.after_ <- rlang::sym('Y.after')
+  avgy_ <- rlang::sym('avgy')
+  L1_ <- rlang::sym('L1')
+
+
+  # ----------------------------------------------------------------------------
+  # Read in Data
+  # ----------------------------------------------------------------------------
 
   #a.  Read in the variable input template, var_in
 
@@ -59,11 +79,11 @@ single_storm_track <- function(map_in
   loc$abbrev <- toupper(loc$NERR.Site.ID)
 
   reserve <- loc %>%
-    dplyr::distinct(abbrev, Latitude, Longitude) %>%
-    dplyr::mutate(Longitude = Longitude*-1) %>%
-    dplyr::group_by(abbrev) %>%
-    dplyr::summarize(avgx = mean(Longitude),
-              avgy = mean(Latitude))
+    dplyr::distinct(!! abbrev_, !! Latitude_, !! Longitude_) %>%
+    dplyr::mutate("Longitude" = !! Longitude_*-1) %>%
+    dplyr::group_by(!! abbrev_) %>%
+    dplyr::summarize("avgx" = mean(!! Longitude_),
+              avgy = mean(!! Latitude_))
 
   #c. Read data as shapefiles
 
@@ -72,9 +92,10 @@ single_storm_track <- function(map_in
     temp <- sf::st_read(path_to_shp[i]) %>%
       sf::st_set_crs(4326) %>%
       #sf::st_crop(., xmin=bbox[1], xmax=bbox[3], ymin=bbox[4], ymax=bbox[2]) %>%
-      dplyr::mutate(NAME = storm_nm[i]) %>%
-      dplyr::mutate(RANK = storm_rank[i]) %>%
-      dplyr::mutate(LABEL = c(storm_nm[i], rep("",nrow(.)-1)))
+      dplyr::mutate("NAME" = storm_nm[i]) %>%
+      dplyr::mutate("RANK" = storm_rank[i])
+    temp <- temp %>%
+      dplyr::mutate("LABEL" = c(storm_nm[i], rep("",nrow(temp)-1)))
 
     ifelse(i == 1, shps <- temp, shps <- rbind(shps,temp))
 
@@ -94,14 +115,14 @@ single_storm_track <- function(map_in
     for (n in names) {
 
       coords <- dat %>%
-        dplyr::filter(NAME == n) %>%
+        dplyr::filter(!! NAME_ == n) %>%
         sf::st_cast("MULTILINESTRING") %>%
         sf::st_cast("LINESTRING") %>%
         sf::st_coordinates() %>%
         as.data.frame() %>%
         #filter(X == nth(X,which(abs(X-target_x)==min(abs(X-target_x))))) %>%
         dplyr::slice_head(n=1) %>%
-        dplyr::mutate(NAME = n)
+        dplyr::mutate("NAME" = n)
 
       label_coords <- if (n == names[1]) {
         coords
@@ -128,16 +149,16 @@ single_storm_track <- function(map_in
     for(n in names) {
 
       df <- dat %>%
-        dplyr::filter(NAME == n)
+        dplyr::filter(!! NAME_ == n)
 
       markers <- data.frame(sf::st_coordinates(df)) %>%
-        dplyr::select(-L1) %>%
+        dplyr::select(-(!! L1_)) %>%
         dplyr::distinct()
 
       markers$X.after <- c(markers$X[-1], NA)
       markers$Y.after <- c(markers$Y[-1], NA)
-      markers$X.dir <- with(markers, X.after-X)
-      markers$Y.dir <- with(markers, Y.after-Y)
+      markers$X.dir <- markers$X.after - markers$X
+      markers$Y.dir <- markers$Y.after - markers$Y
       markers$NAME <- n
 
       n1 <- markers[ceiling(nrow(markers)*.25),]
@@ -176,14 +197,14 @@ single_storm_track <- function(map_in
     #ggspatial::annotation_map_tile(zoom=3) +
     #basemaps::basemap_gglayer(shps, map_service = "osm", map_type = "no_labels") +
     ggplot2::geom_sf(data = base, fill = "#efefef", color = "#cfcfd1", lwd = .5) +
-    ggplot2::geom_sf(data=shps_smooth, ggplot2::aes(color = NAME, size = as.factor(RANK)), inherit.aes = FALSE) +
-    ggplot2::geom_point(data=reserve, ggplot2::aes(x = avgx, y = avgy), size = 3, color = "white") +
-    ggplot2::geom_point(data=reserve, ggplot2::aes(x = avgx, y = avgy), size = 2, color = "grey10") +
-    ggplot2::geom_segment(data=arr, ggplot2::aes(x = X, xend = X.after, y = Y, yend = Y.after, color = NAME),
+    ggplot2::geom_sf(data=shps_smooth, ggplot2::aes(color = !! NAME_, size = as.factor(!! RANK_)), inherit.aes = FALSE) +
+    ggplot2::geom_point(data=reserve, ggplot2::aes(x = !! avgx_, y = !! avgy_), size = 3, color = "white") +
+    ggplot2::geom_point(data=reserve, ggplot2::aes(x = !! avgx_, y = !! avgy_), size = 2, color = "grey10") +
+    ggplot2::geom_segment(data=arr, ggplot2::aes(x = !! X_, xend = !! X.after_, y = !! Y_, yend = !! Y.after_, color = !! NAME_),
                           arrow = ggplot2::arrow(
                             length=ggplot2::unit(0.15, "cm"),
                             type = "closed")) +
-    ggrepel::geom_label_repel(data=reserve, ggplot2::aes(x = avgx, y = avgy, label = abbrev),
+    ggrepel::geom_label_repel(data=reserve, ggplot2::aes(x = !! avgx_, y = !! avgy_, label = !! abbrev_),
                               fill = "grey90",
                               fontface = "bold",
                               color = "grey10",
@@ -193,7 +214,7 @@ single_storm_track <- function(map_in
                               segment.curvature =.1,
                               segment.size = 1,
                               segment.color = "grey30") +
-    ggrepel::geom_label_repel(data=labs, ggplot2::aes(x = X , y = Y , label = NAME, fill = NAME),
+    ggrepel::geom_label_repel(data=labs, ggplot2::aes(x = !! X_, y = !! Y_, label = !! NAME_, fill = !! NAME_),
                               color = "white",
                               alpha = 0.5,
                               size = 4,
@@ -212,7 +233,7 @@ single_storm_track <- function(map_in
                    plot.margin = ggplot2::margin(0,0,0,0))
 
 
-  ggplot2::ggsave("output/maps/single_storm_track2.png", m, width = 3.4722, height = 3.4722, units = "in", dpi=200)
+  ggplot2::ggsave("output/maps/Single_Event_Stormtrack.png", m, width = 3.4722, height = 3.4722, units = "in", dpi=200)
 
 
 }

@@ -27,6 +27,26 @@ event_ridgeline <- function(var_in,
                             skip = NULL) {
 
   # ----------------------------------------------------------------------------
+  # Define global variables
+  # ----------------------------------------------------------------------------
+  NERR.Site.ID_ <- rlang::sym('NERR.Site.ID')
+  Status_ <- rlang::sym('Status')
+  Station.Type_ <- rlang::sym('Station.Type')
+  Station.Code_ <- rlang::sym('Station.Code')
+  Reserve.Name_ <- rlang::sym('Reserve.Name')
+  Latitude_ <- rlang::sym('Latitude')
+
+
+  station_ <- rlang::sym('station')
+  event_ <- rlang::sym('event')
+  parameter_ <- rlang::sym('parameter')
+  result_ <- rlang::sym('result')
+  datetimestamp_ <- rlang::sym('datetimestamp')
+  datetime_floor_ <- rlang::sym('datetime_floor')
+  avg_ <- rlang::sym('avg')
+
+
+  # ----------------------------------------------------------------------------
   # Read in Data
   # ----------------------------------------------------------------------------
 
@@ -44,14 +64,14 @@ event_ridgeline <- function(var_in,
 
 
   stations <- get('sampling_stations') %>%
-    dplyr::filter(NERR.Site.ID == reserve) %>%
-    dplyr::filter(Status == "Active")
+    dplyr::filter(!! NERR.Site.ID_ == reserve) %>%
+    dplyr::filter(!! Status_ == "Active")
 
   wq_stations <- stations %>%
-    dplyr::filter(Station.Type == 1)
+    dplyr::filter(!! Station.Type_ == 1)
 
   met_stations <- stations %>%
-    dplyr::filter(Station.Type == 0)
+    dplyr::filter(!! Station.Type_ == 0)
 
 
 
@@ -93,24 +113,24 @@ event_ridgeline <- function(var_in,
 
   # combine data.frames into one and tidy
   dat <- dplyr::bind_rows(ls_par, .id = 'station')
-  dat_tidy <- dat %>% tidyr::pivot_longer(., 3:length(names(dat)), names_to = 'parameter', values_to = 'result')
+  dat_tidy <- tidyr::pivot_longer(dat, 3:length(names(dat)), names_to = 'parameter', values_to = 'result')
   dat_tidy$event <- storm_nm
   dat_tidy$evt_start <- storm_start
   dat_tidy$evt_end <- storm_end
 
 
   # add reserve name
-  station_list <-sampling_stations
-  add_reserve <- station_list %>% dplyr::select(station = Station.Code, Reserve.Name)
+  station_list <- get('sampling_stations')
+  add_reserve <- station_list %>% dplyr::select("station" = !! Station.Code_, !! Reserve.Name_)
   dat_tidy <- dplyr::left_join(dat_tidy, add_reserve)
 
   # assign factors for plotting
   f_reservename <- station_list %>%
-    dplyr::filter(Station.Code %in% unique(dat_tidy$station)) %>%
-    dplyr::select(Reserve.Name, Latitude) %>%
+    dplyr::filter(!! Station.Code_ %in% unique(dat_tidy$station)) %>%
+    dplyr::select(!! Reserve.Name_, !! Latitude_) %>%
     dplyr::distinct() %>%
-    dplyr::arrange(dplyr::desc(Latitude)) %>%
-    dplyr::mutate(factorid = rank(Latitude))
+    dplyr::arrange(dplyr::desc(!! Latitude_)) %>%
+    dplyr::mutate(factorid = rank(!! Latitude_))
 
   # use those factor levels to turn Reserve.Name in the main data frame into a factor, ordered thusly
   dat_tidy$Reserve.Name <- factor(dat_tidy$Reserve.Name
@@ -127,14 +147,13 @@ event_ridgeline <- function(var_in,
   for(param in params) {
 
     df <- dat_tidy %>%
-      dplyr::filter(parameter == param)
+      dplyr::filter(!! parameter_ == param)
 
     plt_ttl <- paste('output/wq/ridgelines/ridgeline_', '_', param, '.png', sep = '')
 
-    p1 <- ggplot2::ggplot(df, ggplot2::aes(x=datetimestamp, y = Reserve.Name,
-                                     height = result, group = Reserve.Name)) +
+    p1 <- ggplot2::ggplot(df, ggplot2::aes(x=!! datetimestamp_, y = !! Reserve.Name_,
+                                     height = !! result_, group = !! Reserve.Name_)) +
       ggridges::geom_density_ridges(stat = "identity", scale = 1, fill = "lightblue") +
-      #ggridges::theme_ridges() +
       ggplot2::ggtitle(SWMPrStorm::y_labeler(param)) +
       ggplot2::ylab("") +
       ggplot2::xlab("") +
@@ -166,18 +185,18 @@ event_ridgeline <- function(var_in,
   for(param in params) {
 
     df <- dat_tidy %>%
-      dplyr::filter(parameter == param)
+      dplyr::filter(!! parameter_ == param)
     df$datetime_floor <- lubridate::floor_date(df$datetimestamp, unit = 'hour')
 
     df_smooth <- df %>%
-      dplyr::group_by(station, Reserve.Name, parameter, datetime_floor) %>%
-      dplyr::summarise(avg = mean(result, na.rm = T))
+      dplyr::group_by(!! station_, !! Reserve.Name_, !! parameter_, !! datetime_floor_) %>%
+      dplyr::summarise(avg = mean(!! result_, na.rm = T))
 
 
     plt_ttl <- paste('output/wq/ridgelines/ridgeline_', '_', param, '_smoothed.png', sep = '')
 
-    p2 <- ggplot2::ggplot(df_smooth, ggplot2::aes(x=datetime_floor, y = Reserve.Name,
-                                     height = avg, group = Reserve.Name)) +
+    p2 <- ggplot2::ggplot(df_smooth, ggplot2::aes(x=!! datetime_floor_, y = !! Reserve.Name_,
+                                     height = !! avg_, group = !! Reserve.Name_)) +
       ggridges::geom_density_ridges(stat = "identity", scale = 1, fill = "lightblue") +
       #ggridges::theme_ridges() +
       ggplot2::ggtitle(SWMPrStorm::y_labeler(param)) +
@@ -216,29 +235,29 @@ event_ridgeline <- function(var_in,
 
 
   ## identify parameters, remove a few
-  parm <- unique(names(ls_par[[1]])) %>% subset(!(. %in% c('datetimestamp')))
-  parm <- parm %>%  subset(!(. %in% c('wdir', 'sdwdir', 'totpar', 'totsorad')))
+  parm <- unique(names(ls_par[[1]]))
+  parm <- subset(parm, !(parm %in% c('datetimestamp', 'wdir', 'sdwdir', 'totpar', 'totsorad')))
 
   # combine data.frames into one and tidy
   dat <- dplyr::bind_rows(ls_par, .id = 'station')
-  dat_tidy <- dat %>% tidyr::pivot_longer(., 3:length(names(dat)), names_to = 'parameter', values_to = 'result')
+  dat_tidy <- tidyr::pivot_longer(dat, 3:length(names(dat)), names_to = 'parameter', values_to = 'result')
   dat_tidy$event <- storm_nm
   dat_tidy$evt_start <- storm_start
   dat_tidy$evt_end <- storm_end
 
 
   # add reserve name
-  station_list <-sampling_stations
-  add_reserve <- station_list %>% dplyr::select(station = Station.Code, Reserve.Name)
+  station_list <- get('sampling_stations')
+  add_reserve <- station_list %>% dplyr::select("station" = !! Station.Code_, !! Reserve.Name_)
   dat_tidy <- dplyr::left_join(dat_tidy, add_reserve)
 
   # assign factors for plotting
   f_reservename <- station_list %>%
-    dplyr::filter(Station.Code %in% unique(dat_tidy$station)) %>%
-    dplyr::select(Reserve.Name, Latitude) %>%
+    dplyr::filter(!! Station.Code_ %in% unique(dat_tidy$station)) %>%
+    dplyr::select(!! Reserve.Name_, !! Latitude_) %>%
     dplyr::distinct() %>%
-    dplyr::arrange(dplyr::desc(Latitude)) %>%
-    dplyr::mutate(factorid = rank(Latitude))
+    dplyr::arrange(dplyr::desc(!! Latitude_)) %>%
+    dplyr::mutate(factorid = rank(!! Latitude_))
 
   # use those factor levels to turn Reserve.Name in the main data frame into a factor, ordered thusly
   dat_tidy$Reserve.Name <- factor(dat_tidy$Reserve.Name
@@ -255,12 +274,12 @@ event_ridgeline <- function(var_in,
   for(param in params) {
 
     df <- dat_tidy %>%
-      dplyr::filter(parameter == param)
+      dplyr::filter(!! parameter_ == param)
 
     plt_ttl <- paste('output/met/ridgelines/ridgeline_', '_', param, '.png', sep = '')
 
-    p3 <- ggplot2::ggplot(df, ggplot2::aes(x=datetimestamp, y = Reserve.Name,
-                                     height = result, group = Reserve.Name)) +
+    p3 <- ggplot2::ggplot(df, ggplot2::aes(x=!! datetimestamp_, y = !! Reserve.Name_,
+                                     height = !! result_, group = !! Reserve.Name_)) +
       ggridges::geom_density_ridges(stat = "identity", scale = 1, fill = "lightblue") +
       #ggridges::theme_ridges() +
       ggplot2::ggtitle(SWMPrStorm::y_labeler(param)) +
@@ -294,18 +313,18 @@ event_ridgeline <- function(var_in,
   for(param in params) {
 
     df <- dat_tidy %>%
-      dplyr::filter(parameter == param)
+      dplyr::filter(!! parameter_ == param)
     df$datetime_floor <- lubridate::floor_date(df$datetimestamp, unit = 'hour')
 
     df_smooth <- df %>%
-      dplyr::group_by(station, Reserve.Name, parameter, datetime_floor) %>%
-      dplyr::summarise(avg = mean(result, na.rm = T))
+      dplyr::group_by(!! station_, !! Reserve.Name_, !! parameter_, !! datetime_floor_) %>%
+      dplyr::summarise(avg = mean(!! result_, na.rm = T))
 
 
     plt_ttl <- paste('output/met/ridgelines/ridgeline_', '_', param, '_smoothed.png', sep = '')
 
-    p4 <- ggplot2::ggplot(df_smooth, ggplot2::aes(x=datetime_floor, y = Reserve.Name,
-                                            height = avg, group = Reserve.Name)) +
+    p4 <- ggplot2::ggplot(df_smooth, ggplot2::aes(x=!! datetime_floor_, y = !! Reserve.Name_,
+                                            height = !! avg_, group = !! Reserve.Name_)) +
       ggridges::geom_density_ridges(stat = "identity", scale = 1, fill = "lightblue") +
       #ggridges::theme_ridges() +
       ggplot2::ggtitle(SWMPrStorm::y_labeler(param)) +

@@ -36,6 +36,26 @@ event_timeseries_hourly <- function(var_in,
 
 
   # ----------------------------------------------------------------------------
+  # Define global variables
+  # ----------------------------------------------------------------------------
+  NERR.Site.ID_ <- rlang::sym('NERR.Site.ID')
+  Status_ <- rlang::sym('Status')
+  Station.Type_ <- rlang::sym('Station.Type')
+
+  parameter_ <- rlang::sym('parameter')
+  value_ <- rlang::sym('value')
+
+  datetimestamp_ <- rlang::sym('datetimestamp')
+  datetimestamp_day_ <- rlang::sym('datetimestamp_day')
+  con_ <- rlang::sym('con')
+  xmin_ <- rlang::sym('xmin')
+  ymin_ <- rlang::sym('ymin')
+  xmax_ <- rlang::sym('xmax')
+  ymax_ <- rlang::sym('ymax')
+  years_ <- rlang::sym('years')
+
+
+  # ----------------------------------------------------------------------------
   # Read in Data
   # ----------------------------------------------------------------------------
 
@@ -51,14 +71,14 @@ event_timeseries_hourly <- function(var_in,
 
 
   stations <- get('sampling_stations') %>%
-    dplyr::filter(NERR.Site.ID == reserve) %>%
-    dplyr::filter(Status == "Active")
+    dplyr::filter(!! NERR.Site.ID_ == reserve) %>%
+    dplyr::filter(!! Status_ == "Active")
 
   wq_stations <- stations %>%
-    dplyr::filter(Station.Type == 1)
+    dplyr::filter(!! Station.Type_ == 1)
 
   met_stations <- stations %>%
-    dplyr::filter(Station.Type == 0)
+    dplyr::filter(!! Station.Type_ == 0)
 
 
   if(is.null(storm_nm)) storm_nm <- input_Parameters[1,2]
@@ -102,18 +122,14 @@ event_timeseries_hourly <- function(var_in,
   ## list unit conversions for plot labels
   param <- c('atemp', 'wspd', 'maxwspd', 'totprcp', 'intensprcp')
   unit <- rep(TRUE, length(param))
-  conversions <- data.frame(parameter = param, con = unit)
+  conversions <- data.frame("parameter" = param, "con" = unit)
 
   names(ls_par) <- met_sites
 
 
   ## identify parameters, remove a few
-  parm <- unique(names(ls_par[[1]])) %>% subset(!(. %in% c('datetimestamp')))
-  parm <- parm %>% subset(!(. %in% c('wdir', 'sdwdir', 'totpar', 'totsorad')))
-
-
-  ## identify parameters
-  parm <- unique(names(ls_par[[1]])) %>% subset(!(. %in% c('datetimestamp')))
+  parm <- unique(names(ls_par[[1]]))
+  parm <- subset(parm, !(parm %in% c('datetimestamp', 'wdir', 'sdwdir', 'totpar', 'totsorad')))
 
 
   for(i in 1:length(ls_par)) {
@@ -128,14 +144,14 @@ event_timeseries_hourly <- function(var_in,
                         , values_to = 'value')
 
     df_day <- dat %>%
-      dplyr::filter(dplyr::between(datetimestamp
+      dplyr::filter(dplyr::between(!! datetimestamp_
                      , as.POSIXct(view_start)
                      , as.POSIXct(view_end))) %>%
-      dplyr::mutate(datetimestamp_day = lubridate::floor_date(datetimestamp, unit = 'hour')) %>%
-      dplyr::group_by(datetimestamp_day, parameter) %>%
-      dplyr::summarize(value = mean(value, na.rm = T)) %>%
+      dplyr::mutate("datetimestamp_day" = lubridate::floor_date(!! datetimestamp_, unit = 'hour')) %>%
+      dplyr::group_by(!! datetimestamp_day_, !! parameter_) %>%
+      dplyr::summarize("value" = mean(!! value_, na.rm = T)) %>%
       dplyr::left_join(conversions) %>%
-      dplyr::mutate(con = tidyr::replace_na(con, FALSE))
+      dplyr::mutate("con" = tidyr::replace_na(!! con_, FALSE))
 
     for(j in 1:length(parm)) {
 
@@ -146,16 +162,18 @@ event_timeseries_hourly <- function(var_in,
                        ymax=c(Inf),
                        years=c('Event Onset'))
 
-      converted <- df_day %>% dplyr::filter(parameter == parm[j])
+      converted <- df_day %>% dplyr::filter(!! parameter_ == parm[j])
       converted <- converted$con[1]
 
 
       x <-
-        df_day %>% dplyr::filter(parameter == parm[j]) %>%
-        ggplot2::ggplot(., ggplot2::aes(x = datetimestamp_day, y = value)) +
+        df_day %>% dplyr::filter(!! parameter_ == parm[j])
+
+      x <-
+        ggplot2::ggplot(x, ggplot2::aes(x = !! datetimestamp_day_, y = !! value_)) +
         ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = sta)) +
         ggplot2::geom_line(ggplot2::aes(color = 'Hourly Avg'), lwd = 1) +# 'steelblue3') +
-        ggplot2::geom_rect(data=df,ggplot2::aes(xmin=xmin,ymin=ymin,xmax=xmax,ymax=ymax,fill=years),
+        ggplot2::geom_rect(data=df,ggplot2::aes(xmin=!! xmin_,ymin=!! ymin_,xmax=!! xmax_,ymax=!! ymax_,fill=!! years_),
                   alpha=0.1,inherit.aes=FALSE) +
         ggplot2::labs(x = '', y = SWMPrStorm::y_labeler(parm[j], converted=converted))
 
@@ -210,7 +228,8 @@ event_timeseries_hourly <- function(var_in,
   names(ls_par) <- wq_sites
 
   ## identify parameters
-  parm <- unique(names(ls_par[[1]])) %>% subset(!(. %in% c('datetimestamp')))
+  parm <- unique(names(ls_par[[1]]))
+  parm <- subset(parm, !(parm %in% c('datetimestamp')))
 
   # ----------------------------------------------
   # Time series, hourly smooth, event window -----
@@ -228,14 +247,14 @@ event_timeseries_hourly <- function(var_in,
                         , values_to = 'value')
 
     df_day <- dat %>%
-      dplyr::filter(dplyr::between(datetimestamp
+      dplyr::filter(dplyr::between(!! datetimestamp_
                      , as.POSIXct(view_start)
                      , as.POSIXct(view_end))) %>%
-      dplyr::mutate(datetimestamp_day = lubridate::floor_date(datetimestamp, unit = 'hour')) %>%
-      dplyr::group_by(datetimestamp_day, parameter) %>%
-      dplyr::summarize(value = mean(value, na.rm = T)) %>%
+      dplyr::mutate("datetimestamp_day" = lubridate::floor_date(!! datetimestamp_, unit = 'hour')) %>%
+      dplyr::group_by(!! datetimestamp_day_, !! parameter_) %>%
+      dplyr::summarize("value" = mean(!! value_, na.rm = T)) %>%
       dplyr::left_join(conversions) %>%
-      dplyr::mutate(con = tidyr::replace_na(con, FALSE))
+      dplyr::mutate(con = tidyr::replace_na(!! con_, FALSE))
 
     for(j in 1:length(parm)) {
 
@@ -246,7 +265,7 @@ event_timeseries_hourly <- function(var_in,
                        ymax=c(Inf),
                        years=c('Event Onset'))
 
-      converted <- df_day %>% dplyr::filter(parameter == parm[j])
+      converted <- df_day %>% dplyr::filter(!! parameter_ == parm[j])
       converted <- converted$con[1]
 
 
@@ -265,11 +284,13 @@ event_timeseries_hourly <- function(var_in,
 
       x <-
         df_day %>%
-        dplyr::filter(parameter == parm[j]) %>%
-        ggplot2::ggplot(., ggplot2::aes(x = datetimestamp_day, y = value)) +
+        dplyr::filter(!! parameter_ == parm[j])
+
+      x <-
+        ggplot2::ggplot(x, ggplot2::aes(x = !! datetimestamp_day_, y = !! value_)) +
         ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = sta)) +
         ggplot2::geom_line(ggplot2::aes(color = 'Hourly Avg'), lwd = 1) +
-        ggplot2::geom_rect(data=df,ggplot2::aes(xmin=xmin,ymin=ymin,xmax=xmax,ymax=ymax,fill=years),
+        ggplot2::geom_rect(data=df,ggplot2::aes(xmin=!! xmin_,ymin=!! ymin_,xmax=!! xmax_,ymax=!! ymax_,fill=!! years_),
                   alpha=0.1,inherit.aes=FALSE) +
         ggplot2::labs(x = '', y = SWMPrStorm::y_labeler(parm[j],converted=converted))
 

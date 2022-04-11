@@ -26,6 +26,28 @@ event_roc <- function(var_in,
                       keep_flags = NULL,
                       skip = NULL) {
 
+  # ----------------------------------------------------------------------------
+  # Define global variables
+  # ----------------------------------------------------------------------------
+  NERR.Site.ID_ <- rlang::sym('NERR.Site.ID')
+  Status_ <- rlang::sym('Status')
+  Station.Type_ <- rlang::sym('Station.Type')
+  Station.Code_ <- rlang::sym('Station.Code')
+  Reserve.Name_ <- rlang::sym('Reserve.Name')
+  Latitude_ <- rlang::sym('Latitude')
+
+
+  station_ <- rlang::sym('station')
+  event_ <- rlang::sym('event')
+  parameter_ <- rlang::sym('parameter')
+  result_ <- rlang::sym('result')
+  datetimestamp_ <- rlang::sym('datetimestamp')
+  datetime_floor_ <- rlang::sym('datetime_floor')
+  avg_ <- rlang::sym('avg')
+  diff_result_ <- rlang::sym('diff_result')
+  legend_ <- rlang::sym('legend')
+  time_hr_ <- rlang::sym('time_hr')
+
 
   # ----------------------------------------------------------------------------
   # Read in Data
@@ -43,14 +65,14 @@ event_roc <- function(var_in,
 
 
   stations <- get('sampling_stations') %>%
-    dplyr::filter(NERR.Site.ID == reserve) %>%
-    dplyr::filter(Status == "Active")
+    dplyr::filter(!! NERR.Site.ID_ == reserve) %>%
+    dplyr::filter(!! Status_ == "Active")
 
   wq_stations <- stations %>%
-    dplyr::filter(Station.Type == 1)
+    dplyr::filter(!! Station.Type_ == 1)
 
   met_stations <- stations %>%
-    dplyr::filter(Station.Type == 0)
+    dplyr::filter(!! Station.Type_ == 0)
 
   if(is.null(storm_nm)) storm_nm <- input_Parameters[1,2]
   if(is.null(storm_start)) storm_start <- input_Parameters[2,2]
@@ -78,38 +100,38 @@ event_roc <- function(var_in,
   data_type <- 'wq'
 
   ls_par <- lapply(wq_sites, SWMPr::import_local, path = data_path)
-  ls_par <- lapply(ls_par, qaqc, qaqc_keep = keep_flags)
+  ls_par <- lapply(ls_par, SWMPr::qaqc, qaqc_keep = keep_flags)
   ls_par <- lapply(ls_par, subset, subset = c(storm_start, storm_end))#, select = par) # Note: par <- wb_basic %>% .[[1]]
 
   names(ls_par) <- wq_sites
 
   ## identify parameters, remove a few
-  parm <- unique(names(ls_par[[1]])) %>% subset(!(. %in% c('datetimestamp')))
-  parm <- parm %>%  subset(!(. %in% c('wdir', 'sdwdir', 'totpar', 'totsorad')))
+  parm <- unique(names(ls_par[[1]]))
+  parm <- subset(parm, !(parm %in% c('datetimestamp', 'wdir', 'sdwdir', 'totpar', 'totsorad')))
 
   # combine data.frames into one and tidy
   dat <- dplyr::bind_rows(ls_par, .id = 'station')
-  dat_tidy <- dat %>% tidyr::pivot_longer(., 3:length(names(dat)), names_to = 'parameter', values_to = 'result')
+  dat_tidy <- tidyr::pivot_longer(dat, 3:length(names(dat)), names_to = 'parameter', values_to = 'result')
   dat_tidy$event <- storm_nm
   dat_tidy$evt_start <- storm_start
   dat_tidy$evt_end <- storm_end
 
-  dat_tidy <- dat_tidy %>% dplyr::filter(parameter %in% parm)
+  dat_tidy <- dat_tidy %>% dplyr::filter(!! parameter_ %in% parm)
 
   # add reserve name
-  station_list <-sampling_stations
-  add_reserve <- station_list %>% dplyr::select(station = Station.Code, Reserve.Name)
+  station_list <- get('sampling_stations')
+  add_reserve <- station_list %>% dplyr::select("station" = !! Station.Code_, !! Reserve.Name_)
   dat_tidy <- dplyr::left_join(dat_tidy, add_reserve)
 
   # assign factors for plotting
   ## turn this into a function
 
   f_reservename <- station_list %>%
-    dplyr::filter(Station.Code %in% unique(dat_tidy$station)) %>%
-    dplyr::select(Reserve.Name, Latitude) %>%
+    dplyr::filter(!! Station.Code_ %in% unique(dat_tidy$station)) %>%
+    dplyr::select(!! Reserve.Name_, !! Latitude_) %>%
     dplyr::distinct() %>%
-    dplyr::arrange(dplyr::desc(Latitude)) %>%
-    dplyr::mutate(factorid = rank(Latitude))
+    dplyr::arrange(dplyr::desc(!! Latitude_)) %>%
+    dplyr::mutate(factorid = rank(!! Latitude_))
 
   # use those factor levels to turn Reserve.Name in the main data frame into a factor, ordered thusly
   dat_tidy$Reserve.Name <- factor(dat_tidy$Reserve.Name
@@ -127,24 +149,24 @@ event_roc <- function(var_in,
     for(s in wq_sites) {
 
       roc <- dat_tidy %>%
-        dplyr::filter(station == s, parameter == p) %>%
-        dplyr::mutate(diff_result = result - dplyr::lag(result),
-                      legend = "Raw Data")
+        dplyr::filter(!! station_ == s, !! parameter_ == p) %>%
+        dplyr::mutate("diff_result" = !! result_ - dplyr::lag(!! result_),
+                      "legend" = "Raw Data")
 
       roc_smooth <- dat_tidy %>%
-        dplyr::filter(station == s, parameter == p) %>%
-        dplyr::group_by(time_hr = lubridate::floor_date(datetimestamp, "hour")) %>%
-        dplyr::summarise(result = mean(result, na.rm = T)) %>%
-        dplyr::mutate(diff_result = result - dplyr::lag(result),
-                      legend = "Hourly Avg")
+        dplyr::filter(!! station_ == s, !! parameter_ == p) %>%
+        dplyr::group_by("time_hr" = lubridate::floor_date(!! datetimestamp_, "hour")) %>%
+        dplyr::summarise("result" = mean(!! result_, na.rm = T)) %>%
+        dplyr::mutate("diff_result" = !! result_ - dplyr::lag(!! result_),
+                      "legend" = "Hourly Avg")
 
       roc_raw <- dat_tidy %>%
-        dplyr::filter(station == s, parameter == p) %>%
-        dplyr::mutate(legend = "Raw Data")
+        dplyr::filter(!! station_ == s, !! parameter_ == p) %>%
+        dplyr::mutate("legend" = "Raw Data")
 
 
-      p1 <- ggplot2::ggplot(roc, ggplot2::aes(x = datetimestamp, y = diff_result)) +
-        ggplot2::geom_line(ggplot2::aes(color = legend), lwd = 1) +
+      p1 <- ggplot2::ggplot(roc, ggplot2::aes(x = !! datetimestamp_, y = !! diff_result_)) +
+        ggplot2::geom_line(ggplot2::aes(color = !! legend_), lwd = 1) +
         ggplot2::scale_x_datetime(date_breaks = '1 day'
                                   , labels = scales::date_format('%b %d')
                                   , guide = ggplot2::guide_axis(check.overlap = TRUE)) +
@@ -167,8 +189,8 @@ event_roc <- function(var_in,
 
 
 
-      p2 <- ggplot2::ggplot(roc_smooth, ggplot2::aes(x = time_hr, y = diff_result)) +
-        ggplot2::geom_line(ggplot2::aes(color = legend), lwd = 1) +
+      p2 <- ggplot2::ggplot(roc_smooth, ggplot2::aes(x = !! time_hr_, y = !! diff_result_)) +
+        ggplot2::geom_line(ggplot2::aes(color = !! legend_), lwd = 1) +
         ggplot2::scale_x_datetime(limits = c(as.POSIXct(storm_start), as.POSIXct(storm_end))
                                   , date_breaks = '1 day'
                                   , labels = scales::date_format('%b %d')
@@ -189,8 +211,8 @@ event_roc <- function(var_in,
 
         ggplot2::ggsave(filename = paste0("output/wq/event_roc/roc_", s, "_", p, "_hourly.png"), plot = p2, height=4, width=6, dpi=300)
 
-      p3 <- ggplot2::ggplot(roc_raw, ggplot2::aes(x = datetimestamp, y = result)) +
-        ggplot2::geom_line(ggplot2::aes(color = legend), lwd = 1) +
+      p3 <- ggplot2::ggplot(roc_raw, ggplot2::aes(x = !! datetimestamp_, y = !! result_)) +
+        ggplot2::geom_line(ggplot2::aes(color = !! legend_), lwd = 1) +
         ggplot2::scale_x_datetime(limits = c(as.POSIXct(storm_start), as.POSIXct(storm_end))
                                   , date_breaks = '1 day'
                                   , labels = scales::date_format('%b %d')
@@ -232,7 +254,7 @@ event_roc <- function(var_in,
   data_type <- 'met'
 
   ls_par <- lapply(met_sites, SWMPr::import_local, path = data_path)
-  ls_par <- lapply(ls_par, qaqc, qaqc_keep = keep_flags)
+  ls_par <- lapply(ls_par, SWMPr::qaqc, qaqc_keep = keep_flags)
   ls_par <- lapply(ls_par, subset, subset = c(storm_start, storm_end))#, select = par) # Note: par <- wb_basic %>% .[[1]]
 
   ## convert select parameters, add precip intensity (in/hr)
@@ -245,33 +267,33 @@ event_roc <- function(var_in,
   names(ls_par) <- met_sites
 
   ## identify parameters, remove a few
-  parm <- unique(names(ls_par[[1]])) %>% subset(!(. %in% c('datetimestamp')))
-  parm <- parm %>%  subset(!(. %in% c('wdir', 'sdwdir', 'totsorad')))
+  parm <- unique(names(ls_par[[1]]))
+  parm <- subset(parm, !(parm %in% c('datetimestamp', 'wdir', 'sdwdir', 'totsorad')))
   #parm <- parm %>%  subset(!(. %in% c('wdir', 'sdwdir', 'totpar', 'totsorad')))
 
   # combine data.frames into one and tidy
   dat <- dplyr::bind_rows(ls_par, .id = 'station')
-  dat_tidy <- dat %>% tidyr::pivot_longer(., 3:length(names(dat)), names_to = 'parameter', values_to = 'result')
+  dat_tidy <- tidyr::pivot_longer(dat, 3:length(names(dat)), names_to = 'parameter', values_to = 'result')
   dat_tidy$event <- storm_nm
   dat_tidy$evt_start <- storm_start
   dat_tidy$evt_end <- storm_end
 
-  dat_tidy <- dat_tidy %>% dplyr::filter(parameter %in% parm)
+  dat_tidy <- dat_tidy %>% dplyr::filter(!! parameter_ %in% parm)
 
   # add reserve name
-  station_list <- sampling_stations
-  add_reserve <- station_list %>% dplyr::select(station = Station.Code, Reserve.Name)
+  station_list <- get('sampling_stations')
+  add_reserve <- station_list %>% dplyr::select("station" = !! Station.Code_, !! Reserve.Name_)
   dat_tidy <- dplyr::left_join(dat_tidy, add_reserve)
 
   # assign factors for plotting
   ## turn this into a function
 
   f_reservename <- station_list %>%
-    dplyr::filter(Station.Code %in% unique(dat_tidy$station)) %>%
-    dplyr::select(Reserve.Name, Latitude) %>%
+    dplyr::filter(!! Station.Code_ %in% unique(dat_tidy$station)) %>%
+    dplyr::select(!! Reserve.Name_, !! Latitude_) %>%
     dplyr::distinct() %>%
-    dplyr::arrange(dplyr::desc(Latitude)) %>%
-    dplyr::mutate(factorid = rank(Latitude))
+    dplyr::arrange(dplyr::desc(!! Latitude_)) %>%
+    dplyr::mutate(factorid = rank(!! Latitude_))
 
   # use those factor levels to turn Reserve.Name in the main data frame into a factor, ordered thusly
   dat_tidy$Reserve.Name <- factor(dat_tidy$Reserve.Name
@@ -288,24 +310,24 @@ event_roc <- function(var_in,
     for (s in met_sites) {
 
       roc <- dat_tidy %>%
-        dplyr::filter(station == s, parameter == p) %>%
-        dplyr::mutate(diff_result = result - dplyr::lag(result),
-                      legend = "Raw Data")
+        dplyr::filter(!! station_ == s, !! parameter_ == p) %>%
+        dplyr::mutate("diff_result" = !! result_ - dplyr::lag(!! result_),
+                      "legend" = "Raw Data")
 
       roc_smooth <- dat_tidy %>%
-        dplyr::filter(station == s, parameter == p) %>%
-        dplyr::group_by(time_hr = lubridate::floor_date(datetimestamp, "hour")) %>%
-        dplyr::summarise(result = mean(result, na.rm = T)) %>%
-        dplyr::mutate(diff_result = result - dplyr::lag(result),
-                      legend = "Hourly Avg")
+        dplyr::filter(!! station_ == s, !! parameter_ == p) %>%
+        dplyr::group_by("time_hr" = lubridate::floor_date(!! datetimestamp_, "hour")) %>%
+        dplyr::summarise("result" = mean(!! result_, na.rm = T)) %>%
+        dplyr::mutate("diff_result" = !! result_ - dplyr::lag(!! result_),
+                      "legend" = "Hourly Avg")
 
       roc_raw <- dat_tidy %>%
-        dplyr::filter(station == s, parameter == p) %>%
-        dplyr::mutate(legend = "Raw Data")
+        dplyr::filter(!! station_ == s, !! parameter_ == p) %>%
+        dplyr::mutate("legend" = "Raw Data")
 
 
-      p1 <- ggplot2::ggplot(roc, ggplot2::aes(x = datetimestamp, y = diff_result)) +
-        ggplot2::geom_line(ggplot2::aes(color = legend), lwd = 1) +
+      p1 <- ggplot2::ggplot(roc, ggplot2::aes(x = !! datetimestamp_, y = !! diff_result_)) +
+        ggplot2::geom_line(ggplot2::aes(color = !! legend_), lwd = 1) +
         ggplot2::scale_x_datetime(date_breaks = '1 day'
                                   , labels = scales::date_format('%b %d')
                                   , guide = ggplot2::guide_axis(check.overlap = TRUE)) +
@@ -327,8 +349,8 @@ event_roc <- function(var_in,
 
 
 
-      p2 <- ggplot2::ggplot(roc_smooth, ggplot2::aes(x = time_hr, y = diff_result)) +
-        ggplot2::geom_line(ggplot2::aes(color = legend), lwd = 1) +
+      p2 <- ggplot2::ggplot(roc_smooth, ggplot2::aes(x = !! time_hr_, y = !! diff_result_)) +
+        ggplot2::geom_line(ggplot2::aes(color = !! legend_), lwd = 1) +
         ggplot2::scale_x_datetime(limits = c(as.POSIXct(storm_start), as.POSIXct(storm_end))
                                   , date_breaks = '1 day'
                                   , labels = scales::date_format('%b %d')
@@ -350,8 +372,8 @@ event_roc <- function(var_in,
         ggplot2::ggsave(filename = paste0("output/met/event_roc/roc_", s, "_", p, "_hourly.png"), plot = p2, height=4, width=6, dpi=300)
 
 
-      p3 <-  ggplot2::ggplot(roc_raw, ggplot2::aes(x = datetimestamp, y = result)) +
-        ggplot2::geom_line(ggplot2::aes(color = legend), lwd = 1) +
+      p3 <-  ggplot2::ggplot(roc_raw, ggplot2::aes(x = !! datetimestamp_, y = !! result_)) +
+        ggplot2::geom_line(ggplot2::aes(color = !! legend_), lwd = 1) +
         ggplot2::scale_x_datetime(limits = c(as.POSIXct(storm_start), as.POSIXct(storm_end))
                                   , date_breaks = '1 day'
                                   , labels = scales::date_format('%b %d')

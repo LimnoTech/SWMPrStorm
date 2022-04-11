@@ -23,7 +23,16 @@ res_storm_track <- function(map_in
                             , scale_pos = 'bottomleft') {
 
 
-  ### 0. Read variables ########################################################
+  # ----------------------------------------------------------------------------
+  # Define global variables
+  # ----------------------------------------------------------------------------
+  LABEL_ <- rlang::sym('LABEL')
+
+
+
+  # ----------------------------------------------------------------------------
+  # Read in Data
+  # ----------------------------------------------------------------------------
 
   #a.  Read in the variable input template, var_in
 
@@ -49,8 +58,9 @@ res_storm_track <- function(map_in
 
     temp <- sf::st_read(path_to_shp[i]) %>%
       sf::st_set_crs(4326) %>%
-      dplyr::mutate(NAME = storm_nm[i]) %>%
-      dplyr::mutate(LABEL = c(storm_nm[i], rep("",nrow(.)-1)))
+      dplyr::mutate(NAME = storm_nm[i])
+    temp <-
+      dplyr::mutate(LABEL = c(storm_nm[i], rep("",nrow(temp)-1)))
 
     ifelse(i == 1, shps <- temp, shps <- rbind(shps,temp))
 
@@ -65,7 +75,7 @@ res_storm_track <- function(map_in
 
   #e. filter for track labels
   labs <- shps %>%
-    dplyr::filter(LABEL != "")
+    dplyr::filter(!! LABEL_ != "")
 
 
   #e. Determine if r and l labs exist <- need to figure out if we need this for this map... borrowed from res_local_map
