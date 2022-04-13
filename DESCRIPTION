@@ -1,6 +1,6 @@
 Package: SWMPrStorm
 Title: Organizing, and Analyzing Estuary Monitoring Data for Storm Events
-Version: 0.0.0.9000
+Version: 0.0.1.0
 Authors@R: c(
     person("Ben", "Crary", , "bcrary@limno.com", c("aut", "cre")),
     person("Julie", "Padilla", , "padilla410@gmail.com", "aut"),

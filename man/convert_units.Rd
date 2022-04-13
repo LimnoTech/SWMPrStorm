@@ -7,7 +7,7 @@
 convert_units(dat, to_units)
 }
 \arguments{
-\item{dat}{list of datasets}
+\item{dat}{list of datasets CDMO datasets}
 
 \item{to_units}{unit set to convert from default SWMPrStorm units ('English' or 'SI')}
 }
@@ -16,4 +16,9 @@ df, list of datasets in the same input format as dat
 }
 \description{
 convert_units()
+}
+\examples{
+\dontrun{
+convert_units(dat, 'English')
+}
 }

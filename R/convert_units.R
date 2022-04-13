@@ -1,12 +1,15 @@
 #' convert_units()
 #'
-#' @param dat list of datasets
+#' @param dat list of datasets CDMO datasets
 #' @param to_units unit set to convert from default SWMPrStorm units ('English' or 'SI')
 #'
 #' @return df, list of datasets in the same input format as dat
 #' @export
 #'
 #' @examples
+#' \dontrun{
+#' convert_units(dat, 'English')
+#' }
 convert_units <- function(dat,
                           to_units) {
 
