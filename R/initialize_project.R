@@ -2,10 +2,18 @@
 #'
 #' @param path_to_project pathway to project location. If blank, the current working directory will be called. (string).
 #'
-#' @return
+#' @return no objects returned. standard SWMPrStorm empty output directories are created.
 #' @export
 #'
 #' @examples
+#'
+#' \dontrun{
+#' ## initialize in current working director:
+#' initialize_project()
+#' ## initialize in specific location
+#' working_dir <- 'C:/path/to/directory'
+#' initialize_project(working_dir)
+#' }
 initialize_project <- function(path_to_project = NULL) {
 
   if(is.null(path_to_project)) path_to_project <- getwd()

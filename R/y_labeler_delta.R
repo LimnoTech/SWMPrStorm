@@ -3,19 +3,16 @@
 #' @param param chr string of variable abbreviation
 #' @param converted logical, should the parameter label units be converted from metric to english? Defaults to \code{FALSE}. Currently available for \code{temp}, \code{depth}, \code{cdepth}, \code{level}, \code{clevel}, \code{atemp}, \code{wspd}, \code{maxwspd}, and \code{totprcp}
 #'
+#' @return Returns character vector or an unevaluated expression
 #' @export
 #'
 #' @details A helper function used internally by several plotting functions to generate y-axis labels. This function does not convert sample results from metric to english. It only adjusts the units in the y-axis label.
 #'
-#' @author B. Crary
 #'
-#' @concept miscellaneous
-#'
-#' @return Returns character vector or an unevaluated expression
 #'
 #' @examples
 #' \dontrun{
-#'
+#' y_lab <- y_labeler_delta('do_mgl')
 #' }
 #'
 y_labeler_delta <- function(param, converted = FALSE) {
@@ -35,7 +32,7 @@ y_labeler_delta <- function(param, converted = FALSE) {
   } else {
 
     # Parameter labels
-    wq_lab <- c(quote('delta Water Temperature (' ~degree~ 'C)'), 'delta Specific Conductivity (mS/cm)', 'delta Salinity (psu)', 'delta Dissolved Oxygen \nSaturation (%)'
+    wq_lab <- c(quote(~Delta~'Water Temperature (' ~degree~ 'C)'), 'delta Specific Conductivity (mS/cm)', 'delta Salinity (psu)', 'delta Dissolved Oxygen \nSaturation (%)'
                 , 'delta Dissolved Oxygen (mg/L)', 'delta Sonde Depth (m)', 'delta Depth, Corrected for \nBarometric Pressure (m)', 'delta Level (m)'
                 , 'deltaLevel, corrected for \nBarometric Pressure (m)', 'delta pH (su)', 'delta Turbidity (NTU)', quote('delta Chlorophyll Fluorescence (' ~mu~ 'g/L)'))
 

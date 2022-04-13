@@ -42,8 +42,16 @@ single_storm_track(
 \item{skip}{TRUE/FALSE. If TRUE, function will be skipped (string).}
 }
 \value{
-
+map is generated and saved in /output/maps/
 }
 \description{
 single_storm_track
+}
+\examples{
+
+\dontrun{
+#StormTrackVariables.xlsx is a template variable input file saved in data/
+var_in <- 'data/StormTrackVariables.xlsx'
+single_storm_track(map_in = var_in)
+}
 }

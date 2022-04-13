@@ -9,10 +9,16 @@
 #' @param map_in .xlsx with all required input variables defined (string).
 #' @param storm_nm name of storm event (string).
 #'
-#' @return
+#'
+#' @return map is generated and saved in /output/maps/
 #' @export
 #'
 #' @examples
+#' \dontrun{
+#' #StormTrackVariables.xlsx is a template variable input file saved in data/
+#' var_in <- 'data/StormTrackVariables.xlsx'
+#' res_storm_track(map_in = var_in)
+#' }
 res_storm_track <- function(map_in
                             , nerr_site_id = NULL
                             , storm_nm = NULL

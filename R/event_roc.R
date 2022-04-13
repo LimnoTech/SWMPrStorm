@@ -10,11 +10,18 @@
 #' @param keep_flags comma separated list of data quality flags that should be kept (string).
 #' @param reserve 3 digit reserve code (string).
 #' @param skip TRUE/FALSE. If TRUE, function will be skipped (string).
+#' @param user_units User defined units. Set to "English" or "SI". Default CDMO data is in SI units. Not all parameters have common equivalent English units (e.g. concentrations), and therefore not all will be converted.
 #'
-#' @return
+#' @return plots are generated and saved in /output/wq/event_roc/ and /output/met/event_roc/
 #' @export
 #'
 #' @examples
+#'
+#' \dontrun{
+#' #StormVariables.xlsx is a template variable input file saved in data/
+#' vars_in <- 'data/StormTrackVariables.xlsx'
+#' single_storm_track(var_in = vars_in)
+#' }
 event_roc <- function(var_in,
                       data_path = NULL,
                       reserve = NULL,
@@ -24,7 +31,8 @@ event_roc <- function(var_in,
                       wq_sites = NULL,
                       met_sites = NULL,
                       keep_flags = NULL,
-                      skip = NULL) {
+                      skip = NULL,
+                      user_units = NULL) {
 
   # ----------------------------------------------------------------------------
   # Define global variables
@@ -83,6 +91,7 @@ event_roc <- function(var_in,
   if(is.null(met_sites)) met_sites <- if(is.na(input_Parameters[5,2])) {met_stations$Station.Code} else {unlist(strsplit(input_Parameters[5,2],", "))}
   if(is.null(keep_flags)) keep_flags <- unlist(strsplit(input_Parameters[6,2],", "))
   if(is.null(skip)) skip <- input_Parameters[7,2]
+  if(is.null(user_units)) user_units <- input_Parameters[8,2]
   if(is.null(data_path)) data_path <- 'data/cdmo'
 
 
@@ -105,9 +114,14 @@ event_roc <- function(var_in,
 
   names(ls_par) <- wq_sites
 
+  ## convert dataset to user defined units (if "SI", no conversion will take place)
+  ls_par <- SWMPrStorm::convert_units(ls_par, user_units)
+
+
   ## identify parameters, remove a few
   parm <- unique(names(ls_par[[1]]))
   parm <- subset(parm, !(parm %in% c('datetimestamp', 'wdir', 'sdwdir', 'totpar', 'totsorad')))
+
 
   # combine data.frames into one and tidy
   dat <- dplyr::bind_rows(ls_par, .id = 'station')
@@ -142,9 +156,6 @@ event_roc <- function(var_in,
   # ----------------------------------------------
 
 
-#p <- parm[1]
-#s <- wq_sites[1]
-
   for(p in parm) {
     for(s in wq_sites) {
 
@@ -172,7 +183,7 @@ event_roc <- function(var_in,
                                   , guide = ggplot2::guide_axis(check.overlap = TRUE)) +
         ggplot2::scale_color_manual(values = c("steelblue3"), name = "") +
         ggplot2::ggtitle(p) +
-        ggplot2::ylab(SWMPrStorm::y_labeler_delta(p)) +
+        ggplot2::ylab(SWMPrStorm::y_axis_unit_labeler_delta(p, user_units)) +
         ggplot2::xlab("") +
         ggplot2::theme_bw() +
         ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
@@ -197,7 +208,7 @@ event_roc <- function(var_in,
                                   , guide = ggplot2::guide_axis(check.overlap = TRUE)) +
         ggplot2::scale_color_manual(values = c("steelblue3"), name = "") +
         ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = s)) +
-        ggplot2::ylab(SWMPrStorm::y_labeler_delta(p)) +
+        ggplot2::ylab(SWMPrStorm::y_axis_unit_labeler_delta(p, user_units)) +
         ggplot2::xlab("") +
         ggplot2::theme_bw() +
         ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
@@ -219,7 +230,7 @@ event_roc <- function(var_in,
                                   , guide = ggplot2::guide_axis(check.overlap = TRUE)) +
         ggplot2::scale_color_manual(values = c("steelblue3"), name = "") +
         ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = s)) +
-        ggplot2::ylab(SWMPrStorm::y_labeler(p)) +
+        ggplot2::ylab(SWMPrStorm::y_axis_unit_labeler_delta(p, user_units)) +
         ggplot2::xlab("") +
         ggplot2::theme_bw() +
         ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
@@ -255,21 +266,19 @@ event_roc <- function(var_in,
 
   ls_par <- lapply(met_sites, SWMPr::import_local, path = data_path)
   ls_par <- lapply(ls_par, SWMPr::qaqc, qaqc_keep = keep_flags)
-  ls_par <- lapply(ls_par, subset, subset = c(storm_start, storm_end))#, select = par) # Note: par <- wb_basic %>% .[[1]]
-
-  ## convert select parameters, add precip intensity (in/hr)
-  ls_par <- lapply(ls_par, function(x) {x$atemp <- x$atemp * 9 / 5 + 32; x}) # C to F
-  ls_par <- lapply(ls_par, function(x) {x$wspd <- x$wspd * 3600 * 1 / 1609.34; x}) # m/s to mph
-  ls_par <- lapply(ls_par, function(x) {x$maxwspd <- x$maxwspd * 3600 * 1 / 1609.34; x}) # m/s to mph
-  ls_par <- lapply(ls_par, function(x) {x$totprcp <- x$totprcp / 25.4; x}) # mm to in
-  ls_par <- lapply(ls_par, function(x) {x$intensprcp <- x$totprcp * 4; x}) # in/15-min to in/hr
+  ls_par <- lapply(ls_par, subset, subset = c(storm_start, storm_end))
 
   names(ls_par) <- met_sites
+
+
+  ## convert dataset to user defined units (if "SI", no conversion will take place)
+  ls_par <- SWMPrStorm::convert_units(ls_par, user_units)
+
 
   ## identify parameters, remove a few
   parm <- unique(names(ls_par[[1]]))
   parm <- subset(parm, !(parm %in% c('datetimestamp', 'wdir', 'sdwdir', 'totsorad')))
-  #parm <- parm %>%  subset(!(. %in% c('wdir', 'sdwdir', 'totpar', 'totsorad')))
+
 
   # combine data.frames into one and tidy
   dat <- dplyr::bind_rows(ls_par, .id = 'station')
@@ -303,8 +312,7 @@ event_roc <- function(var_in,
   # Rate of change plot                        ---
   # ----------------------------------------------
 
-  p <- "atemp"
-  s <- "gtmpcmet"
+
 
   for(p in parm) {
     for (s in met_sites) {
@@ -333,7 +341,7 @@ event_roc <- function(var_in,
                                   , guide = ggplot2::guide_axis(check.overlap = TRUE)) +
         ggplot2::scale_color_manual(values = c("steelblue3"), name = "") +
         ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = s)) +
-        ggplot2::ylab(SWMPrStorm::y_labeler_delta(p)) +
+        ggplot2::ylab(SWMPrStorm::y_axis_unit_labeler_delta(p, user_units)) +
         ggplot2::xlab("") +
         ggplot2::theme_bw() +
         ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
@@ -357,7 +365,7 @@ event_roc <- function(var_in,
                                   , guide = ggplot2::guide_axis(check.overlap = TRUE)) +
         ggplot2::scale_color_manual(values = c("steelblue3"), name = "") +
         ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = s)) +
-        ggplot2::ylab(SWMPrStorm::y_labeler_delta(p)) +
+        ggplot2::ylab(SWMPrStorm::y_axis_unit_labeler_delta(p, user_units)) +
         ggplot2::xlab("") +
         ggplot2::theme_bw() +
         ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),
@@ -380,7 +388,7 @@ event_roc <- function(var_in,
                                   , guide = ggplot2::guide_axis(check.overlap = TRUE)) +
         ggplot2::scale_color_manual(values = c("steelblue3"), name = "") +
         ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = s)) +
-        ggplot2::ylab(SWMPrStorm::y_labeler(p)) +
+        ggplot2::ylab(SWMPrStorm::y_axis_unit_labeler_delta(p, user_units)) +
         ggplot2::xlab("") +
         ggplot2::theme_bw() +
         ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5),

@@ -8,11 +8,19 @@
 #' @param reserve 3 digit reserve code (string).
 #' @param keep_flags comma separated list of data quality flags that should be kept (string).
 #' @param skip TRUE/FALSE. If TRUE, function will be skipped (string).
+#' @param user_units User defined units. Set to "English" or "SI". Default CDMO data is in SI units. Not all parameters have common equivalent English units (e.g. concentrations), and therefore not all will be converted.
 #'
-#' @return
+#'
+#' @return tables are generated and saved in /output/wq/data_table/ and /output/met/data_table/
 #' @export
 #'
 #' @examples
+#'
+#' \dontrun{
+#' #StormVariables.xlsx is a template variable input file saved in data/
+#' vars_in <- 'data/StormTrackVariables.xlsx'
+#' single_storm_track(var_in = vars_in)
+#' }
 summary_data_table <- function(var_in,
                                data_path,
                                storm_nm = NULL,
@@ -20,7 +28,8 @@ summary_data_table <- function(var_in,
                                storm_end = NULL,
                                reserve = NULL,
                                keep_flags = NULL,
-                               skip = NULL) {
+                               skip = NULL,
+                               user_units = NULL) {
 
   # ----------------------------------------------------------------------------
   # Define global variables
@@ -56,6 +65,7 @@ summary_data_table <- function(var_in,
   if(is.null(reserve)) reserve <- if(is.na(input_Parameters[4,2])) {input_Master[1,2]} else { unlist(strsplit(input_Parameters[4,2],", "))}
   if(is.null(keep_flags)) keep_flags <- unlist(strsplit(input_Parameters[5,2],", "))
   if(is.null(skip)) skip <- input_Parameters[6,2]
+  if(is.null(user_units)) user_units <- input_Parameters[7,2]
   if(is.null(data_path)) data_path <- 'data/cdmo'
 
   stations <- get('sampling_stations') %>%
@@ -88,27 +98,34 @@ summary_data_table <- function(var_in,
 
   ls_par <- lapply(wq_sites, SWMPr::import_local, path = data_path)
   ls_par <- lapply(ls_par, SWMPr::qaqc, qaqc_keep = keep_flags)
-  ls_par <- lapply(ls_par, subset, subset = c(storm_start, storm_end))
-
-  ## convert select parameters
-  ls_par <- lapply(ls_par, function(x) {x$temp <- x$temp * 9 / 5 + 32; x})
-  ls_par <- lapply(ls_par, function(x) {x$depth <- x$depth * 3.28; x})
-  ls_par <- lapply(ls_par, function(x) {x$level <- x$level * 3.28; x})
-  ls_par <- lapply(ls_par, function(x) {x$cdepth <- x$cdepth * 3.28; x})
-  ls_par <- lapply(ls_par, function(x) {x$clevel <- x$clevel * 3.28; x})
 
   names(ls_par) <- wq_sites
+
+  ## convert dataset to user defined units (if "SI", no conversion will take place)
+  ls_par <- SWMPrStorm::convert_units(ls_par, user_units)
 
   ## identify parameters
   parm <- unique(names(ls_par[[1]]))
   parm <- subset(parm, !(parm %in% c('datetimestamp')))
 
-  # combine data.frames into one and tidy
-  dat <- dplyr::bind_rows(ls_par, .id = 'station')
-  dat_tidy <- tidyr::pivot_longer(dat, 3:length(names(dat)), names_to = 'parameter', values_to = 'result')
-  dat_tidy$event <- storm_nm
-  dat_tidy$evt_start <- storm_start
-  dat_tidy$evt_end <- storm_end
+  ## filter timeframe
+  evts <- data.frame()
+  for(i in 1:length(storm_nm)) {
+
+    evt <- lapply(ls_par, subset, subset = c(as.POSIXct(storm_start[i]), as.POSIXct(storm_end[i])))
+    evt <- dplyr::bind_rows(evt, .id = 'station')
+    evt$event <- storm_nm[i]
+
+    evts <- dplyr::bind_rows(evts, evt)
+
+  }
+
+  dat <- evts %>% dplyr::relocate(!! event_)
+
+
+  ## combine data.frames into one and tidy
+  dat_tidy <- tidyr::pivot_longer(dat, 4:length(names(dat)), names_to = 'parameter', values_to = 'result')
+
 
 
   # -------------------------------------------------------------------
@@ -116,7 +133,7 @@ summary_data_table <- function(var_in,
   # -------------------------------------------------------------------
 
   summary <- dat_tidy %>%
-    dplyr::group_by(!! event_, !! evt_start_, !! evt_end_, !! parameter_, !! station_) %>%
+    dplyr::group_by(!! event_, !! parameter_,!! station_) %>%
     tidyr::drop_na(!! result_) %>%
     dplyr::summarise(min = min(!! result_, na.rm = T)
                      , max = max(!! result_, na.rm = T)
@@ -133,7 +150,7 @@ summary_data_table <- function(var_in,
   summary <- dplyr::arrange(summary, !! parameter_, !! station_fac_)
 
   # write table
-  tbl_ttl <- paste('output/wq/data_table/summary_data_table_wq_', paste(reserve, collapse = "_"), ".csv", sep = '')
+  tbl_ttl <- paste('output/wq/data_table/summary_data_table_wq_', user_units, "_", paste(reserve, collapse = "_"), ".csv", sep = '')
   utils::write.csv(summary, file = tbl_ttl, quote = F, row.names = F)
 
 
@@ -148,27 +165,29 @@ summary_data_table <- function(var_in,
 
   ls_par <- lapply(met_sites, SWMPr::import_local, path = data_path)
   ls_par <- lapply(ls_par, SWMPr::qaqc, qaqc_keep = keep_flags)
-  ls_par <- lapply(ls_par, subset, subset = c(storm_start, storm_end))
-
-  ## convert select parameters, add precip intensity (in/hr)
-  ls_par <- lapply(ls_par, function(x) {x$atemp <- x$atemp * 9 / 5 + 32; x}) # C to F
-  ls_par <- lapply(ls_par, function(x) {x$wspd <- x$wspd * 3600 * 1 / 1609.34; x}) # m/s to mph
-  ls_par <- lapply(ls_par, function(x) {x$maxwspd <- x$maxwspd * 3600 * 1 / 1609.34; x}) # m/s to mph
-  ls_par <- lapply(ls_par, function(x) {x$totprcp <- x$totprcp / 25.4; x}) # mm to in
-  ls_par <- lapply(ls_par, function(x) {x$intensprcp <- x$totprcp * 4; x}) # in/15-min to in/hr
 
   names(ls_par) <- met_sites
+
+  ## convert dataset to user defined units (if "SI", no conversion will take place)
+  ls_par <- SWMPrStorm::convert_units(ls_par, user_units)
 
   ## identify parameters, remove a few
   parm <- unique(names(ls_par[[1]]))
   parm <- subset(parm, !(parm %in% c('datetimestamp', 'wdir', 'sdwdir', 'totpar', 'totsorad')))
 
-  # combine data.frames into one and tidy
-  dat <- dplyr::bind_rows(ls_par, .id = 'station')
-  dat_tidy <- tidyr::pivot_longer(dat, 3:length(names(dat)), names_to = 'parameter', values_to = 'result')
-  dat_tidy$event <- storm_nm
-  dat_tidy$evt_start <- storm_start
-  dat_tidy$evt_end <- storm_end
+  ## filter timeframe
+  evts <- data.frame()
+  for(i in 1:length(storm_nm)) {
+
+    evt <- lapply(ls_par, subset, subset = c(as.POSIXct(storm_start[i]), as.POSIXct(storm_end[i])))
+    evt <- dplyr::bind_rows(evt, .id = 'station')
+    evt$event <- storm_nm[i]
+
+    evts <- dplyr::bind_rows(evts, evt)
+
+  }
+
+  dat <- evts %>% dplyr::relocate(!! event_)
 
   dat_tidy <- dat_tidy %>% dplyr::filter(!! parameter_ %in% parm)
 
@@ -179,7 +198,7 @@ summary_data_table <- function(var_in,
   total_nalist <- c("atemp", "bp", "intensprcp", "maxwspd", "rh", "sdwdir", "wdir", "wspd")
 
   summary <- dat_tidy %>%
-    dplyr::group_by(!! event_, !! evt_start_, !! evt_end_, !! parameter_, !! station_) %>%
+    dplyr::group_by(!! event_, !! parameter_,!! station_) %>%
     tidyr::drop_na(!! result_) %>%
     dplyr::summarise(min = min(!! result_, na.rm = T)
                      , max = max(!! result_, na.rm = T)
@@ -199,10 +218,8 @@ summary_data_table <- function(var_in,
   summary <- dplyr::arrange(summary, !! parameter_, !! station_fac_)
 
   # write table
-  tbl_ttl <- paste('output/met/data_table/summary_data_table_met_', paste(reserve, collapse = "_"), ".csv", sep = '')
+  tbl_ttl <- paste('output/met/data_table/summary_data_table_met_', user_units, "_", paste(reserve, collapse = "_"), ".csv", sep = '')
   utils::write.csv(summary, file = tbl_ttl, quote = F, row.names = F)
-
-
 
 
 

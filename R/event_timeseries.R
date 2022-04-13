@@ -12,11 +12,18 @@
 #' @param keep_flags comma separated list of data quality flags that should be kept (string).
 #' @param reserve 3 digit reserve code (string).
 #' @param skip TRUE/FALSE. If TRUE, function will be skipped (string).
+#' @param user_units User defined units. Set to "English" or "SI". Default CDMO data is in SI units. Not all parameters have common equivalent English units (e.g. concentrations), and therefore not all will be converted.
 #'
-#' @return
+#' @return plots are generated and saved in /output/wq/timeseries_event_recovery/ and /output/met/timeseries_event_recovery/
 #' @export
 #'
 #' @examples
+#'
+#' \dontrun{
+#' #StormVariables.xlsx is a template variable input file saved in data/
+#' vars_in <- 'data/StormTrackVariables.xlsx'
+#' single_storm_track(var_in = vars_in)
+#' }
 event_timeseries <- function(var_in,
                              data_path = NULL,
                              reserve = NULL,
@@ -28,7 +35,8 @@ event_timeseries <- function(var_in,
                              recovery_end = NULL,
                              stn_wq = NULL,
                              keep_flags = NULL,
-                             skip = NULL) {
+                             skip = NULL,
+                             user_units = NULL) {
 
   # ----------------------------------------------------------------------------
   # Define global variables
@@ -83,6 +91,7 @@ event_timeseries <- function(var_in,
   if(is.null(stn_wq)) stn_wq <- if(is.na(input_Parameters[7,2])) {wq_stations$Station.Code} else {input_Parameters[7,2]}
   if(is.null(keep_flags)) keep_flags <- unlist(strsplit(input_Parameters[8,2],", "))
   if(is.null(skip)) skip <- input_Parameters[9,2]
+  if(is.null(user_units)) user_units <- input_Parameters[10,2]
   if(is.null(data_path)) data_path <- 'data/cdmo'
 
 
@@ -93,21 +102,15 @@ event_timeseries <- function(var_in,
 
 
   ### 1. Read in data and wrangle ##############################################
-  #data will be placed in the data folder within the Event Level Template
-  #dat_wq <- SWMPr::import_local(path = data_path, stn_wq)
-  #dat_wq <- SWMPr::qaqc(dat_wq, qaqc_keep = keep_flags)
-  #dat_wq <- SWMPr::import_local(path = data_path, stn_wq)
-  #dat_wq <- SWMPr::qaqc(dat_wq, qaqc_keep = keep_flags)
   ls_par <- lapply(stn_wq, SWMPr::import_local, path = data_path)
   ls_par <- lapply(ls_par, SWMPr::qaqc, qaqc_keep = keep_flags)
   names(ls_par) <- stn_wq
 
 
-  # tidy the data ------------------------------------
-  #dat_wq2 <- tidyr::pivot_longer(dat_wq, cols = 2:13
-  #                    , names_to = 'parameter'
-  #                    ,values_to = 'value')
+  ## convert dataset to user defined units (if "SI", no conversion will take place)
+  ls_par <- SWMPrStorm::convert_units(ls_par, user_units)
 
+  ## tidy data
 
   ls_wq <- lapply(ls_par, tidyr::pivot_longer,cols = 2:13, names_to = 'parameter',values_to = 'value')
 
@@ -128,53 +131,6 @@ event_timeseries <- function(var_in,
 
     parm_wq <- parms
 
-    # one station, daily smooth -------------------------------------------------
-
-    #df_day <- dat_wq %>%
-    #  dplyr::filter(between(datetimestamp
-    #                 , as.POSIXct(view_start)
-    #                 , as.POSIXct(view_end))) %>%
-    #  dplyr::mutate(datetimestamp_day = floor_date(datetimestamp, unit = 'day')) %>%
-    #  dplyr::group_by(datetimestamp_day, parameter) %>%
-    #  dplyr::summarize(value = mean(value, na.rm = T))
-    #
-    #for(i in 1:length(parms)){
-    #  parm = parms[i]
-    #
-    #  # Create a dummy data.frame for events and recovery
-    #  df<-data.frame(xmin=as.POSIXct(storm_start),
-    #                 xmax=as.POSIXct(storm_end),
-    #                 ymin=c(-Inf),
-    #                 ymax=c(Inf),
-    #                 years=c('Event Duration'))
-    #
-    #  x <-
-    #    df_day %>%
-    #    dplyr::filter(parameter == parm) %>%
-    #    ggplot2::ggplot(., aes(x = datetimestamp_day, y = value)) +
-    #    ggplot2::geom_line(aes(color = 'Daily Avg')) +# 'steelblue3') +
-    #    ggplot2::geom_rect(data=df,aes(xmin=xmin,ymin=ymin,xmax=xmax,ymax=ymax,fill=years),
-    #              alpha=0.2,inherit.aes=FALSE) +
-    #    ggplot2::scale_x_datetime(date_breaks = '2 weeks', date_labels = '%b %d') +
-    #    ggplot2::labs(x = '', y = SWMPrStorm::y_labeler(parm))
-    #
-    #  x <-
-    #    x +
-    #    ggplot2::scale_color_manual('', values = c('steelblue3')) +
-    #    ggplot2::scale_fill_manual('', values = 'steelblue3')
-    #
-    #  x <- x +
-    #    ggplot2::theme_bw() +
-    #    ggplot2::theme(strip.background = element_blank(),
-    #          panel.grid = element_blank(),
-    #          panel.border = element_rect(color = 'black', fill = NA)) +
-    #    ggplot2::theme(axis.title.y = element_text(margin = unit(c(0, 8, 0, 0), 'pt'), angle = 90)) +
-    #    ggplot2::theme(text = element_text(size = 16)) +
-    #    ggplot2::theme(legend.position = 'top')
-    #
-    #  print(x)
-    #
-    #}
 
     # one station, daily smooth, with recovery -----------------------------------
 
@@ -209,7 +165,7 @@ event_timeseries <- function(var_in,
         ggplot2::geom_line(ggplot2::aes(color = 'Daily Avg'), lwd = 1) +
         ggplot2::geom_rect(data=df,ggplot2::aes(xmin=!! xmin_,ymin=!! ymin_,xmax=!! xmax_,ymax=!! ymax_,fill=!! years_),
                   alpha=0.1,inherit.aes=FALSE) +
-        ggplot2::labs(x = '', y = SWMPrStorm::y_labeler(parm))
+        ggplot2::labs(x = '', y = SWMPrStorm::y_axis_unit_labeler(parm, user_units))  #REPLACE WTIH NEW UNIT SCHEME
 
 
       x <-

@@ -33,8 +33,15 @@ res_storm_track(
 \item{scale_pos}{location of the scale on th map optional (string)}
 }
 \value{
-
+map is generated and saved in /output/maps/
 }
 \description{
 res_storm_track
+}
+\examples{
+\dontrun{
+#StormTrackVariables.xlsx is a template variable input file saved in data/
+var_in <- 'data/StormTrackVariables.xlsx'
+res_storm_track(map_in = var_in)
+}
 }

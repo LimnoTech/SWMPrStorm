@@ -8,13 +8,18 @@
 #' @param keep_flags comma separated list of data quality flags that should be kept (string).
 #' @param reserve 3 digit reserve code (string).
 #' @param skip TRUE/FALSE. If TRUE, function will be skipped (string).
+#' @param user_units User defined units. Set to "English" or "SI". Default CDMO data is in SI units. Not all parameters have common equivalent English units (e.g. concentrations), and therefore not all will be converted.
 #'
-#'
-#'
-#' @return
+#' @return tables are generated and saved in /output/wq/compare_one_evt_multi_reserve/ and /output/met/compare_one_evt_multi_reserve/
 #' @export
 #'
+#'
 #' @examples
+#' \dontrun{
+#' #StormVariables.xlsx is a template variable input file saved in data/
+#' vars_in <- 'data/StormTrackVariables.xlsx'
+#' single_storm_track(var_in = vars_in)
+#' }
 compare_one_event_multi_reserve <- function(var_in,
                                             data_path,
                                             reserve = NULL,
@@ -22,7 +27,8 @@ compare_one_event_multi_reserve <- function(var_in,
                                             storm_start = NULL,
                                             storm_end = NULL,
                                             keep_flags = NULL,
-                                            skip = NULL) {
+                                            skip = NULL,
+                                            user_units = NULL) {
 
   # ----------------------------------------------------------------------------
   # Define global variables
@@ -62,6 +68,7 @@ compare_one_event_multi_reserve <- function(var_in,
   if(is.null(reserve)) reserve <- if(is.na(input_Parameters[4,2])) {input_Master[1,2]} else { unlist(strsplit(input_Parameters[4,2],", "))}
   if(is.null(keep_flags)) keep_flags <- unlist(strsplit(input_Parameters[5,2],", "))
   if(is.null(skip)) skip <- input_Parameters[6,2]
+  if(is.null(user_units)) user_units <- input_Parameters[7,2]
   if(is.null(data_path)) data_path <- 'data/cdmo'
 
 
@@ -97,14 +104,10 @@ compare_one_event_multi_reserve <- function(var_in,
   ls_par <- lapply(ls_par, SWMPr::qaqc, qaqc_keep = keep_flags)
   ls_par <- lapply(ls_par, subset, subset = c(storm_start, storm_end))
 
-  ## convert select parameters
-  ls_par <- lapply(ls_par, function(x) {x$temp <- x$temp * 9 / 5 + 32; x})
-  ls_par <- lapply(ls_par, function(x) {x$depth <- x$depth * 3.28; x})
-  ls_par <- lapply(ls_par, function(x) {x$level <- x$level * 3.28; x})
-  ls_par <- lapply(ls_par, function(x) {x$cdepth <- x$cdepth * 3.28; x})
-  ls_par <- lapply(ls_par, function(x) {x$clevel <- x$clevel * 3.28; x})
-
   names(ls_par) <- wq_sites
+
+  ## convert dataset to user defined units (if "SI", no conversion will take place)
+  ls_par <- SWMPrStorm::convert_units(ls_par, user_units)
 
   ## identify parameters
   parm <- unique(names(ls_par[[1]]))
@@ -139,7 +142,7 @@ compare_one_event_multi_reserve <- function(var_in,
   summary <- dplyr::arrange(summary, !! parameter_, !! station_fac_)
 
   # write table
-  tbl_ttl <- paste('output/wq/data_one_event_multi_reserve_table/data_table_wq_', storm_nm, '_multireserve.csv', sep = '')
+  tbl_ttl <- paste('output/wq/data_one_event_multi_reserve_table/data_table_wq_',user_units, "_", storm_nm, '_multireserve.csv', sep = '')
   utils::write.csv(summary, file = tbl_ttl, quote = F, row.names = F)
 
   ########## Meteorological #####################################################
@@ -155,14 +158,10 @@ compare_one_event_multi_reserve <- function(var_in,
   ls_par <- lapply(ls_par, SWMPr::qaqc, qaqc_keep = keep_flags)
   ls_par <- lapply(ls_par, subset, subset = c(storm_start, storm_end))
 
-  ## convert select parameters, add precip intensity (in/hr)
-  ls_par <- lapply(ls_par, function(x) {x$atemp <- x$atemp * 9 / 5 + 32; x}) # C to F
-  ls_par <- lapply(ls_par, function(x) {x$wspd <- x$wspd * 3600 * 1 / 1609.34; x}) # m/s to mph
-  ls_par <- lapply(ls_par, function(x) {x$maxwspd <- x$maxwspd * 3600 * 1 / 1609.34; x}) # m/s to mph
-  ls_par <- lapply(ls_par, function(x) {x$totprcp <- x$totprcp / 25.4; x}) # mm to in
-  ls_par <- lapply(ls_par, function(x) {x$intensprcp <- x$totprcp * 4; x}) # in/15-min to in/hr
-
   names(ls_par) <- met_sites
+
+  ## convert dataset to user defined units (if "SI", no conversion will take place)
+  ls_par <- SWMPrStorm::convert_units(ls_par, user_units)
 
   ## identify parameters, remove a few
   parm <- unique(names(ls_par[[1]]))
@@ -204,7 +203,7 @@ compare_one_event_multi_reserve <- function(var_in,
   summary <- dplyr::arrange(summary, !! parameter_, !! station_fac_)
 
   # write table
-  tbl_ttl <- paste('output/met/data_one_event_multi_reserve_table/data_table_met_', storm_nm, '_multireserve.csv', sep = '')
+  tbl_ttl <- paste('output/met/data_one_event_multi_reserve_table/data_table_met_', user_units, "_", storm_nm, '_multireserve.csv', sep = '')
   utils::write.csv(summary, file = tbl_ttl, quote = F, row.names = F)
 
 

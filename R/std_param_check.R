@@ -2,10 +2,15 @@
 #'
 #' @param param user provided parameter code
 #'
-#' @return
+#' @return TRUE/FALSE
 #' @export
 #'
 #' @examples
+#'
+#' \dontrun{
+#' test_param <- 'totprcp'
+#' st_param_check(test_param)
+#' }
 std_param_check <- function(param) {
 
   # Parameter abbreviations

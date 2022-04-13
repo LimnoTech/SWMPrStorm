@@ -12,7 +12,8 @@ compare_one_event_multi_reserve(
   storm_start = NULL,
   storm_end = NULL,
   keep_flags = NULL,
-  skip = NULL
+  skip = NULL,
+  user_units = NULL
 )
 }
 \arguments{
@@ -31,10 +32,19 @@ compare_one_event_multi_reserve(
 \item{keep_flags}{comma separated list of data quality flags that should be kept (string).}
 
 \item{skip}{TRUE/FALSE. If TRUE, function will be skipped (string).}
+
+\item{user_units}{User defined units. Set to "English" or "SI". Default CDMO data is in SI units. Not all parameters have common equivalent English units (e.g. concentrations), and therefore not all will be converted.}
 }
 \value{
-
+tables are generated and saved in /output/wq/compare_one_evt_multi_reserve/ and /output/met/compare_one_evt_multi_reserve/
 }
 \description{
 compare_one_event_multi_reserve
+}
+\examples{
+\dontrun{
+#StormVariables.xlsx is a template variable input file saved in data/
+vars_in <- 'data/StormTrackVariables.xlsx'
+single_storm_track(var_in = vars_in)
+}
 }

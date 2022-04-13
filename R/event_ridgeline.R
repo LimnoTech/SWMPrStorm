@@ -10,11 +10,19 @@
 #' @param keep_flags comma separated list of data quality flags that should be kept (string).
 #' @param reserve 3 digit reserve code (string).
 #' @param skip TRUE/FALSE. If TRUE, function will be skipped (string).
+#' @param user_units User defined units. Set to "English" or "SI". Default CDMO data is in SI units. Not all parameters have common equivalent English units (e.g. concentrations), and therefore not all will be converted.
 #'
-#' @return
+#'
+#' @return plots are generated and saved in /output/wq/ridgelines/ and /output/met/ridgelines/
 #' @export
 #'
 #' @examples
+#'
+#' \dontrun{
+#' #StormVariables.xlsx is a template variable input file saved in data/
+#' vars_in <- 'data/StormTrackVariables.xlsx'
+#' single_storm_track(var_in = vars_in)
+#' }
 event_ridgeline <- function(var_in,
                             data_path,
                             reserve = NULL,
@@ -24,7 +32,8 @@ event_ridgeline <- function(var_in,
                             wq_sites = NULL,
                             met_sites = NULL,
                             keep_flags = NULL,
-                            skip = NULL) {
+                            skip = NULL,
+                            user_units = NULL) {
 
   # ----------------------------------------------------------------------------
   # Define global variables
@@ -84,6 +93,7 @@ event_ridgeline <- function(var_in,
   if(is.null(met_sites)) met_sites <- if(is.na(input_Parameters[5,2])) {met_stations$Station.Code[1]} else {unlist(strsplit(input_Parameters[5,2],", "))}
   if(is.null(keep_flags)) keep_flags <- unlist(strsplit(input_Parameters[6,2],", "))
   if(is.null(skip)) skip <- input_Parameters[7,2]
+  if(is.null(user_units)) user_units <- input_Parameters[8,2]
   if(is.null(data_path)) data_path <- 'data/cdmo'
 
 
@@ -107,9 +117,9 @@ event_ridgeline <- function(var_in,
 
   names(ls_par) <- wq_sites
 
-  ## identify parameters, remove a few
-  #parm <- unique(names(ls_par[[1]])) %>% subset(!(. %in% c('datetimestamp')))
-  #parm <- parm %>%  subset(!(. %in% c('wdir', 'sdwdir', 'totpar', 'totsorad')))
+  ## convert dataset to user defined units (if "SI", no conversion will take place)
+  ls_par <- SWMPrStorm::convert_units(ls_par, user_units)
+
 
   # combine data.frames into one and tidy
   dat <- dplyr::bind_rows(ls_par, .id = 'station')
@@ -154,7 +164,7 @@ event_ridgeline <- function(var_in,
     p1 <- ggplot2::ggplot(df, ggplot2::aes(x=!! datetimestamp_, y = !! Reserve.Name_,
                                      height = !! result_, group = !! Reserve.Name_)) +
       ggridges::geom_density_ridges(stat = "identity", scale = 1, fill = "lightblue") +
-      ggplot2::ggtitle(SWMPrStorm::y_labeler(param)) +
+      ggplot2::ggtitle(SWMPrStorm::y_axis_unit_labeler(param, user_units)) +
       ggplot2::ylab("") +
       ggplot2::xlab("") +
       ggplot2::scale_x_datetime(expand = c(0, 0)) +
@@ -199,7 +209,7 @@ event_ridgeline <- function(var_in,
                                      height = !! avg_, group = !! Reserve.Name_)) +
       ggridges::geom_density_ridges(stat = "identity", scale = 1, fill = "lightblue") +
       #ggridges::theme_ridges() +
-      ggplot2::ggtitle(SWMPrStorm::y_labeler(param)) +
+      ggplot2::ggtitle(SWMPrStorm::y_axis_unit_labeler(param, user_units)) + #REPLACE WITH NEW UNIT SCHEME
       ggplot2::ylab("") +
       ggplot2::xlab("") +
       ggplot2::scale_x_datetime(expand = c(0, 0)) +
@@ -237,6 +247,10 @@ event_ridgeline <- function(var_in,
   ## identify parameters, remove a few
   parm <- unique(names(ls_par[[1]]))
   parm <- subset(parm, !(parm %in% c('datetimestamp', 'wdir', 'sdwdir', 'totpar', 'totsorad')))
+
+  ## convert dataset to user defined units (if "SI", no conversion will take place)
+  ls_par <- SWMPrStorm::convert_units(ls_par, user_units)
+
 
   # combine data.frames into one and tidy
   dat <- dplyr::bind_rows(ls_par, .id = 'station')
@@ -282,7 +296,7 @@ event_ridgeline <- function(var_in,
                                      height = !! result_, group = !! Reserve.Name_)) +
       ggridges::geom_density_ridges(stat = "identity", scale = 1, fill = "lightblue") +
       #ggridges::theme_ridges() +
-      ggplot2::ggtitle(SWMPrStorm::y_labeler(param)) +
+      ggplot2::ggtitle(SWMPrStorm::y_axis_unit_labeler(param, user_units)) + #REPLACE WITH NEW UNIT SCHEME
       ggplot2::ylab("") +
       ggplot2::xlab("") +
       ggplot2::scale_x_datetime(expand = c(0, 0)) +
@@ -327,7 +341,7 @@ event_ridgeline <- function(var_in,
                                             height = !! avg_, group = !! Reserve.Name_)) +
       ggridges::geom_density_ridges(stat = "identity", scale = 1, fill = "lightblue") +
       #ggridges::theme_ridges() +
-      ggplot2::ggtitle(SWMPrStorm::y_labeler(param)) +
+      ggplot2::ggtitle(SWMPrStorm::y_axis_unit_labeler(param, user_units)) +
       ggplot2::ylab("") +
       ggplot2::xlab("") +
       ggplot2::scale_x_datetime(expand = c(0, 0)) +

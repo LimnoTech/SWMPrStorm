@@ -16,8 +16,6 @@
 #' @importFrom rlang .data
 #' @importFrom utils download.file unzip
 #'
-#' @export
-#'
 #' @details Creates a stylized, reserve-level base map. The user can specify the reserve and stations to plot. The user can also specify a bounding box. For multi-component reserves, the user should specify a bounding box that highlights the component of interest.
 #'
 #' This function does not automatically detect conflicts between station labels. The \code{lab_loc} argument allows the user to specify "R" or "L" for each station to prevent labels from conflicting with each other.
@@ -31,7 +29,29 @@
 #' @return returns a leaflet object
 #'
 #' @examples
+#' \dontrun{
+#' ## a multicomponent reserve (show two different bounding boxes)
+#' ### set plotting parameters
+#' stations <-
+#' sampling_stations[(sampling_stations$NERR.Site.ID == 'cbm'
+#' & sampling_stations$Status == 'Active'), ]$Station.Code
+#' to_match <- c('wq', 'met')
+#' stns <- stations[grep(paste(to_match, collapse = '|'), stations)]
+#' shp_fl <- cbm_spatial
+#' bounding_cbm_1 <- c(-77.393, 39.741, -75.553, 38.277)
+#' bounding_cbm_2 <- c(-76.862006, 38.811571, -76.596508, 38.642454)
+#' lab_dir <- c('L', 'R', 'L', 'L', 'L')
+#' labs <- c('ap', 'cw', 'nm', 'sm', 'vm')
+#' pos <- 'bottomleft'
 #'
+#' ### plot
+#' res_local_map('cbm', stations = stns, bbox = bounding_cbm_1,
+#' lab_loc = lab_dir, scale_pos = pos, shp = shp_fl)
+#'
+#' res_local_map('cbm', stations = stns, bbox = bounding_cbm_2,
+#' lab_loc = lab_dir, scale_pos = pos, shp = shp_fl)
+#'
+#' }
 #'
 res_local_map <- function(nerr_site_id
                           , stations

@@ -8,11 +8,18 @@
 #' @param keep_flags comma separated list of data quality flags that should be kept (string).
 #' @param reserve 3 digit reserve code (string).
 #' @param skip TRUE/FALSE. If TRUE, function will be skipped (string).
+#' @param user_units English, or SI (string)
 #'
-#' @return
+#' @return plots are generated and saved in /output/met/windrose/
 #' @export
 #'
 #' @examples
+#'
+#' \dontrun{
+#' #StormVariables.xlsx is a template variable input file saved in data/
+#' vars_in <- 'data/StormTrackVariables.xlsx'
+#' single_storm_track(var_in = vars_in)
+#' }
 event_windrose <- function(var_in,
                            data_path = NULL,
                            reserve = NULL,
@@ -20,7 +27,8 @@ event_windrose <- function(var_in,
                            storm_end = NULL,
                            met_sites = NULL,
                            keep_flags = NULL,
-                           skip = NULL) {
+                           skip = NULL,
+                           user_units = NULL) {
 
 
   # ----------------------------------------------------------------------------
@@ -59,6 +67,7 @@ event_windrose <- function(var_in,
   if(is.null(met_sites)) met_sites <- if(is.na(input_Parameters[3,2])) {met_stations$Station.Code} else {unlist(strsplit(input_Parameters[3,2],", "))}
   if(is.null(keep_flags)) keep_flags <- unlist(strsplit(input_Parameters[4,2],", "))
   if(is.null(skip)) skip <- input_Parameters[5,2]
+  if(is.null(user_units)) user_units <- input_Parameters[6,2]
   if(is.null(data_path)) data_path <- 'data/cdmo'
 
 
@@ -79,12 +88,8 @@ event_windrose <- function(var_in,
   ls_par <- lapply(ls_par, SWMPr::qaqc, qaqc_keep = keep_flags)
   ls_par <- lapply(ls_par, subset, subset = c(storm_start, storm_end))
 
-  ## convert select parameters, add precip intensity (in/hr)
-  ls_par <- lapply(ls_par, function(x) {x$atemp <- x$atemp * 9 / 5 + 32; x}) # C to F
-  ls_par <- lapply(ls_par, function(x) {x$wspd <- x$wspd * 3600 * 1 / 1609.34; x}) # m/s to mph
-  ls_par <- lapply(ls_par, function(x) {x$maxwspd <- x$maxwspd * 3600 * 1 / 1609.34; x}) # m/s to mph
-  ls_par <- lapply(ls_par, function(x) {x$totprcp <- x$totprcp / 25.4; x}) # mm to in
-  ls_par <- lapply(ls_par, function(x) {x$intensprcp <- x$totprcp * 4; x}) # in/15-min to in/hr
+  ## convert dataset to user defined units (if "SI", no conversion will take place)
+  ls_par <- SWMPrStorm::convert_units(ls_par, user_units)
 
   names(ls_par) <- met_sites
 
@@ -115,7 +120,7 @@ event_windrose <- function(var_in,
 
     plt_ttl <- paste0("output/met/windrose/",attributes(tmp)$station, "_wspd.png")
     grDevices::png(plt_ttl, width = 1000, height = 1000)
-    openair::windRose(tmp, ws = 'wspd', wd = 'wdir', #type = 'date_char',
+    z <- openair::windRose(tmp, ws = 'wspd', wd = 'wdir', #type = 'date_char',
                       angle = angle,
                       width = width,
                       breaks = breaks,
@@ -128,13 +133,16 @@ event_windrose <- function(var_in,
                       # type = type,
                       between = between,
                       par.settings = par.settings,
-                      strip = strip)
+                      strip = strip,
+                      auto.text = FALSE)
+    if(user_units == "English") {z$plot$legend$bottom$args$key$footer <- "(mph)"}
+    z
     grDevices::dev.off()
 
 
     plt_ttl <- paste0("output/met/windrose/",attributes(tmp)$station, "_wspd_bydate.png")
     grDevices::png(plt_ttl, width = 1000, height = 1000)
-    openair::windRose(tmp, ws = 'wspd', wd = 'wdir', type = 'date_char',
+    z <- openair::windRose(tmp, ws = 'wspd', wd = 'wdir', type = 'date_char',
                       angle = angle,
                       width = width,
                       breaks = breaks,
@@ -148,8 +156,13 @@ event_windrose <- function(var_in,
                       between = between,
                       par.settings = par.settings,
                       strip = strip)
+    if(user_units == "English") {z$plot$legend$bottom$args$key$footer <- "(mph)"}
+    z
     grDevices::dev.off()
 
   }
 
 }
+
+
+

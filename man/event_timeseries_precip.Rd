@@ -13,7 +13,8 @@ event_timeseries_precip(
   stn_met = NULL,
   keep_flags = NULL,
   flip = FALSE,
-  skip = NULL
+  skip = NULL,
+  user_units = NULL
 )
 }
 \arguments{
@@ -34,10 +35,20 @@ event_timeseries_precip(
 \item{flip}{TRUE/FALSE. If TRUE, the plot axes will flip.}
 
 \item{skip}{TRUE/FALSE. If TRUE, function will be skipped (string).}
+
+\item{user_units}{User defined units. Set to "English" or "SI". Default CDMO data is in SI units. Not all parameters have common equivalent English units (e.g. concentrations), and therefore not all will be converted.}
 }
 \value{
-
+plots are generated and saved in /output/met/barplot/
 }
 \description{
 event_timeseries_precip
+}
+\examples{
+
+\dontrun{
+#StormVariables.xlsx is a template variable input file saved in data/
+vars_in <- 'data/StormTrackVariables.xlsx'
+single_storm_track(var_in = vars_in)
+}
 }

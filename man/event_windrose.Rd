@@ -12,7 +12,8 @@ event_windrose(
   storm_end = NULL,
   met_sites = NULL,
   keep_flags = NULL,
-  skip = NULL
+  skip = NULL,
+  user_units = NULL
 )
 }
 \arguments{
@@ -31,10 +32,20 @@ event_windrose(
 \item{keep_flags}{comma separated list of data quality flags that should be kept (string).}
 
 \item{skip}{TRUE/FALSE. If TRUE, function will be skipped (string).}
+
+\item{user_units}{English, or SI (string)}
 }
 \value{
-
+plots are generated and saved in /output/met/windrose/
 }
 \description{
 event_windrose
+}
+\examples{
+
+\dontrun{
+#StormVariables.xlsx is a template variable input file saved in data/
+vars_in <- 'data/StormTrackVariables.xlsx'
+single_storm_track(var_in = vars_in)
+}
 }

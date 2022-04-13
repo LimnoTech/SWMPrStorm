@@ -14,11 +14,19 @@
 #' @param keep_flags comma separated list of data quality flags that should be kept (string).
 #' @param reserve 3 digit reserve code (string).
 #' @param skip TRUE/FALSE. If TRUE, function will be skipped (string).
+#' @param user_units User defined units. Set to "English" or "SI". Default CDMO data is in SI units. Not all parameters have common equivalent English units (e.g. concentrations), and therefore not all will be converted.
 #'
-#' @return
+#'
+#' @return plots are generated and saved in /output/wq/timeseries_event_hourly/ and /output/met/timeseries_event_hourly/
 #' @export
 #'
 #' @examples
+#'
+#' \dontrun{
+#' #StormVariables.xlsx is a template variable input file saved in data/
+#' vars_in <- 'data/StormTrackVariables.xlsx'
+#' single_storm_track(var_in = vars_in)
+#' }
 event_timeseries_hourly <- function(var_in,
                                     data_path = NULL,
                                     reserve = NULL,
@@ -32,7 +40,8 @@ event_timeseries_hourly <- function(var_in,
                                     wq_sites = NULL,
                                     met_sites = NULL,
                                     keep_flags = NULL,
-                                    skip = NULL){
+                                    skip = NULL,
+                                    user_units = NULL){
 
 
   # ----------------------------------------------------------------------------
@@ -94,6 +103,7 @@ event_timeseries_hourly <- function(var_in,
   if(is.null(met_sites)) met_sites <- if(is.na(input_Parameters[9,2])) {met_stations$Station.Code} else {unlist(strsplit(input_Parameters[9,2],", "))}
   if(is.null(keep_flags)) keep_flags <- unlist(strsplit(input_Parameters[10,2],", "))
   if(is.null(skip)) skip <- input_Parameters[11,2]
+  if(is.null(user_units)) user_units <- input_Parameters[12,2]
   if(is.null(data_path)) data_path <- 'data/cdmo'
 
   ############## Tests #########################################################
@@ -112,20 +122,11 @@ event_timeseries_hourly <- function(var_in,
   ls_par <- lapply(ls_par, SWMPr::qaqc, qaqc_keep = keep_flags)
   ls_par <- lapply(ls_par, subset, subset = c(view_start, view_end))#, select = par) # Note: par <- wb_basic %>% .[[1]]
 
-  ## convert select parameters, add precip intensity (in/hr)
-  ls_par <- lapply(ls_par, function(x) {x$atemp <- x$atemp * 9 / 5 + 32; x}) # C to F
-  ls_par <- lapply(ls_par, function(x) {x$wspd <- x$wspd * 3600 * 1 / 1609.34; x}) # m/s to mph
-  ls_par <- lapply(ls_par, function(x) {x$maxwspd <- x$maxwspd * 3600 * 1 / 1609.34; x}) # m/s to mph
-  ls_par <- lapply(ls_par, function(x) {x$totprcp <- x$totprcp / 25.4; x}) # mm to in
-  ls_par <- lapply(ls_par, function(x) {x$intensprcp <- x$totprcp * 4; x}) # in/15-min to in/hr
-
-  ## list unit conversions for plot labels
-  param <- c('atemp', 'wspd', 'maxwspd', 'totprcp', 'intensprcp')
-  unit <- rep(TRUE, length(param))
-  conversions <- data.frame("parameter" = param, "con" = unit)
 
   names(ls_par) <- met_sites
 
+  ## convert dataset to user defined units (if "SI", no conversion will take place)
+  ls_par <- SWMPrStorm::convert_units(ls_par, user_units)
 
   ## identify parameters, remove a few
   parm <- unique(names(ls_par[[1]]))
@@ -139,7 +140,7 @@ event_timeseries_hourly <- function(var_in,
     sta <- names(ls_par)[i]
 
     # tidy
-    dat <- tidyr::pivot_longer(dat, cols = 2:12
+    dat <- tidyr::pivot_longer(dat, cols = 2:11
                         , names_to = 'parameter'
                         , values_to = 'value')
 
@@ -149,9 +150,7 @@ event_timeseries_hourly <- function(var_in,
                      , as.POSIXct(view_end))) %>%
       dplyr::mutate("datetimestamp_day" = lubridate::floor_date(!! datetimestamp_, unit = 'hour')) %>%
       dplyr::group_by(!! datetimestamp_day_, !! parameter_) %>%
-      dplyr::summarize("value" = mean(!! value_, na.rm = T)) %>%
-      dplyr::left_join(conversions) %>%
-      dplyr::mutate("con" = tidyr::replace_na(!! con_, FALSE))
+      dplyr::summarize("value" = mean(!! value_, na.rm = T))
 
     for(j in 1:length(parm)) {
 
@@ -161,9 +160,6 @@ event_timeseries_hourly <- function(var_in,
                        ymin=c(-Inf),
                        ymax=c(Inf),
                        years=c('Event Onset'))
-
-      converted <- df_day %>% dplyr::filter(!! parameter_ == parm[j])
-      converted <- converted$con[1]
 
 
       x <-
@@ -175,7 +171,7 @@ event_timeseries_hourly <- function(var_in,
         ggplot2::geom_line(ggplot2::aes(color = 'Hourly Avg'), lwd = 1) +# 'steelblue3') +
         ggplot2::geom_rect(data=df,ggplot2::aes(xmin=!! xmin_,ymin=!! ymin_,xmax=!! xmax_,ymax=!! ymax_,fill=!! years_),
                   alpha=0.1,inherit.aes=FALSE) +
-        ggplot2::labs(x = '', y = SWMPrStorm::y_labeler(parm[j], converted=converted))
+        ggplot2::labs(x = '', y = SWMPrStorm::y_axis_unit_labeler(parm[j], user_units))
 
       x <-
         x +
@@ -214,18 +210,13 @@ event_timeseries_hourly <- function(var_in,
 
   ls_par <- lapply(wq_sites, SWMPr::import_local, path = data_path)
   ls_par <- lapply(ls_par, SWMPr::qaqc, qaqc_keep = keep_flags)
-  ls_par <- lapply(ls_par, subset, subset = c(view_start, view_end))#, select = par) # Note: par <- wb_basic %>% .[[1]]
-
-  ## convert select parameters
-  ls_par <- lapply(ls_par, function(x) {x$temp <- x$temp * 9 / 5 + 32; x})
-  ls_par <- lapply(ls_par, function(x) {x$depth <- x$depth * 3.28; x})
-
-  ## list unit conversions for plot labels
-  param <- c('temp', 'depth')
-  unit <- rep(TRUE, length(param))
-  conversions <- data.frame(parameter = param, con = unit)
+  ls_par <- lapply(ls_par, subset, subset = c(view_start, view_end))
 
   names(ls_par) <- wq_sites
+
+  ## convert dataset to user defined units (if "SI", no conversion will take place)
+  ls_par <- SWMPrStorm::convert_units(ls_par, user_units)
+
 
   ## identify parameters
   parm <- unique(names(ls_par[[1]]))
@@ -252,9 +243,7 @@ event_timeseries_hourly <- function(var_in,
                      , as.POSIXct(view_end))) %>%
       dplyr::mutate("datetimestamp_day" = lubridate::floor_date(!! datetimestamp_, unit = 'hour')) %>%
       dplyr::group_by(!! datetimestamp_day_, !! parameter_) %>%
-      dplyr::summarize("value" = mean(!! value_, na.rm = T)) %>%
-      dplyr::left_join(conversions) %>%
-      dplyr::mutate(con = tidyr::replace_na(!! con_, FALSE))
+      dplyr::summarize("value" = mean(!! value_, na.rm = T))
 
     for(j in 1:length(parm)) {
 
@@ -264,23 +253,6 @@ event_timeseries_hourly <- function(var_in,
                        ymin=c(-Inf),
                        ymax=c(Inf),
                        years=c('Event Onset'))
-
-      converted <- df_day %>% dplyr::filter(!! parameter_ == parm[j])
-      converted <- converted$con[1]
-
-
-      #breaks <- df_day %>%
-      #  dplyr::filter(parameter == parm[j]) %>%
-      #  dplyr::ungroup() %>%
-      #  dplyr::select(datetimestamp_day) %>%
-      #  dplyr::summarize(min = min(datetimestamp_day), max = max(datetimestamp_day)) %>%
-      #  dplyr::mutate(floor = lubridate::floor_date(min, unit = "day"),
-      #                ceiling = lubridate::ceiling_date(max, unit = "day")) %>%
-      #  dplyr::mutate(diff = difftime(ceiling, floor, unit = "day")) %>%
-      #  dplyr::mutate(interval = diff/6) %>%
-      #  dplyr::mutate(interval = floor(interval))
-
-
 
       x <-
         df_day %>%
@@ -292,14 +264,13 @@ event_timeseries_hourly <- function(var_in,
         ggplot2::geom_line(ggplot2::aes(color = 'Hourly Avg'), lwd = 1) +
         ggplot2::geom_rect(data=df,ggplot2::aes(xmin=!! xmin_,ymin=!! ymin_,xmax=!! xmax_,ymax=!! ymax_,fill=!! years_),
                   alpha=0.1,inherit.aes=FALSE) +
-        ggplot2::labs(x = '', y = SWMPrStorm::y_labeler(parm[j],converted=converted))
+        ggplot2::labs(x = '', y = SWMPrStorm::y_axis_unit_labeler(parm[j],user_units)) #
 
       x <-
         x +
         ggplot2::scale_color_manual('', values = c('steelblue3')) +
         ggplot2::scale_fill_manual('', values = c('steelblue3', 'green')) +
         ggplot2::scale_x_datetime(date_breaks = 'day', date_labels = '%b\n%d', guide = ggplot2::guide_axis(check.overlap = TRUE))
-        #ggplot2::scale_x_datetime(date_breaks = paste0(breaks$interval, " ", units(breaks$interval)), date_labels = '%b %d')
 
       x <- x +
         ggplot2::theme_bw() +
@@ -308,7 +279,7 @@ event_timeseries_hourly <- function(var_in,
                        panel.grid = ggplot2::element_blank(),
                        panel.border = ggplot2::element_rect(color = 'black', fill = NA),
                        plot.margin = ggplot2::margin(5.5, 24, 5.5, 5.5, unit = 'pt'),
-                       axis.title.y = ggplot2::element_text(margin = unit(c(0, 8, 0, 8), 'pt'), angle = 90),
+                       axis.title.y = ggplot2::element_text(margin = ggplot2::unit(c(0, 8, 0, 8), 'pt'), angle = 90),
                        text = ggplot2::element_text(size = 16),
                        legend.position = 'top')
 

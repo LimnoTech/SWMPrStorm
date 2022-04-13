@@ -11,11 +11,18 @@
 #' @param keep_flags comma separated list of data quality flags that should be kept (string).
 #' @param storm_nm name of storm event (string).
 #' @param skip TRUE/FALSE. If TRUE, function will be skipped (string).
+#' @param user_units User defined units. Set to "English" or "SI". Default CDMO data is in SI units. Not all parameters have common equivalent English units (e.g. concentrations), and therefore not all will be converted.
 #'
-#' @return
+#' @return plots are generated and saved in /output/combined/timeseries_dual_axis/
 #' @export
 #'
 #' @examples
+#'
+#' \dontrun{
+#' #StormVariables.xlsx is a template variable input file saved in data/
+#' vars_in <- 'data/StormTrackVariables.xlsx'
+#' single_storm_track(var_in = vars_in)
+#' }
 event_timeseries_dual <- function(var_in,
                                   data_path = NULL,
                                   storm_nm = NULL,
@@ -26,7 +33,8 @@ event_timeseries_dual <- function(var_in,
                                   param_primary = NULL,
                                   param_secondary = NULL,
                                   keep_flags = NULL,
-                                  skip = NULL) {
+                                  skip = NULL,
+                                  user_units = NULL) {
 
   # ----------------------------------------------------------------------------
   # Define global variables
@@ -61,6 +69,7 @@ event_timeseries_dual <- function(var_in,
   if(is.null(param_secondary)) param_secondary <- input_Parameters[6,2]
   if(is.null(keep_flags)) keep_flags <- unlist(strsplit(input_Parameters[7,2],", "))
   if(is.null(skip)) skip <- input_Parameters[8,2]
+  if(is.null(user_units)) user_units <- input_Parameters[9,2]
   if(is.null(data_path)) data_path <- 'data/cdmo'
 
 
@@ -77,12 +86,15 @@ event_timeseries_dual <- function(var_in,
 
   ### Load wq data
 
-
-
   if(!is.na(stn_wq)) {
 
     dat_wq <- SWMPr::import_local(path = data_path, stn_wq)
     dat_wq <- SWMPr::qaqc(dat_wq, qaqc_keep = keep_flags)
+
+    ## convert dataset to user defined units (if "SI", no conversion will take place)
+    dat_wq <- SWMPrStorm::convert_units(dat_wq, user_units)
+    dat_wq <- as.data.frame(dat_wq)
+
 
     # tidy the data ---------------------------------------------
 
@@ -107,6 +119,13 @@ event_timeseries_dual <- function(var_in,
 
     dat_met <- SWMPr::import_local(path = data_path, stn_met)
     dat_met <- SWMPr::qaqc(dat_met, qaqc_keep = keep_flags)
+
+
+    ## convert dataset to user defined units (if "SI", no conversion will take place)
+    dat_met <- SWMPrStorm::convert_units(dat_met, user_units)
+    dat_met <- as.data.frame(dat_met)
+
+
 
     # tidy the data --------------------------------------------
     dat_met <- tidyr::pivot_longer(dat_met
@@ -170,8 +189,8 @@ event_timeseries_dual <- function(var_in,
   p1 <- ggplot2::ggplot(dat_merged, ggplot2::aes(x=!! datetimestamp_, y=!! val_scaled_)) +
     ggplot2::geom_line(ggplot2::aes(color = !! parameter_)) +
     ggplot2::scale_color_manual(name = "", values = c("steelblue1", "steelblue4")) +
-    ggplot2::scale_y_continuous(name = SWMPrStorm::y_labeler(param_primary)
-                                , sec.axis = ggplot2::sec_axis(~./scaler, name = SWMPrStorm::y_labeler(param_secondary))) +
+    ggplot2::scale_y_continuous(name = SWMPrStorm::y_axis_unit_labeler(param_primary, user_units)
+                                , sec.axis = ggplot2::sec_axis(~./scaler, name = SWMPrStorm::y_axis_unit_labeler(param_secondary, user_units))) +
     ggplot2::scale_x_datetime(date_breaks = '2 days', date_labels = '%b %d', guide = ggplot2::guide_axis(check.overlap = TRUE)) +
     ggplot2::ggtitle(SWMPrExtension::title_labeler(nerr_site_id = ttl)) +
     ggplot2::xlab("Datetime") +

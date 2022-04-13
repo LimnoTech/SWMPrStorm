@@ -8,11 +8,18 @@
 #' @param reserve 3 digit reserve code (string).
 #' @param keep_flags comma separated list of data quality flags that should be kept (string).
 #' @param skip TRUE/FALSE. If TRUE, function will be skipped (string).
+#' @param user_units User defined units. Set to "English" or "SI". Default CDMO data is in SI units. Not all parameters have common equivalent English units (e.g. concentrations), and therefore not all will be converted.
 #'
-#' @return
+#' @return tables are generated and saved in /output/wq/compare_one_reserve_multi_event/ and /output/met/compare_one_reserve_multi_event/
 #' @export
 #'
 #' @examples
+#'
+#' \dontrun{
+#' #StormVariables.xlsx is a template variable input file saved in data/
+#' vars_in <- 'data/StormTrackVariables.xlsx'
+#' single_storm_track(var_in = vars_in)
+#' }
 compare_one_reserve_multi_event <- function(var_in,
                                             data_path,
                                             storm_nm = NULL,
@@ -20,7 +27,8 @@ compare_one_reserve_multi_event <- function(var_in,
                                             storm_end = NULL,
                                             reserve = NULL,
                                             keep_flags = NULL,
-                                            skip = NULL) {
+                                            skip = NULL,
+                                            user_units = NULL) {
 
   # ----------------------------------------------------------------------------
   # Define global variables
@@ -56,6 +64,7 @@ compare_one_reserve_multi_event <- function(var_in,
   if(is.null(reserve)) reserve <- if(is.na(input_Parameters[4,2])) {input_Master[1,2]} else {input_Parameters[4,2]}
   if(is.null(keep_flags)) keep_flags <- unlist(strsplit(input_Parameters[5,2],", "))
   if(is.null(skip)) skip <- input_Parameters[6,2]
+  if(is.null(user_units)) user_units <- input_Parameters[7,2]
   if(is.null(data_path)) data_path <- 'data/cdmo'
 
   stations <- get('sampling_stations') %>%
@@ -87,8 +96,11 @@ compare_one_reserve_multi_event <- function(var_in,
   ls_par <- lapply(ls_par, SWMPr::qaqc, qaqc_keep = keep_flags)
   names(ls_par) <- wq_sites
 
-  # filter
 
+  ## convert dataset to user defined units (if "SI", no conversion will take place)
+  ls_par <- SWMPrStorm::convert_units(ls_par, user_units)
+
+  ## filter timeframe
   evts <- data.frame()
   for(i in 1:length(storm_nm)) {
 
@@ -130,7 +142,7 @@ compare_one_reserve_multi_event <- function(var_in,
   # summary <- summary %>% arrange(., parameter, station_fac)
 
   # write table
-  tbl_ttl <- paste('output/wq/data_one_reserve_multi_event_table/data_table_wq_', reserve, '_multievent.csv', sep = '')
+  tbl_ttl <- paste('output/wq/data_one_reserve_multi_event_table/data_table_wq_', user_units, "_", reserve, '_multievent.csv', sep = '')
   utils::write.csv(summary, file = tbl_ttl, quote = F, row.names = F)
 
 
@@ -148,7 +160,11 @@ compare_one_reserve_multi_event <- function(var_in,
   ls_par <- lapply(ls_par, SWMPr::qaqc, qaqc_keep = keep_flags)
   names(ls_par) <- met_sites
 
-  # filter
+  ## convert dataset to user defined units (if "SI", no conversion will take place)
+  ls_par <- SWMPrStorm::convert_units(ls_par, user_units)
+
+
+  ## filter timeframes
 
   evts <- data.frame()
   for(i in 1:length(storm_nm)) {
@@ -161,13 +177,6 @@ compare_one_reserve_multi_event <- function(var_in,
 
   }
 
-
-  ## convert select parameters
-  evts$atemp <- evts$atemp * 9 / 5 + 3
-  evts$wspd <- evts$wspd * 3600 * 1 / 1609.34
-  evts$maxwspd <- evts$maxwspd * 3600 * 1 / 1609.34
-  evts$totprcp <- evts$totprcp / 25.4
-  evts$intensprcp <- evts$totprcp * 4
 
   dat <- evts %>% dplyr::relocate(!! event_)
 
@@ -197,7 +206,7 @@ compare_one_reserve_multi_event <- function(var_in,
 
 
   # write table
-  tbl_ttl <- paste('output/met/data_one_reserve_multi_event_table/data_table_met_', reserve, '_multievent.csv', sep = '')
+  tbl_ttl <- paste('output/met/data_one_reserve_multi_event_table/data_table_met_', user_units, "_", reserve, '_multievent.csv', sep = '')
   utils::write.csv(summary, file = tbl_ttl, quote = F, row.names = F)
 
 

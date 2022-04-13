@@ -12,10 +12,18 @@
 #' @param path_to_base pathway to shapefile for the basemap world boundaries (string)
 #' @param skip TRUE/FALSE. If TRUE, function will be skipped (string).
 #'
-#' @return
+#'
+#' @return map is generated and saved in /output/maps/
 #' @export
 #'
+#'
 #' @examples
+#' \dontrun{
+#' #StormTrackVariables.xlsx is a template variable input file saved in data/
+#' var_in <- 'data/StormTrackVariables.xlsx'
+#' multi_storm_track(map_in = var_in)
+#' }
+
 multi_storm_track <- function(map_in
                             , nerr_site_id = NULL
                             , storm_nm = NULL

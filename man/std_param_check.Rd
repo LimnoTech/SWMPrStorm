@@ -10,8 +10,15 @@ std_param_check(param)
 \item{param}{user provided parameter code}
 }
 \value{
-
+TRUE/FALSE
 }
 \description{
 Check user parameter against standard parameter list
+}
+\examples{
+
+\dontrun{
+test_param <- 'totprcp'
+st_param_check(test_param)
+}
 }

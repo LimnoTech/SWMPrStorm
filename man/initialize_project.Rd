@@ -10,8 +10,18 @@ initialize_project(path_to_project = NULL)
 \item{path_to_project}{pathway to project location. If blank, the current working directory will be called. (string).}
 }
 \value{
-
+no objects returned. standard SWMPrStorm empty output directories are created.
 }
 \description{
 initialize_project()
+}
+\examples{
+
+\dontrun{
+## initialize in current working director:
+initialize_project()
+## initialize in specific location
+working_dir <- 'C:/path/to/directory'
+initialize_project(working_dir)
+}
 }
