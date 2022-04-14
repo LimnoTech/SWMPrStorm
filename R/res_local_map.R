@@ -28,6 +28,8 @@
 #'
 #' @return returns a leaflet object
 #'
+#' @export
+#'
 #' @examples
 #' \dontrun{
 #' ## a multicomponent reserve (show two different bounding boxes)
