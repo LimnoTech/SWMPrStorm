@@ -54,8 +54,8 @@ compare_one_reserve_one_event <- function(var_in,
 
   #a.  Read in the variable input template, var_in
 
-  input_Parameters <- xlsx::read.xlsx(var_in, sheetName = "table_daily")
-  input_Master <- xlsx::read.xlsx(var_in, sheetName = "MASTER")
+  input_Parameters <- openxlsx::read.xlsx(var_in, sheet = "table_daily")
+  input_Master <- openxlsx::read.xlsx(var_in, sheet = "MASTER")
 
 
   if(is.null(storm_nm)) storm_nm <- unlist(strsplit(input_Parameters[1,2],", "))

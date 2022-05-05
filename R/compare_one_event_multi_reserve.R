@@ -52,8 +52,8 @@ compare_one_event_multi_reserve <- function(var_in,
 
   #a.  Read in the variable input template, var_in
 
-  input_Parameters <- xlsx::read.xlsx(var_in, sheetName = "stats_one_event")
-  input_Master <- xlsx::read.xlsx(var_in, sheetName = "MASTER")
+  input_Parameters <- openxlsx::read.xlsx(var_in, sheet = "stats_one_event")
+  input_Master <- openxlsx::read.xlsx(var_in, sheet = "MASTER")
 
 
   #b.  Read the following variables from template spreadsheet if not provided as optional arguments

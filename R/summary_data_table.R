@@ -54,8 +54,8 @@ summary_data_table <- function(var_in,
 
   #a.  Read in the variable input template, var_in
 
-  input_Parameters <- xlsx::read.xlsx(var_in, sheetName = "table_summary")
-  input_Master <- xlsx::read.xlsx(var_in, sheetName = "MASTER")
+  input_Parameters <- openxlsx::read.xlsx(var_in, sheet = "table_summary")
+  input_Master <- openxlsx::read.xlsx(var_in, sheet = "MASTER")
 
 
 

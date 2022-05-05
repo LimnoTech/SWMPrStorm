@@ -60,8 +60,8 @@ multi_storm_track <- function(map_in
 
   #a.  Read in the variable input template, var_in
 
-  input_Parameters <- xlsx::read.xlsx(map_in, sheetName = "Multi-storm parameters")
-  input_Shp <- xlsx::read.xlsx(map_in, sheetName = "Multi-storm shps")
+  input_Parameters <- openxlsx::read.xlsx(map_in, sheet = "Multi-storm parameters")
+  input_Shp <- openxlsx::read.xlsx(map_in, sheet = "Multi-storm shps")
 
 
   if(is.null(nerr_site_id)) nerr_site_id <- unlist(strsplit(input_Parameters[1,2],", "))

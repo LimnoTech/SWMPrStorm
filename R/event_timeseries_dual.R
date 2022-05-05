@@ -55,7 +55,7 @@ event_timeseries_dual <- function(var_in,
   # Read in Data
   # ----------------------------------------------------------------------------
 
-  input_Parameters <- xlsx::read.xlsx(var_in, sheetName = "timeseries_dual")
+  input_Parameters <- openxlsx::read.xlsx(var_in, sheet = "timeseries_dual")
 
 
   #b.  Read the following variables from template spreadsheet if not provided as optional arguments

@@ -42,9 +42,9 @@ res_storm_track <- function(map_in
 
   #a.  Read in the variable input template, var_in
 
-  input_Parameters <- xlsx::read.xlsx(map_in, sheetName = "Parameters")
-  input_Shp <- xlsx::read.xlsx(map_in, sheetName = "shps")
-  input_Stations <- xlsx::read.xlsx(map_in, sheetName = "Stations")
+  input_Parameters <- openxlsx::read.xlsx(map_in, sheet = "Parameters")
+  input_Shp <- openxlsx::read.xlsx(map_in, sheet = "shps")
+  input_Stations <- openxlsx::read.xlsx(map_in, sheet = "Stations")
 
 
   if(is.null(nerr_site_id)) nerr_site_id <- input_Parameters[1,2]

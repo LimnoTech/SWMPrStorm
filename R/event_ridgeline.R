@@ -62,8 +62,8 @@ event_ridgeline <- function(var_in,
 
   #a.  Read in the variable input template, var_in
 
-  input_Parameters <- xlsx::read.xlsx(var_in, sheetName = "ridgeline")
-  input_Master <- xlsx::read.xlsx(var_in, sheetName = "MASTER")
+  input_Parameters <- openxlsx::read.xlsx(var_in, sheet = "ridgeline")
+  input_Master <- openxlsx::read.xlsx(var_in, sheet = "MASTER")
 
 
 
