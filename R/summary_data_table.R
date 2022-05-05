@@ -35,6 +35,7 @@ summary_data_table <- function(var_in,
   # Define global variables
   # ----------------------------------------------------------------------------
   NERR.Site.ID_ <- rlang::sym('NERR.Site.ID')
+  Station.Code_ <- rlang::sym('Station.Code')
   Status_ <- rlang::sym('Status')
   Station.Type_ <- rlang::sym('Station.Type')
 
@@ -62,14 +63,14 @@ summary_data_table <- function(var_in,
   if(is.null(storm_nm)) storm_nm <- unlist(strsplit(input_Parameters[1,2],", "))
   if(is.null(storm_start)) storm_start <- unlist(strsplit(input_Parameters[2,2],", "))
   if(is.null(storm_end)) storm_end <- unlist(strsplit(input_Parameters[3,2],", "))
-  if(is.null(reserve)) reserve <- if(is.na(input_Parameters[4,2])) {input_Master[1,2]} else { unlist(strsplit(input_Parameters[4,2],", "))}
+  if(is.null(reserve)) reserve <- if(is.na(input_Parameters[4,2])) {input_Master[1,2]} else {unlist(strsplit(input_Parameters[4,2],", "))}
   if(is.null(keep_flags)) keep_flags <- unlist(strsplit(input_Parameters[5,2],", "))
   if(is.null(skip)) skip <- input_Parameters[6,2]
   if(is.null(user_units)) user_units <- input_Parameters[7,2]
   if(is.null(data_path)) data_path <- 'data/cdmo'
 
   stations <- get('sampling_stations') %>%
-    dplyr::filter(!! NERR.Site.ID_ == reserve) %>%
+    dplyr::filter(!! NERR.Site.ID_ %in% reserve) %>%
     dplyr::filter(!! Status_ == "Active")
 
   wq_sites <- stations %>%
@@ -112,19 +113,25 @@ summary_data_table <- function(var_in,
   evts <- data.frame()
   for(i in 1:length(storm_nm)) {
 
-    evt <- lapply(ls_par, subset, subset = c(as.POSIXct(storm_start[i]), as.POSIXct(storm_end[i])))
-    evt <- dplyr::bind_rows(evt, .id = 'station')
+    #evt <- lapply(ls_par, subset, subset = c(as.POSIXct(storm_start[i]), as.POSIXct(storm_end[i])))
+    evt <- dplyr::bind_rows(ls_par, .id = 'station')
+    evt <- subset(evt, subset = c(as.POSIXct(storm_start[i]), as.POSIXct(storm_end[i])))
     evt$event <- storm_nm[i]
 
     evts <- dplyr::bind_rows(evts, evt)
 
   }
 
-  dat <- evts %>% dplyr::relocate(!! event_)
+  # reformat, add reserve name
+  dat <- evts %>% dplyr::relocate(!! event_) %>%
+    dplyr::left_join(sampling_stations %>%
+                       dplyr::select(!! NERR.Site.ID_, !! Station.Code_) %>%
+                       dplyr::rename("reserve_code" = NERR.Site.ID, "station" = !! Station.Code_)) %>%
+    dplyr::relocate(!! event_, reserve_code)
 
 
   ## combine data.frames into one and tidy
-  dat_tidy <- tidyr::pivot_longer(dat, 4:length(names(dat)), names_to = 'parameter', values_to = 'result')
+  dat_tidy <- tidyr::pivot_longer(dat, 5:length(names(dat)), names_to = 'parameter', values_to = 'result')
 
 
 
@@ -133,7 +140,7 @@ summary_data_table <- function(var_in,
   # -------------------------------------------------------------------
 
   summary <- dat_tidy %>%
-    dplyr::group_by(!! event_, !! parameter_,!! station_) %>%
+    dplyr::group_by(!! event_, !! parameter_, reserve_code, !! station_) %>%
     tidyr::drop_na(!! result_) %>%
     dplyr::summarise(min = min(!! result_, na.rm = T)
                      , max = max(!! result_, na.rm = T)
@@ -147,10 +154,12 @@ summary_data_table <- function(var_in,
   summary$station_fac <- factor(summary$station, levels = wq_sites)
 
   # re-sort the table using factors
-  summary <- dplyr::arrange(summary, !! parameter_, !! station_fac_)
+  summary <- dplyr::arrange(summary, !! parameter_, !! station_fac_) %>%
+    dplyr::select(- !! station_fac_) %>%
+    dplyr::relocate(!! event_, reserve_code, !! station_, station_name, !! parameter_)
 
   # write table
-  tbl_ttl <- paste('output/wq/data_table/summary_data_table_wq_', user_units, "_", paste(reserve, collapse = "_"), ".csv", sep = '')
+  tbl_ttl <- paste('output/wq/data_table/summary_data_table_wq_', user_units, "_", paste0(reserve, collapse = "_"), ".csv", sep = '')
   utils::write.csv(summary, file = tbl_ttl, quote = F, row.names = F)
 
 
@@ -179,18 +188,25 @@ summary_data_table <- function(var_in,
   evts <- data.frame()
   for(i in 1:length(storm_nm)) {
 
-    evt <- lapply(ls_par, subset, subset = c(as.POSIXct(storm_start[i]), as.POSIXct(storm_end[i])))
-    evt <- dplyr::bind_rows(evt, .id = 'station')
+    evt <- dplyr::bind_rows(ls_par, .id = 'station')
+    evt <- subset(evt, subset = c(as.POSIXct(storm_start[i]), as.POSIXct(storm_end[i])))
     evt$event <- storm_nm[i]
 
     evts <- dplyr::bind_rows(evts, evt)
 
   }
 
-  dat <- evts %>% dplyr::relocate(!! event_)
+
+  # reformat, add reserve name
+  dat <- evts %>% dplyr::relocate(!! event_) %>%
+    dplyr::left_join(sampling_stations %>%
+                       dplyr::select(!! NERR.Site.ID_, !! Station.Code_) %>%
+                       dplyr::rename("reserve_code" = NERR.Site.ID, "station" = !! Station.Code_)) %>%
+    dplyr::relocate(!! event_, reserve_code)
+
 
   # combine data.frames into one and tidy
-  dat_tidy <- tidyr::pivot_longer(dat, 4:length(names(dat)), names_to = 'parameter', values_to = 'result') %>%
+  dat_tidy <- tidyr::pivot_longer(dat, 5:length(names(dat)), names_to = 'parameter', values_to = 'result') %>%
     dplyr::mutate(date = as.Date(!! datetimestamp_))
 
   dat_tidy <- dat_tidy %>% dplyr::filter(!! parameter_ %in% parm)
@@ -202,7 +218,7 @@ summary_data_table <- function(var_in,
   total_nalist <- c("atemp", "bp", "intensprcp", "maxwspd", "rh", "sdwdir", "wdir", "wspd")
 
   summary <- dat_tidy %>%
-    dplyr::group_by(!! event_, !! parameter_,!! station_) %>%
+    dplyr::group_by(!! event_, !! parameter_, reserve_code, !! station_) %>%
     tidyr::drop_na(!! result_) %>%
     dplyr::summarise(min = min(!! result_, na.rm = T)
                      , max = max(!! result_, na.rm = T)
@@ -219,10 +235,12 @@ summary_data_table <- function(var_in,
   summary$station_fac <- factor(summary$station, levels = met_sites)
 
   # re-sort the table using factors
-  summary <- dplyr::arrange(summary, !! parameter_, !! station_fac_)
+  summary <- dplyr::arrange(summary, !! parameter_, !! station_fac_) %>%
+    dplyr::select(- !! station_fac_) %>%
+    dplyr::relocate(!! event_, reserve_code, !! station_, station_name, !! parameter_)
 
   # write table
-  tbl_ttl <- paste('output/met/data_table/summary_data_table_met_', user_units, "_", paste(reserve, collapse = "_"), ".csv", sep = '')
+  tbl_ttl <- paste('output/met/data_table/summary_data_table_met_', user_units, "_", paste0(reserve, collapse = "_"), ".csv", sep = '')
   utils::write.csv(summary, file = tbl_ttl, quote = F, row.names = F)
 
 

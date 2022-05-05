@@ -40,6 +40,7 @@ daily_data_table <- function(var_in,
   # Define global variables
   # ----------------------------------------------------------------------------
   NERR.Site.ID_ <- rlang::sym('NERR.Site.ID')
+  Station.Code_ <- rlang::sym('Station.Code')
   Status_ <- rlang::sym('Status')
   Station.Type_ <- rlang::sym('Station.Type')
 
@@ -65,14 +66,14 @@ daily_data_table <- function(var_in,
   if(is.null(storm_nm)) storm_nm <- unlist(strsplit(input_Parameters[1,2],", "))
   if(is.null(storm_start)) storm_start <- unlist(strsplit(input_Parameters[2,2],", "))
   if(is.null(storm_end)) storm_end <- unlist(strsplit(input_Parameters[3,2],", "))
-  if(is.null(reserve)) reserve <- if(is.na(input_Parameters[4,2])) {input_Master[1,2]} else {input_Parameters[4,2]}
+  if(is.null(reserve)) reserve <- if(is.na(input_Parameters[4,2])) {input_Master[1,2]} else {unlist(strsplit(input_Parameters[4,2],", "))}
   if(is.null(keep_flags)) keep_flags <- unlist(strsplit(input_Parameters[5,2],", "))
   if(is.null(skip)) skip <- input_Parameters[6,2]
   if(is.null(user_units)) user_units <- input_Parameters[7,2]
   if(is.null(data_path)) data_path <- 'data/cdmo'
 
   stations <- get('sampling_stations') %>%
-    dplyr::filter(!! NERR.Site.ID_ == reserve) %>%
+    dplyr::filter(!! NERR.Site.ID_ %in% reserve) %>%
     dplyr::filter(!! Status_ == "Active")
 
   wq_sites <- stations %>%
@@ -111,19 +112,24 @@ daily_data_table <- function(var_in,
   evts <- data.frame()
   for(i in 1:length(storm_nm)) {
 
-    evt <- lapply(ls_par, subset, subset = c(as.POSIXct(storm_start[i]), as.POSIXct(storm_end[i])))
-    evt <- dplyr::bind_rows(evt, .id = 'station')
+    evt <- dplyr::bind_rows(ls_par, .id = 'station')
+    evt <- subset(evt, subset = c(as.POSIXct(storm_start[i]), as.POSIXct(storm_end[i])))
     evt$event <- storm_nm[i]
 
     evts <- dplyr::bind_rows(evts, evt)
 
   }
 
-  dat <- evts %>% dplyr::relocate(!! event_)
+  # reformat, add reserve name
+  dat <- evts %>% dplyr::relocate(!! event_) %>%
+    dplyr::left_join(sampling_stations %>%
+                       dplyr::select(!! NERR.Site.ID_, !! Station.Code_) %>%
+                       dplyr::rename("reserve_code" = NERR.Site.ID, "station" = !! Station.Code_)) %>%
+    dplyr::relocate(!! event_, reserve_code)
 
 
   # combine data.frames into one and tidy
-  dat_tidy <- tidyr::pivot_longer(dat, 4:length(names(dat)), names_to = 'parameter', values_to = 'result') %>%
+  dat_tidy <- tidyr::pivot_longer(dat, 5:length(names(dat)), names_to = 'parameter', values_to = 'result') %>%
     dplyr::mutate(date = as.Date(!! datetimestamp_))
 
   # ----------------------------------------------
@@ -148,7 +154,7 @@ daily_data_table <- function(var_in,
   # summary <- summary %>% arrange(., parameter, station_fac)
 
   # write table
-  tbl_ttl <- paste('output/wq/data_table/daily_data_table_wq_', user_units, "_", storm_nm, '_', reserve, '.csv', sep = '')
+  tbl_ttl <- paste('output/wq/data_table/daily_data_table_wq_', user_units, "_", storm_nm, '_', paste0(reserve, collapse = "_"), '.csv', sep = '')
   utils::write.csv(summary, file = tbl_ttl, quote = F, row.names = F)
 
 
@@ -174,19 +180,23 @@ daily_data_table <- function(var_in,
   evts <- data.frame()
   for(i in 1:length(storm_nm)) {
 
-    evt <- lapply(ls_par, subset, subset = c(as.POSIXct(storm_start[i]), as.POSIXct(storm_end[i])))
-    evt <- dplyr::bind_rows(evt, .id = 'station')
+    evt <- dplyr::bind_rows(ls_par, .id = 'station')
+    evt <- subset(evt, subset = c(as.POSIXct(storm_start[i]), as.POSIXct(storm_end[i])))
     evt$event <- storm_nm[i]
 
     evts <- dplyr::bind_rows(evts, evt)
 
   }
 
-
-  dat <- evts %>% dplyr::relocate(!! event_)
+  # reformat, add reserve name
+  dat <- evts %>% dplyr::relocate(!! event_) %>%
+    dplyr::left_join(sampling_stations %>%
+                       dplyr::select(!! NERR.Site.ID_, !! Station.Code_) %>%
+                       dplyr::rename("reserve_code" = NERR.Site.ID, "station" = !! Station.Code_)) %>%
+    dplyr::relocate(!! event_, reserve_code)
 
   # combine data.frames into one and tidy
-  dat_tidy <- tidyr::pivot_longer(dat, 4:length(names(dat)), names_to = 'parameter', values_to = 'result') %>%
+  dat_tidy <- tidyr::pivot_longer(dat, 5:length(names(dat)), names_to = 'parameter', values_to = 'result') %>%
     dplyr::mutate(date = as.Date(!! datetimestamp_))
 
   # ----------------------------------------------
@@ -214,7 +224,7 @@ daily_data_table <- function(var_in,
 
 
   # write table
-  tbl_ttl <- paste('output/met/data_table/daily_data_table_met_', user_units, "_", storm_nm, '_', reserve, '.csv', sep = '')
+  tbl_ttl <- paste('output/met/data_table/daily_data_table_met_', user_units, "_", storm_nm, '_', paste0(reserve, collapse = "_"), '.csv', sep = '')
   utils::write.csv(summary, file = tbl_ttl, quote = F, row.names = F)
 
 
