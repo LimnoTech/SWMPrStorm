@@ -235,6 +235,9 @@ event_timeseries_precip <- function(var_in,
 
 
       } else if(flip == FALSE) {
+
+        ylabel <- if(user_units == "English") {'Total Precipitation (in)'} else { 'Total Precipitation (mm)'}
+
         x <- ggplot2::ggplot(precip_all, ggplot2::aes(x=!! Date_, y = !! total_precip_in_)) +
           ggplot2::geom_col(fill = "steelblue3", width = 0.5) +
           ggplot2::geom_text(ggplot2::aes(x=!! Date_, y = (!! total_precip_in_ + ceiling(max(precip_all$total_precip_in)*1.25)*.05), label = !! label_), color = "steelblue3", fontface="bold",hjust=0) +
