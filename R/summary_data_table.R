@@ -189,6 +189,10 @@ summary_data_table <- function(var_in,
 
   dat <- evts %>% dplyr::relocate(!! event_)
 
+  # combine data.frames into one and tidy
+  dat_tidy <- tidyr::pivot_longer(dat, 4:length(names(dat)), names_to = 'parameter', values_to = 'result') %>%
+    dplyr::mutate(date = as.Date(!! datetimestamp_))
+
   dat_tidy <- dat_tidy %>% dplyr::filter(!! parameter_ %in% parm)
 
   # ---------------------------------------------------------------
