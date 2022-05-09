@@ -180,6 +180,10 @@ summary_data_table <- function(var_in,
   ## convert dataset to user defined units (if "SI", no conversion will take place)
   ls_par <- SWMPrStorm::convert_units(ls_par, user_units)
 
+  ## add in precip intensity
+  ls_par <- lapply(ls_par, function(x) {x$intensprcp <- x$totprcp * 4; x}) # unit/15-min to unit/hr
+
+
   ## identify parameters, remove a few
   parm <- unique(names(ls_par[[1]]))
   parm <- subset(parm, !(parm %in% c('datetimestamp', 'wdir', 'sdwdir', 'totpar', 'totsorad')))
