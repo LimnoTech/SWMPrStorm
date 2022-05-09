@@ -38,8 +38,10 @@ summary_data_table <- function(var_in,
   Station.Code_ <- rlang::sym('Station.Code')
   Status_ <- rlang::sym('Status')
   Station.Type_ <- rlang::sym('Station.Type')
+  reserve_code_ <- rlang::sym('reserve_code')
 
   station_ <- rlang::sym('station')
+  station_name_ <- rlang::sym('station_name')
   event_ <- rlang::sym('event')
   evt_start_ <- rlang::sym('evt_start')
   evt_end_ <- rlang::sym('evt_end')
@@ -124,10 +126,10 @@ summary_data_table <- function(var_in,
 
   # reformat, add reserve name
   dat <- evts %>% dplyr::relocate(!! event_) %>%
-    dplyr::left_join(sampling_stations %>%
+    dplyr::left_join(stations %>%
                        dplyr::select(!! NERR.Site.ID_, !! Station.Code_) %>%
-                       dplyr::rename("reserve_code" = NERR.Site.ID, "station" = !! Station.Code_)) %>%
-    dplyr::relocate(!! event_, reserve_code)
+                       dplyr::rename("reserve_code" = !! NERR.Site.ID_, "station" = !! Station.Code_)) %>%
+    dplyr::relocate(!! event_, !! reserve_code_)
 
 
   ## combine data.frames into one and tidy
@@ -140,7 +142,7 @@ summary_data_table <- function(var_in,
   # -------------------------------------------------------------------
 
   summary <- dat_tidy %>%
-    dplyr::group_by(!! event_, !! parameter_, reserve_code, !! station_) %>%
+    dplyr::group_by(!! event_, !! parameter_, !! reserve_code_, !! station_) %>%
     tidyr::drop_na(!! result_) %>%
     dplyr::summarise(min = min(!! result_, na.rm = T)
                      , max = max(!! result_, na.rm = T)
@@ -156,7 +158,7 @@ summary_data_table <- function(var_in,
   # re-sort the table using factors
   summary <- dplyr::arrange(summary, !! parameter_, !! station_fac_) %>%
     dplyr::select(- !! station_fac_) %>%
-    dplyr::relocate(!! event_, reserve_code, !! station_, station_name, !! parameter_)
+    dplyr::relocate(!! event_, !! reserve_code_, !! station_, !! station_name_, !! parameter_)
 
   # write table
   tbl_ttl <- paste('output/wq/data_table/summary_data_table_wq_', user_units, "_", paste0(reserve, collapse = "_"), ".csv", sep = '')
@@ -203,10 +205,10 @@ summary_data_table <- function(var_in,
 
   # reformat, add reserve name
   dat <- evts %>% dplyr::relocate(!! event_) %>%
-    dplyr::left_join(sampling_stations %>%
+    dplyr::left_join(stations %>%
                        dplyr::select(!! NERR.Site.ID_, !! Station.Code_) %>%
-                       dplyr::rename("reserve_code" = NERR.Site.ID, "station" = !! Station.Code_)) %>%
-    dplyr::relocate(!! event_, reserve_code)
+                       dplyr::rename("reserve_code" = !! NERR.Site.ID_, "station" = !! Station.Code_)) %>%
+    dplyr::relocate(!! event_, !! reserve_code_)
 
 
   # combine data.frames into one and tidy
@@ -222,7 +224,7 @@ summary_data_table <- function(var_in,
   total_nalist <- c("atemp", "bp", "intensprcp", "maxwspd", "rh", "sdwdir", "wdir", "wspd")
 
   summary <- dat_tidy %>%
-    dplyr::group_by(!! event_, !! parameter_, reserve_code, !! station_) %>%
+    dplyr::group_by(!! event_, !! parameter_, !! reserve_code_, !! station_) %>%
     tidyr::drop_na(!! result_) %>%
     dplyr::summarise(min = min(!! result_, na.rm = T)
                      , max = max(!! result_, na.rm = T)
@@ -241,7 +243,7 @@ summary_data_table <- function(var_in,
   # re-sort the table using factors
   summary <- dplyr::arrange(summary, !! parameter_, !! station_fac_) %>%
     dplyr::select(- !! station_fac_) %>%
-    dplyr::relocate(!! event_, reserve_code, !! station_, station_name, !! parameter_)
+    dplyr::relocate(!! event_, !! reserve_code_, !! station_, !! station_name_, !! parameter_)
 
   # write table
   tbl_ttl <- paste('output/met/data_table/summary_data_table_met_', user_units, "_", paste0(reserve, collapse = "_"), ".csv", sep = '')

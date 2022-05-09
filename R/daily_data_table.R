@@ -43,6 +43,7 @@ daily_data_table <- function(var_in,
   Station.Code_ <- rlang::sym('Station.Code')
   Status_ <- rlang::sym('Status')
   Station.Type_ <- rlang::sym('Station.Type')
+  reserve_code_ <- rlang::sym('reserve_code')
 
   station_ <- rlang::sym('station')
   event_ <- rlang::sym('event')
@@ -124,10 +125,10 @@ daily_data_table <- function(var_in,
 
   # reformat, add reserve name
   dat <- evts %>% dplyr::relocate(!! event_) %>%
-    dplyr::left_join(sampling_stations %>%
+    dplyr::left_join(stations %>%
                        dplyr::select(!! NERR.Site.ID_, !! Station.Code_) %>%
-                       dplyr::rename("reserve_code" = NERR.Site.ID, "station" = !! Station.Code_)) %>%
-    dplyr::relocate(!! event_, reserve_code)
+                       dplyr::rename("reserve_code" = !! NERR.Site.ID_, "station" = !! Station.Code_)) %>%
+    dplyr::relocate(!! event_, !! reserve_code_)
 
 
   # combine data.frames into one and tidy
@@ -192,10 +193,10 @@ daily_data_table <- function(var_in,
 
   # reformat, add reserve name
   dat <- evts %>% dplyr::relocate(!! event_) %>%
-    dplyr::left_join(sampling_stations %>%
+    dplyr::left_join(stations %>%
                        dplyr::select(!! NERR.Site.ID_, !! Station.Code_) %>%
-                       dplyr::rename("reserve_code" = NERR.Site.ID, "station" = !! Station.Code_)) %>%
-    dplyr::relocate(!! event_, reserve_code)
+                       dplyr::rename("reserve_code" = !! NERR.Site.ID_, "station" = !! Station.Code_)) %>%
+    dplyr::relocate(!! event_, !! reserve_code_)
 
   # combine data.frames into one and tidy
   dat_tidy <- tidyr::pivot_longer(dat, 5:length(names(dat)), names_to = 'parameter', values_to = 'result') %>%
