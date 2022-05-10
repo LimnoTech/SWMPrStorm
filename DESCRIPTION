@@ -21,17 +21,14 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.2
 Imports: 
     lubridate,
-    here,
     tidyr,
     dplyr,
     ggplot2,
     openair,
     scales,
-    oce,
     magrittr,
     leaflet,
     sf,
-    maptools,
     rlang,
     ggridges,
     mapview,
