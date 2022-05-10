@@ -144,7 +144,7 @@ event_timeseries_hourly <- function(var_in,
     sta <- names(ls_par)[i]
 
     # tidy
-    dat <- tidyr::pivot_longer(dat, cols = 2:11
+    dat <- tidyr::pivot_longer(dat, cols = 2:12
                         , names_to = 'parameter'
                         , values_to = 'value')
 
