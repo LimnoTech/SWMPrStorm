@@ -10,8 +10,6 @@ experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](h
 <!-- badges: end -->
 
 <!-- logos: start -->
-
-<img src="man/figures/swmpr_logo.png" align="center"/>
 <img src="man/figures/Storm-Story-logo.png" align="center" width = "50%"/>
 <!-- logos: end -->
 
