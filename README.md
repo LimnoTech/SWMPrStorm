@@ -21,7 +21,7 @@ The System Wide Monitoring Program
 ([SWMP](http://nerrs.noaa.gov/RCDefault.aspx?ID=18)) was implemented by
 the National Estuarine Research Reserve System
 ([NERRS](http://nerrs.noaa.gov/)) in 1995 to provide continuous
-monitoring data at over 140 continuous monitoring stations in 28
+monitoring data at over 140 continuous monitoring stations in 30
 estuaries across the United States. SWMPrStorm (pronounced “swamper
 storm”) is an R package that provides functions to organize and analyze
 SWMP data on a storm event basis. It is a companion package to
@@ -30,9 +30,6 @@ SWMP data on a storm event basis. It is a companion package to
 Currently, there is no citation for SWMPrStorm
 
 ## Installation
-
-SWMPrStorm is not yet available on [CRAN](https://CRAN.R-project.org)
-but will be in 2022.
 
 You can install the development version from
 [GitHub](https://github.com/) with:
@@ -44,10 +41,12 @@ devtools::install_github("LimnoTech/SWMPrStorm")
 
 ## Using the Package
 
-Documentation for SWMPrStorm is currently in development.
-
 SWMPrStorm adds several functions to existing concepts in SWMPr and
 builds upon the “Reporting” concept introduced in SWMPrExtension.
+
+This package and its functions rely heavily on the workspace structure
+that is available in the StormStories organization: 
+https://github.com/StormStories/SWMPr_Storm_Story_Template 
 
 ### Analyze
 
@@ -60,48 +59,8 @@ section were selected by and approved by a technical advisory committee
 composed of staff from a subset of the Southeast Atlantic and Caribbean
 NERRs.
 
-#### Core Analyses
-
-<!-- haven't found a great way to remove the `\` before the `_` upon rendering -->
-<table>
-<tr>
-<td>
-<code>event\_timeseries</code>
-</td>
-<td>
-Description here
-</td>
-</tr>
-<tr>
-<td>
-<code>Function \#2 Name</code>
-</td>
-<td>
-Description here
-</td>
-</tr>
-<tr>
-<td>
-<code>Function \#3 Name</code>
-</td>
-<td>
-Description here
-</td>
-</tr>
-</table>
-
-#### Mapping
-
-<table>
-<tr>
-<td>
-<code>mapping function name</code>
-</td>
-<td>
-Description here
-</td>
-</tr>
-</table>
+Quick Guides are available in the 'doc' directory of the workspace
+template: https://github.com/StormStories/SWMPr_Storm_Story_Template 
 
 ### Reporting
 
@@ -109,22 +68,3 @@ The reporting concept refers to functions that were specifically
 developed for use with NERRS StormStories reporting scripts that are
 used to generate the StormStories report. They are included as part of
 this package in case users find them useful for their own purposes.
-
-<table>
-<tr>
-<td>
-<code>helper function \#1</code>
-</td>
-<td>
-Description here
-</td>
-</tr>
-<tr>
-<td>
-<code>helper function \#2</code>
-</td>
-<td>
-Description here
-</td>
-</tr>
-</table>
